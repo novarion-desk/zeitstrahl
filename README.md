@@ -7,7 +7,7 @@ Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. 
 
 | Funktion | Ohne Login | Mit Lehrpersonen-Login |
 |---|---|---|
-| Standard-Themen (2. Weltkrieg & Schweiz, Industrialisierung, 1. Weltkrieg) | ✓ | ✓ |
+| 6 Standard-Themen (Alte Eidgenossenschaft, Industrialisierung, 1. Weltkrieg, 2. Weltkrieg, Kalter Krieg, Frauenstimmrecht – je mit Schweizer Spur) | ✓ | ✓ |
 | Eigene Zeitstrahlen bauen | ✓ (auf dem Gerät / als Datei) | ✓ (Cloud, auf allen Geräten) |
 | KI-Chat: Prompt kopieren → Antwort einfügen | ✓ | ✓ |
 | KI direkt (Gemini, Schlüssel aus dem Konto wie im Sek Planer) | – | ✓ |

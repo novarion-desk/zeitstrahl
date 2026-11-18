@@ -2,6 +2,8 @@
 
 ## v1 – 18.11.2026
 - Grundlage mit Gemini erstellt, überarbeitet.
+- Drei zusätzliche Beispielthemen: Alte Eidgenossenschaft, Frauenstimmrecht & Gleichstellung, Kalter Krieg & Schweiz.
+- Zeitstrahl verteilt Karten automatisch auf genügend Etagen, nichts überlappt mehr.
 - Inhalte geprüft und korrigiert; 2. Weltkrieg mit Schweizer Spur (J-Stempel, Landi 39, General Guisan, Rütlirapport/Réduit, Anbauschlacht, Grenzschliessung 1942); 1. Weltkrieg mit Graben, Rationierung, Spanischer Grippe.
 - Kategorien pro Thema statt fest «Gesellschaft & Verfolgung».
 - Neue Themen per KI: direkt (Gemini/Claude, Schlüssel aus dem Konto) oder über einen KI-Chat (Prompt kopieren).
