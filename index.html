@@ -2593,7 +2593,7 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
                         finished++;
                         if (err.aborted && winner !== idx) { checkAllFailed(); return; }
                         const msg = err.message || String(err);
-                        if (err.status === 404 || /no longer available|not found/i.test(msg)) /* Modell nicht verfügbar */
+                        if (err.status === 404 || /no longer available|not found/i.test(msg)) { /* Modell nicht verfügbar */ }
                         if (err.status === 401 || err.status === 403 || /API key/i.test(msg)) {
                             keyInvalid = true;
                             if (!errorDetails.some(e => e.startsWith('[Gemini]'))) errorDetails.push(`[Gemini] ${msg}`);
@@ -2634,7 +2634,7 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
         return text;
       } catch (e) {
         const msg = errors.join(' · ') || e.message;
-        if (/API key|\[Gemini\]/i.test(msg)) throw new Error('Der Gemini-Schlüssel ist ungültig oder gesperrt.');
+        if (/API key|\[Gemini\]/i.test(msg)) throw new Error('Google lehnt den Gemini-Schlüssel ab (' + msg.replace('[Gemini] ', '').slice(0, 120) + '). Bitte im Google AI Studio prüfen oder einen neuen Schlüssel eintragen.');
         throw new Error(/demand|overload|überlastet|503|429/i.test(msg) ? 'Gemini ist gerade überlastet. Bitte in ein paar Minuten nochmals versuchen oder den Weg über den KI-Chat nehmen.' : 'Gemini antwortet nicht: ' + msg.slice(0, 200));
       }
     }
