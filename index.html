@@ -784,7 +784,7 @@ Kategorien: Politik, Konflikte, Alltag
       </div>
       <p class="text-sm text-slate-600">Füge einen API-Schlüssel von Gemini, Claude, ChatGPT oder Mistral ein. Der Anbieter wird automatisch erkannt. Die Schlüssel liegen in deinem Konto; Gemini, Claude und ChatGPT nutzt auch der Sek Planer.</p>
       <div class="space-y-2">
-        <input type="password" id="ai-key-input" autocomplete="off" placeholder="API-Schlüssel einfügen" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono" oninput="const p=detectProvider(this.value); document.getElementById('ai-key-detected').textContent = this.value.trim() ? (p ? 'Erkannt: ' + AI_PROVIDERS[p].label : 'Anbieter nicht erkannt – bitte auswählen') : ''" />
+        <input type="password" id="ai-key-input" autocomplete="off" placeholder="API-Schlüssel einfügen" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono" oninput="const p=detectProvider(this.value); document.getElementById('ai-key-detected').textContent = this.value.trim() ? (p ? 'Erkannt: ' + AI_PROVIDERS[p].label : 'Anbieter wird beim Prüfen gesucht') : ''" />
         <div class="flex items-center gap-2">
           <select id="ai-key-provider" class="rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
             <option value="">Automatisch erkennen</option>
@@ -3530,7 +3530,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
     // Einheitlicher KI-Aufruf (Gemini bevorzugt, Claude als Ersatz – je nach Konto)
     // ---------- KI-Schlüssel (gleiches Konto-Dokument wie im Sek Planer) ----------
     const AI_PROVIDERS = {
-      gemini: { label: 'Google Gemini', field: 'geminiKey', hint: 'beginnt mit «AIza»' },
+      gemini: { label: 'Google Gemini', field: 'geminiKey', hint: 'beginnt mit «AQ.» (neu) oder «AIza» (alt)' },
       claude: { label: 'Anthropic Claude', field: 'claudeKey', hint: 'beginnt mit «sk-ant-»' },
       openai: { label: 'OpenAI ChatGPT', field: 'openaiKey', hint: 'beginnt mit «sk-»' },
       mistral: { label: 'Mistral', field: 'mistralKey', hint: '32 Zeichen, ohne festen Anfang' }
@@ -3566,7 +3566,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
     }
     function detectProvider(key) {
       const k = String(key || '').trim();
-      if (/^AIza[0-9A-Za-z_\-]{20,}$/.test(k)) return 'gemini';
+      if (/^AIza[0-9A-Za-z_\-]{20,}$/.test(k) || /^AQ\.[0-9A-Za-z_\-.]{20,}$/.test(k)) return 'gemini';
       if (/^sk-ant-/.test(k)) return 'claude';
       if (/^sk-/.test(k)) return 'openai';
       if (/^[A-Za-z0-9]{32}$/.test(k)) return 'mistral';
@@ -3660,12 +3660,23 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       const key = document.getElementById('ai-key-input').value.trim();
       let provider = document.getElementById('ai-key-provider').value || detectProvider(key);
       if (!key) return aiKeyStatus('Bitte einen Schlüssel einfügen.', 'error');
-      if (!provider) return aiKeyStatus('Der Anbieter konnte nicht erkannt werden. Bitte oben auswählen.', 'error');
-      aiKeyStatus(`Schlüssel für ${AI_PROVIDERS[provider].label} wird geprüft …`);
-      try {
-        await callProvider(provider, key, 'Antworte nur mit diesem JSON: {"ok": true}');
-      } catch (e) {
-        return aiKeyStatus(`Der Test mit ${AI_PROVIDERS[provider].label} hat nicht geklappt: ${e.message || e}. Der Schlüssel wurde nicht gespeichert.`, 'error');
+      const testPrompt = 'Antworte nur mit diesem JSON: {"ok": true}';
+      if (!provider) {
+        // Format unbekannt: alle Anbieter der Reihe nach ausprobieren
+        const errs = [];
+        for (const p of Object.keys(AI_PROVIDERS)) {
+          aiKeyStatus(`Anbieter unbekannt – ich probiere ${AI_PROVIDERS[p].label} …`);
+          try { await callProvider(p, key, testPrompt); provider = p; break; }
+          catch (e) { errs.push(`${AI_PROVIDERS[p].label}: ${e.message || e}`); }
+        }
+        if (!provider) return aiKeyStatus('Kein Anbieter hat den Schlüssel angenommen. ' + errs.join(' · ') + ' Der Schlüssel wurde nicht gespeichert.', 'error');
+      } else {
+        aiKeyStatus(`Schlüssel für ${AI_PROVIDERS[provider].label} wird geprüft …`);
+        try {
+          await callProvider(provider, key, testPrompt);
+        } catch (e) {
+          return aiKeyStatus(`Der Test mit ${AI_PROVIDERS[provider].label} hat nicht geklappt: ${e.message || e}. Der Schlüssel wurde nicht gespeichert.`, 'error');
+        }
       }
       await saveAiKey(provider, key);
       document.getElementById('ai-key-input').value = '';
