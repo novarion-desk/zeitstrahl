@@ -1,0 +1,159 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    // Richtiges Konto (E-Mail/Google), kein anonymes Login
+    function isAccount() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+    function isOwnerAccount() {
+      return isAccount() && request.auth.token.email == 'patrick.krapf63@gmail.com';
+    }
+
+    // Sek Planer: jedes Dokument gehört genau einem Konto (ownerUid)
+    match /sekSync/{docId} {
+      // einzelnes Dokument öffnen
+      allow get: if isAccount() && (
+        resource == null
+        || resource.data.ownerUid == request.auth.uid
+        || (isOwnerAccount() && !resource.data.keys().hasAny(['ownerUid']))
+      );
+      // Listen nur für die eigenen Dokumente
+      allow list: if isAccount() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isAccount() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAccount()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if isAccount() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Sek Zufall: Daten pro Konto unter users/{uid}/…
+    match /users/{uid}/{document=**} {
+      allow read, write: if isAccount() && request.auth.uid == uid;
+    }
+
+    // ---------------------------------------------------------------
+    // Lightning: private Daten der Lehrperson (Klassen, Vorlagen, Lösungen)
+    // ---------------------------------------------------------------
+    match /lightningTeachers/{uid}/{document=**} {
+      allow read, write: if isAccount() && request.auth.uid == uid;
+    }
+
+    // Lightning: Live-Sessions (Dokument-ID = 4-stelliger Code)
+    match /lightningSessions/{code} {
+      function sessionOwner() {
+        return isAccount() && resource.data.ownerUid == request.auth.uid;
+      }
+
+      // Schüler (ohne Login) dürfen eine einzelne Session per Code öffnen
+      allow get: if true;
+      // Listen nur für die eigenen Sessions der Lehrperson
+      allow list: if sessionOwner();
+      allow create: if isAccount()
+        && code.matches('^[0-9]{4}$')
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.durationSec is int;
+      allow update: if sessionOwner()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.durationSec is int;
+      allow delete: if sessionOwner();
+
+      // Antworten: Dokument-ID = geheimer Zufallsschlüssel des Schülergeräts (20–40 Zeichen)
+      match /responses/{rid} {
+        function session() {
+          return get(/databases/$(database)/documents/lightningSessions/$(code)).data;
+        }
+        function isTeacherOfSession() {
+          return isAccount() && session().ownerUid == request.auth.uid;
+        }
+        function inputOpen() {
+          let s = session();
+          return s.active == true
+            && s.locked == false
+            && (s.durationSec <= 0 || request.time < s.startedAt + duration.value(s.durationSec, 's'));
+        }
+        function validAnswer() {
+          let d = request.resource.data;
+          let s = session();
+          return d.keys().hasOnly(['name', 'answer', 'comment', 'updatedAt', 'mark'])
+            && d.name is string && d.name.size() > 0 && d.name.size() <= 40
+            && d.answer is string && d.answer.size() <= 1000
+            && d.comment is string && d.comment.size() <= 300
+            && d.updatedAt == request.time
+            && (s.roster == null || d.name in s.roster);
+        }
+
+        // Einzelne Antwort nur mit dem geheimen Schlüssel abrufbar; die Liste aller Antworten nur für die Lehrperson
+        allow get: if true;
+        allow list: if isTeacherOfSession();
+
+        allow create: if rid.matches('^[A-Za-z0-9]{20,40}$')
+          && inputOpen() && validAnswer()
+          && request.resource.data.mark == 'none';
+
+        allow update: if (inputOpen() && validAnswer()
+            && request.resource.data.mark == resource.data.mark)
+          || (isTeacherOfSession()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mark'])
+            && request.resource.data.mark in ['none', 'good', 'warn']);
+
+        allow delete: if isTeacherOfSession();
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Zeitstrahl CH: Themen der Lehrperson (Freigabe per Link mit geheimer ID)
+    // ---------------------------------------------------------------
+    match /zeitstrahlTopics/{tid} {
+      allow get: if resource.data.shared == true
+        || (isAccount() && resource.data.ownerUid == request.auth.uid);
+      allow list: if isAccount() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isAccount()
+        && tid.matches('^[A-Za-z0-9]{16,40}$')
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAccount()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if isAccount() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Zeitstrahl CH: Abgabe-Aufträge (Dokument-ID = 4-stelliger Code)
+    match /zeitstrahlTasks/{code} {
+      allow get: if true;
+      allow list: if isAccount() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isAccount()
+        && code.matches('^[0-9]{4}$')
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAccount()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if isAccount() && resource.data.ownerUid == request.auth.uid;
+
+      // Abgaben: Dokument-ID = geheimer Zufallsschlüssel des Schülergeräts
+      match /submissions/{sid} {
+        function task() {
+          return get(/databases/$(database)/documents/zeitstrahlTasks/$(code)).data;
+        }
+        function isTaskOwner() {
+          return isAccount() && task().ownerUid == request.auth.uid;
+        }
+        function validSubmission() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['name', 'topic', 'updatedAt'])
+            && d.name is string && d.name.size() > 0 && d.name.size() <= 40
+            && d.topic is map
+            && d.updatedAt == request.time;
+        }
+        allow get: if true;
+        allow list: if isTaskOwner();
+        allow create, update: if sid.matches('^[A-Za-z0-9]{20,40}$')
+          && task().open == true
+          && validSubmission();
+        allow delete: if isTaskOwner();
+      }
+    }
+  }
+}

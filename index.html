@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Zeitstrahl CH – Geschichte & RZG interaktiv</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="stylesheet" href="vendor/app.css" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #0f172a; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .btn-primary { background-color: #4f46e5; color: #ffffff; font-weight: 600; border-radius: 0.75rem; transition: all 0.15s; }
+    .btn-primary:hover { background-color: #4338ca; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pill-active { background-color: #eef2ff; border-color: #4f46e5; color: #4338ca; font-weight: 600; }
+    .timeline-scroll { scroll-behavior: smooth; }
+    .timeline-scroll::-webkit-scrollbar { height: 10px; }
+    .timeline-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 999px; }
+    .timeline-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    .timeline-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .tab-active { background: #ffffff; color: #4338ca; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+    #share-qr svg { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP BAR -->
+  <header id="main-header" class="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">⏳</div>
+        <div>
+          <h1 class="font-bold text-slate-900 leading-tight text-base sm:text-lg">Zeitstrahl CH</h1>
+          <p class="text-xs text-slate-500 hidden sm:block">Überblick gewinnen, einordnen & eigene Zeitachsen bauen</p>
+        </div>
+      </div>
+
+      <!-- Modus-Umschalter -->
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full">
+        <button onclick="setMode('explore')" id="tab-explore" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">🔍 Überblick</button>
+        <button onclick="setMode('guess')" id="tab-guess" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">🎯 Datum schätzen</button>
+        <button onclick="setMode('sort')" id="tab-sort" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">🔢 Sortier-Sprint</button>
+        <button onclick="setMode('builder')" id="tab-builder" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">✏️ Selbst bauen</button>
+      </div>
+
+      <!-- Thema & Aktionen -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <select id="topic-select" onchange="selectTopic(this.value)" class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium max-w-[210px] sm:max-w-xs"></select>
+        <button onclick="openNewModal()" title="Neues Thema" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-semibold">✨ Neu</button>
+        <button onclick="openShareModal()" title="Mit der Klasse teilen" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">📲 Teilen</button>
+        <button onclick="openAccountModal()" id="btn-account" title="Konto" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">👤 Anmelden</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HINWEIS-BANNER -->
+  <div id="topic-banner" class="hidden px-4 py-2.5 text-xs sm:text-sm border-b">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <span id="topic-banner-text"></span>
+      <span id="topic-banner-actions" class="flex flex-wrap gap-2"></span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5">
+
+    <!-- =================================================================== -->
+    <!-- 1. MODUS: ÜBERBLICK & ERKUNDEN                                      -->
+    <!-- =================================================================== -->
+    <section id="view-explore" class="space-y-4">
+      <div id="explore-toolbar" class="card p-4 flex flex-wrap items-center justify-between gap-3">
+        <div id="filter-bar" class="flex flex-wrap items-center gap-1.5"></div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="loadImagesForTopic(true)" id="btn-auto-images" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-semibold">🖼️ Bilder laden</button>
+          <button onclick="togglePresentationMode()" class="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-semibold">🖥️ Beamer-Fokus</button>
+          <div class="flex items-center gap-1.5 pl-1">
+            <button onclick="changeZoom(-0.3)" class="w-7 h-7 rounded-lg border border-slate-300 bg-white font-bold text-sm hover:bg-slate-50">−</button>
+            <span id="zoom-label" class="text-xs font-mono font-semibold w-11 text-center">110%</span>
+            <button onclick="changeZoom(0.3)" class="w-7 h-7 rounded-lg border border-slate-300 bg-white font-bold text-sm hover:bg-slate-50">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4 sm:p-5 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+          <div id="track-legend-box" class="flex flex-wrap items-center gap-3"></div>
+          <div class="flex items-center gap-2">
+            <button onclick="stepEvent(-1)" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-semibold text-slate-700">← Vorheriges</button>
+            <button onclick="stepEvent(1)" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-semibold text-slate-700">Nächstes →</button>
+            <button onclick="togglePresentationMode()" id="btn-exit-present" class="hidden px-2.5 py-1 rounded-lg bg-slate-800 text-white font-semibold">Fokus beenden</button>
+          </div>
+        </div>
+        <div id="timeline-viewport" class="timeline-scroll overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/70 relative select-none">
+          <div id="timeline-canvas" class="relative min-h-[460px] transition-all duration-150"></div>
+        </div>
+      </div>
+
+      <!-- Detail-Steckbrief -->
+      <div id="detail-card" class="card p-5 sm:p-6 border-indigo-200 bg-white">
+        <div class="flex flex-col md:flex-row gap-6 items-start">
+          <div id="detail-image-box" class="hidden w-full md:w-72 shrink-0 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+            <img id="detail-img" src="" alt="" class="w-full h-52 object-cover bg-slate-200" />
+            <div id="detail-img-caption" class="text-[11px] leading-snug text-slate-500 px-3 py-1.5 bg-slate-50 border-t border-slate-200"></div>
+          </div>
+          <div id="detail-icon-box" class="hidden w-full md:w-72 h-40 shrink-0 rounded-xl border border-slate-200 flex items-center justify-center text-7xl"></div>
+          <div class="flex-1 flex flex-col lg:flex-row lg:items-start justify-between gap-4 min-w-0">
+            <div class="space-y-2 max-w-3xl min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span id="detail-year" class="text-sm font-mono font-bold bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-lg">–</span>
+                <span id="detail-track" class="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg"></span>
+                <span id="detail-cat" class="text-xs font-semibold px-2.5 py-0.5 rounded-lg"></span>
+              </div>
+              <h2 id="detail-title" class="text-xl sm:text-2xl font-bold text-slate-900">Ereignis auswählen</h2>
+              <p id="detail-desc" class="text-sm sm:text-base text-slate-700 leading-relaxed">Klicke auf dem Zeitstrahl auf ein Ereignis oder nutze die Pfeiltasten.</p>
+              <a id="detail-wiki" href="#" target="_blank" rel="noopener" class="hidden inline-block text-xs text-indigo-600 hover:underline">📖 Mehr dazu auf Wikipedia</a>
+            </div>
+            <div id="detail-question-box" class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-4 lg:w-72 shrink-0">
+              <div class="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-1">💡 Denkfrage</div>
+              <p id="detail-question" class="text-xs sm:text-sm text-slate-800 font-medium"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 2. MODUS: DATUM SCHÄTZEN                                            -->
+    <!-- =================================================================== -->
+    <section id="view-guess" class="hidden max-w-3xl mx-auto space-y-5">
+      <div class="card p-6 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Einordnungs-Challenge</span>
+            <h2 class="text-lg font-bold text-slate-900">Wann geschah dieses Ereignis?</h2>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-500">Runde <span id="guess-round">1</span> / <span id="guess-total">5</span></div>
+            <div class="text-sm font-bold text-emerald-700">Punkte: <span id="guess-score">0</span></div>
+          </div>
+        </div>
+        <div id="guess-empty" class="hidden text-sm text-slate-500">Für diese Challenge braucht das Thema mindestens 4 Ereignisse mit verschiedenen Jahren.</div>
+        <div id="guess-body" class="space-y-5">
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 items-center">
+            <img id="guess-card-img" src="" alt="" class="hidden w-full sm:w-40 h-28 object-cover rounded-xl border border-slate-200 shrink-0" />
+            <div id="guess-card-icon" class="hidden w-full sm:w-40 h-28 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-5xl shrink-0"></div>
+            <div class="space-y-2 flex-1">
+              <h3 id="guess-card-title" class="text-xl font-bold text-slate-900"></h3>
+              <p id="guess-card-desc" class="text-sm text-slate-600"></p>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <div class="text-xs font-semibold text-slate-500">Orientierungspunkte:</div>
+            <div id="guess-anchors" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Deine Schätzung:</label>
+              <span id="guess-slider-value" class="text-2xl font-mono font-extrabold text-indigo-600"></span>
+            </div>
+            <input type="range" id="guess-slider" oninput="updateGuessSlider(this.value)" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-xs font-mono text-slate-400">
+              <span id="guess-min-label"></span>
+              <span id="guess-max-label"></span>
+            </div>
+          </div>
+          <div id="guess-feedback" class="hidden rounded-xl p-4 border text-sm space-y-1"></div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button onclick="initGuessChallenge()" id="btn-guess-restart" class="hidden px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium">Neue Runde</button>
+            <button onclick="checkGuess()" id="btn-guess-check" class="btn-primary px-6 py-2.5 text-sm">Einordnung prüfen</button>
+            <button onclick="nextGuessRound()" id="btn-guess-next" class="hidden btn-primary px-6 py-2.5 text-sm">Nächste Karte →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 3. MODUS: SORTIER-SPRINT                                            -->
+    <!-- =================================================================== -->
+    <section id="view-sort" class="hidden max-w-2xl mx-auto space-y-5">
+      <div class="card p-6 space-y-5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Chronologie-Training</span>
+            <h2 class="text-lg font-bold text-slate-900">Bringe die Ereignisse in die richtige Reihenfolge</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Oben = am frühesten • Unten = am spätesten</p>
+          </div>
+          <button onclick="initSortGame()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 font-medium shrink-0">Neu mischen</button>
+        </div>
+        <div id="sort-list" class="space-y-2.5"></div>
+        <div id="sort-feedback" class="hidden rounded-xl p-4 text-sm font-medium"></div>
+        <div class="flex justify-end">
+          <button onclick="checkSortOrder()" id="btn-sort-check" class="btn-primary px-6 py-2.5 text-sm">Reihenfolge überprüfen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 4. MODUS: SELBST BAUEN & BEARBEITEN                                 -->
+    <!-- =================================================================== -->
+    <section id="view-builder" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="card p-5 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="builder-form-heading" class="text-lg font-bold text-slate-900">Ereignis hinzufügen</h2>
+          <button onclick="startEmptyBuilder()" class="text-xs text-rose-600 hover:underline">Neuer leerer Zeitstrahl</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Thementitel</label>
+            <input type="text" id="builder-topic-title" maxlength="80" onchange="updateBuilderMeta()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Darstellung</label>
+            <select id="builder-layout" onchange="updateBuilderMeta()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
+              <option value="single">1 Spur</option>
+              <option value="dual">2 Spuren (z. B. Welt / Schweiz)</option>
+            </select>
+          </div>
+        </div>
+        <div id="builder-track-names" class="hidden grid grid-cols-2 gap-2.5">
+          <input type="text" id="builder-track-top" maxlength="40" onchange="updateBuilderMeta()" placeholder="Obere Spur" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs" />
+          <input type="text" id="builder-track-bottom" maxlength="40" onchange="updateBuilderMeta()" placeholder="Untere Spur" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Startjahr *</label>
+            <input type="number" id="b-start" placeholder="z. B. 1939" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Endjahr (optional)</label>
+            <input type="number" id="b-end" placeholder="z. B. 1945" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400 -mt-2">Jahre vor Christus mit Minus eingeben, z. B. −44.</p>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Titel des Ereignisses *</label>
+          <input type="text" id="b-title" maxlength="90" placeholder="z. B. Überfall auf Polen" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Spur</label>
+            <select id="b-track" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+              <option value="top">Oben</option>
+              <option value="bottom">Unten</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kategorie</label>
+            <select id="b-cat" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Symbol</label>
+            <select id="b-icon" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white"></select>
+          </div>
+        </div>
+
+        <!-- Bild -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Bild (optional)</label>
+            <button type="button" onclick="openImagePicker()" class="text-xs bg-indigo-600 text-white hover:bg-indigo-700 px-2.5 py-1 rounded-lg font-semibold">🔍 Bild suchen</button>
+          </div>
+          <input type="text" id="b-wiki" maxlength="120" placeholder="Wikipedia-Artikel (z. B. Rütlirapport)" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs bg-white" />
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs bg-white border border-slate-300 hover:bg-slate-100 px-2.5 py-1.5 rounded-lg cursor-pointer font-medium text-slate-700">
+              📷 Eigenes Foto
+              <input type="file" accept="image/*" onchange="handleLocalImageUpload(event)" class="hidden" />
+            </label>
+            <button type="button" onclick="setBuilderImage(null)" id="b-img-clear" class="hidden text-xs text-rose-600 hover:underline">Bild entfernen</button>
+          </div>
+          <img id="b-img-preview" src="" alt="" class="hidden w-full h-28 object-cover rounded-lg border border-slate-200" />
+          <div id="b-img-credit" class="hidden text-[10px] text-slate-500"></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kurze Erklärung (2–3 Sätze)</label>
+          <textarea id="b-desc" rows="3" maxlength="600" placeholder="Was ist passiert und warum ist es wichtig?" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Denkfrage (optional)</label>
+          <input type="text" id="b-question" maxlength="200" placeholder="z. B. Welche Folgen hatte dieses Ereignis?" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="saveBuilderEvent()" id="btn-builder-save" class="btn-primary flex-1 py-2.5 text-sm">+ Auf Zeitstrahl setzen</button>
+          <button onclick="cancelEditEvent()" id="btn-builder-cancel" class="hidden px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">Abbrechen</button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 card p-5 sm:p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="font-bold text-slate-900">Erfasste Ereignisse (<span id="builder-count">0</span>)</h3>
+            <p id="builder-save-hint" class="text-xs text-slate-500">Klicke auf ✏️ zum Bearbeiten. Speichern nicht vergessen.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="saveCurrentTopic()" id="btn-save-topic" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold hover:bg-emerald-100">💾 Speichern</button>
+            <button onclick="openSubmitModal()" class="px-3 py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold hover:bg-amber-100">📤 Abgeben</button>
+            <button onclick="downloadJsonFile()" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold hover:bg-slate-50">⬇️ Datei</button>
+            <button onclick="setMode('explore')" class="btn-primary px-4 py-2 text-xs">Zeitstrahl ansehen →</button>
+          </div>
+        </div>
+        <div id="builder-events-list" class="space-y-2 max-h-[38rem] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[70] bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg max-w-[90vw] text-center"></div>
+
+  <!-- MODAL: NEUES THEMA -->
+  <div id="new-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-slate-900">Neues Thema erstellen</h3>
+        <button onclick="closeModal('new-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div class="flex gap-1 bg-slate-100 p-1 rounded-xl text-xs sm:text-sm">
+        <button onclick="setNewTab('ai')" id="newtab-ai" class="newtab flex-1 px-2 py-1.5 rounded-lg">✨ KI direkt</button>
+        <button onclick="setNewTab('prompt')" id="newtab-prompt" class="newtab flex-1 px-2 py-1.5 rounded-lg">📋 KI-Chat</button>
+        <button onclick="setNewTab('manual')" id="newtab-manual" class="newtab flex-1 px-2 py-1.5 rounded-lg">✏️ Leer / Datei</button>
+      </div>
+
+      <!-- gemeinsame Angaben für KI -->
+      <div id="new-ai-fields" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Thema *</label>
+          <input type="text" id="gen-topic" maxlength="120" placeholder="z. B. Kalter Krieg, Römer in der Schweiz, Geschichte des Frauenstimmrechts" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Stufe</label>
+            <select id="gen-level" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+              <option value="Sekundarstufe I, Niveau A (anspruchsvoll)">Sek Niveau A</option>
+              <option value="Sekundarstufe I, Niveau B (einfachere Sprache)">Sek Niveau B</option>
+              <option value="Sekundarstufe I, Niveau C (sehr einfache Sprache, kurze Sätze)">Sek Niveau C</option>
+              <option value="Primarschule 5./6. Klasse (einfache Sprache)">Primar 5./6.</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Ereignisse</label>
+            <select id="gen-count" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+              <option value="8">8</option>
+              <option value="12" selected>12</option>
+              <option value="16">16</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Spuren</label>
+            <select id="gen-layout" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+              <option value="dual">2: Welt + Schweiz</option>
+              <option value="single">1 Spur</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Zusatzwünsche (optional)</label>
+          <input type="text" id="gen-extra" maxlength="300" placeholder="z. B. Schwerpunkt Alltag und Frauen, Bezug zum Kanton Zürich" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+      </div>
+
+      <!-- Tab: KI direkt -->
+      <div id="newpane-ai" class="newpane space-y-3">
+        <div id="gen-login-hint" class="hidden text-sm bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3">Die direkte KI-Erstellung gibt es nur für Lehrpersonen mit Anmeldung. Ohne Anmeldung geht es über «📋 KI-Chat».</div>
+        <div id="gen-key-box" class="hidden space-y-2 text-sm bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <p>In deinem Konto ist noch kein Gemini-Schlüssel hinterlegt. Füge ihn hier ein. Er wird in deinem Konto gespeichert und auch vom Sek Planer genutzt.</p>
+          <input type="password" id="gen-key-input" placeholder="Gemini-API-Schlüssel" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div id="gen-status" class="hidden text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-3"></div>
+        <div class="flex justify-end">
+          <button onclick="generateWithAI()" id="btn-generate" class="btn-primary px-5 py-2.5 text-sm">✨ Zeitstrahl erstellen</button>
+        </div>
+      </div>
+
+      <!-- Tab: KI-Chat (Prompt kopieren) -->
+      <div id="newpane-prompt" class="newpane hidden space-y-3">
+        <ol class="text-sm text-slate-600 list-decimal pl-5 space-y-1">
+          <li>Thema oben eintragen und auf <strong>«Prompt kopieren»</strong> tippen.</li>
+          <li>Den Prompt in Gemini, ChatGPT oder Claude einfügen.</li>
+          <li>Die ganze Antwort kopieren, unten einfügen und auf <strong>«Zeitstrahl erstellen»</strong> tippen.</li>
+        </ol>
+        <button onclick="copyPrompt()" class="px-4 py-2 rounded-xl border border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 text-sm font-semibold">📋 Prompt kopieren</button>
+        <textarea id="prompt-answer" rows="7" placeholder="Antwort der KI hier einfügen…" class="w-full font-mono text-xs rounded-xl border border-slate-300 p-3"></textarea>
+        <div class="flex justify-end">
+          <button onclick="importFromPromptAnswer()" class="btn-primary px-5 py-2.5 text-sm">Zeitstrahl erstellen</button>
+        </div>
+      </div>
+
+      <!-- Tab: Leer / Datei -->
+      <div id="newpane-manual" class="newpane hidden space-y-3">
+        <p class="text-sm text-slate-600">Einen leeren Zeitstrahl selbst aufbauen oder eine gespeicherte Zeitstrahl-Datei (.json) öffnen.</p>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="closeModal('new-modal'); startEmptyBuilder(); setMode('builder');" class="btn-primary px-4 py-2.5 text-sm">✏️ Leeren Zeitstrahl bauen</button>
+          <label class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium cursor-pointer hover:bg-slate-50">
+            📂 Datei öffnen (.json)
+            <input type="file" accept=".json,application/json" onchange="uploadJsonFile(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TEILEN -->
+  <div id="share-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-xl">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-slate-900">Mit der Klasse teilen</h3>
+        <button onclick="closeModal('share-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div id="share-body" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: KONTO -->
+  <div id="account-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 id="account-title" class="font-bold text-lg text-slate-900">Anmelden</h3>
+        <button onclick="closeModal('account-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+
+      <form id="login-form" onsubmit="handleTeacherLogin(event)" class="space-y-3">
+        <p class="text-sm text-slate-500">Für Lehrpersonen: eigene Themen in der Cloud speichern, mit KI erstellen, per QR-Code teilen und Abgaben einsammeln. Schülerinnen und Schüler brauchen kein Konto.</p>
+        <input type="email" id="login-email" autocomplete="username" required placeholder="E-Mail" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base" />
+        <input type="password" id="login-password" autocomplete="current-password" required placeholder="Passwort" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base" />
+        <div id="login-error" class="hidden text-sm bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3"></div>
+        <div id="login-info" class="hidden text-sm bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3"></div>
+        <button type="submit" id="login-submit" class="btn-primary w-full py-3 text-base">Anmelden</button>
+        <button type="button" onclick="handlePasswordReset()" class="text-xs text-indigo-600 hover:underline">Passwort vergessen?</button>
+      </form>
+
+      <div id="account-body" class="hidden space-y-5">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-900">Meine Themen</h4>
+            <span id="my-topics-count" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">0</span>
+          </div>
+          <div id="my-topics-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+          <div id="local-topics-box" class="hidden text-xs bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3"></div>
+        </div>
+
+        <div class="space-y-2 border-t border-slate-100 pt-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-900">📥 Abgaben einsammeln</h4>
+          </div>
+          <p class="text-xs text-slate-500">Erstelle einen Auftrag. Die Schüler bauen ihren Zeitstrahl unter «Selbst bauen» und geben ihn mit dem Code ab.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input type="text" id="task-title" maxlength="80" placeholder="Auftrag, z. B. Zeitstrahl Kalter Krieg" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+            <button onclick="createTask()" class="btn-primary px-3 py-2 text-sm">Auftrag erstellen</button>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="task-with-topic" class="accent-indigo-600" /> Aktuelles Thema als Startpunkt mitgeben (Schüler ergänzen es)</label>
+          <div id="task-list" class="space-y-2"></div>
+        </div>
+
+        <div class="flex justify-between items-center border-t border-slate-100 pt-4">
+          <span id="account-email" class="text-xs text-slate-500"></span>
+          <button onclick="logoutTeacher()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Abmelden</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ABGABEN EINES AUFTRAGS -->
+  <div id="subs-modal" class="hidden fixed inset-0 bg-slate-900/50 z-[55] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 id="subs-title" class="font-bold text-lg text-slate-900">Abgaben</h3>
+        <button onclick="closeModal('subs-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div id="subs-list" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: ABGEBEN (SCHÜLER) -->
+  <div id="submit-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-slate-900">📤 Zeitstrahl abgeben</h3>
+        <button onclick="closeModal('submit-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <input type="text" id="submit-code" maxlength="4" inputmode="numeric" placeholder="4-stelliger Code" class="w-full text-center text-2xl font-mono tracking-widest rounded-xl border border-slate-300 py-2.5" />
+      <input type="text" id="submit-name" maxlength="40" placeholder="Dein Vorname" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base" />
+      <div id="submit-info" class="hidden text-sm rounded-xl p-3 border"></div>
+      <button onclick="submitTopic()" id="btn-submit" class="btn-primary w-full py-3 text-base">Abgeben</button>
+      <p class="text-[11px] text-slate-400">Du kannst später nochmals abgeben, solange der Auftrag offen ist. Die neue Abgabe ersetzt die alte.</p>
+    </div>
+  </div>
+
+  <!-- MODAL: BILD SUCHEN -->
+  <div id="image-modal" class="hidden fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-slate-900">Bild auswählen</h3>
+        <button onclick="closeModal('image-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div class="flex gap-2">
+        <input type="text" id="image-query" placeholder="Wikipedia-Artikel oder Stichwort" onkeydown="if(event.key==='Enter')runImageSearch()" class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        <button onclick="runImageSearch()" class="btn-primary px-4 py-2 text-sm">Suchen</button>
+      </div>
+      <div id="image-status" class="text-xs text-slate-500"></div>
+      <div id="image-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+      <p class="text-[11px] text-slate-400">Bilder stammen aus Wikipedia / Wikimedia Commons. Urheber und Lizenz werden automatisch beim Bild angezeigt.</p>
+    </div>
+  </div>
+
+  <!-- BIBLIOTHEKEN (lokal im Repo) -->
+  <script src="vendor/firebase-app-compat.js"></script>
+  <script src="vendor/firebase-auth-compat.js"></script>
+  <script src="vendor/firebase-firestore-compat.js"></script>
+  <script src="vendor/qrcode.js"></script>
+
+  <script>
+    // =========================================================================
+    // 0. FIREBASE (gleiches Projekt wie Sek Planer, Zufallsgenerator, Lightning)
+    // =========================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBHHhgjAvY0D0trm2IMxauhFp-ssw9ooz4",
+      authDomain: "zufallsgenerator-209f3.firebaseapp.com",
+      projectId: "zufallsgenerator-209f3",
+      storageBucket: "zufallsgenerator-209f3.firebasestorage.app",
+      messagingSenderId: "274439019701",
+      appId: "1:274439019701:web:b90892c5745657e39972fc"
+    };
+    let auth = null, db = null, FV = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      FV = firebase.firestore.FieldValue;
+    } catch (e) { /* ohne Verbindung: App läuft lokal weiter */ }
+
+    const TOPICS_COL = 'zeitstrahlTopics';
+    const TASKS_COL = 'zeitstrahlTasks';
+
+    // =========================================================================
+    // 1. SYMBOLE, KATEGORIEN, HILFSFUNKTIONEN
+    // =========================================================================
+    const ICONS = {
+      herrschaft: '👑', staat: '🏛️', demokratie: '🗳️', recht: '⚖️', vertrag: '📜', krieg: '⚔️', militaer: '🪖',
+      frieden: '🕊️', revolution: '✊', verfolgung: '⛓️', flucht: '🧳', gesellschaft: '👥', frauen: '👩', kinder: '🧒',
+      arbeit: '🛠️', industrie: '🏭', technik: '⚙️', erfindung: '💡', verkehr: '🚂', schifffahrt: '⚓', luftfahrt: '✈️',
+      raumfahrt: '🚀', wissenschaft: '🔬', medizin: '🏥', krankheit: '🦠', wirtschaft: '💰', handel: '🤝', landwirtschaft: '🌾',
+      hunger: '🍞', religion: '⛪', kultur: '🎨', bildung: '📚', medien: '📻', sport: '🏅', entdeckung: '🧭', bau: '🏗️',
+      stadt: '🏙️', berge: '🏔️', umwelt: '🌳', katastrophe: '🔥', ende: '🏁'
+    };
+    const ICON_LABELS = {
+      herrschaft: 'Herrschaft', staat: 'Staat', demokratie: 'Demokratie/Wahl', recht: 'Recht/Gesetz', vertrag: 'Vertrag', krieg: 'Krieg',
+      militaer: 'Militär', frieden: 'Frieden', revolution: 'Revolution/Protest', verfolgung: 'Verfolgung', flucht: 'Flucht', gesellschaft: 'Gesellschaft',
+      frauen: 'Frauen', kinder: 'Kinder', arbeit: 'Arbeit', industrie: 'Industrie', technik: 'Technik', erfindung: 'Erfindung', verkehr: 'Eisenbahn/Verkehr',
+      schifffahrt: 'Schifffahrt', luftfahrt: 'Luftfahrt', raumfahrt: 'Raumfahrt', wissenschaft: 'Wissenschaft', medizin: 'Medizin', krankheit: 'Krankheit/Seuche',
+      wirtschaft: 'Wirtschaft/Geld', handel: 'Handel', landwirtschaft: 'Landwirtschaft', hunger: 'Hunger/Versorgung', religion: 'Religion', kultur: 'Kultur',
+      bildung: 'Bildung', medien: 'Medien', sport: 'Sport', entdeckung: 'Entdeckung', bau: 'Bauwerk', stadt: 'Stadt', berge: 'Alpen/Schweiz',
+      umwelt: 'Umwelt', katastrophe: 'Katastrophe', ende: 'Ende/Ergebnis'
+    };
+    const CAT_STYLES = [
+      { card: 'border-indigo-400 bg-indigo-50/95 text-indigo-950', dot: 'bg-indigo-600', chip: 'bg-indigo-100 text-indigo-800', soft: 'bg-indigo-50' },
+      { card: 'border-amber-400 bg-amber-50/95 text-amber-950', dot: 'bg-amber-500', chip: 'bg-amber-100 text-amber-800', soft: 'bg-amber-50' },
+      { card: 'border-emerald-400 bg-emerald-50/95 text-emerald-950', dot: 'bg-emerald-600', chip: 'bg-emerald-100 text-emerald-800', soft: 'bg-emerald-50' },
+      { card: 'border-rose-400 bg-rose-50/95 text-rose-950', dot: 'bg-rose-500', chip: 'bg-rose-100 text-rose-800', soft: 'bg-rose-50' }
+    ];
+    const DEFAULT_CATS = [
+      { id: 'politik', label: 'Politik & Staat' },
+      { id: 'krieg', label: 'Krieg & Konflikt' },
+      { id: 'gesellschaft', label: 'Gesellschaft & Alltag' },
+      { id: 'wirtschaft', label: 'Wirtschaft & Technik' }
+    ];
+
+    function escapeHTML(str) {
+      return String(str ?? '').replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+    }
+    function fmtYear(y) {
+      y = Number(y);
+      return y < 0 ? `${-y} v. Chr.` : String(y);
+    }
+    function fmtRange(ev) {
+      return ev.end != null && ev.end !== ev.start ? `${fmtYear(ev.start)}–${fmtYear(ev.end)}` : fmtYear(ev.start);
+    }
+    function randomId(len = 20) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      return Array.from(crypto.getRandomValues(new Uint8Array(len)), b => chars[b % chars.length]).join('');
+    }
+    function getDeviceId() {
+      let id = localStorage.getItem('zeitstrahl_device_id');
+      if (!id || !/^[A-Za-z0-9]{20,40}$/.test(id)) { id = randomId(28); localStorage.setItem('zeitstrahl_device_id', id); }
+      return id;
+    }
+    let toastTimer = null;
+    function toast(msg, ms = 3500) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('hidden'), ms);
+    }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function stripHtml(s) {
+      const d = document.createElement('div');
+      d.innerHTML = String(s || '');
+      return (d.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+    function clone(o) { return JSON.parse(JSON.stringify(o)); }
+    function catIndex(topic, catId) {
+      const i = (topic.categories || []).findIndex(c => c.id === catId);
+      return i < 0 ? 0 : i;
+    }
+    function catStyle(topic, catId) { return CAT_STYLES[catIndex(topic, catId) % CAT_STYLES.length]; }
+    function catLabel(topic, catId) {
+      const c = (topic.categories || []).find(x => x.id === catId);
+      return c ? c.label : catId;
+    }
+
+    // =========================================================================
+    // 2. STANDARD-THEMEN (geprüft, mit Schweizer Spur)
+    // =========================================================================
+    const PRESET_TOPICS = {
+      ww2: {
+        title: "Zweiter Weltkrieg & Schweiz (1933–1945)",
+        layout: "dual", trackTop: "Europa / Welt", trackBottom: "Schweiz",
+        categories: [
+          { id: 'politik', label: 'Politik & Macht' },
+          { id: 'krieg', label: 'Krieg & Militär' },
+          { id: 'gesellschaft', label: 'Gesellschaft & Verfolgung' }
+        ],
+        phases: [
+          { start: 1933, end: 1939, label: "Vorkriegszeit & NS-Diktatur" },
+          { start: 1939, end: 1941, label: "Blitzkriege" },
+          { start: 1941, end: 1943, label: "Weltkrieg & Wende" },
+          { start: 1943, end: 1945, label: "Kriegsende" }
+        ],
+        events: [
+          { id: "w2_1", start: 1933, title: "Hitler wird Reichskanzler", track: "top", cat: "politik", icon: "herrschaft", wiki: "Machtergreifung", desc: "Am 30. Januar 1933 wird Hitler Reichskanzler. Nach dem Reichstagsbrand und mit dem Ermächtigungsgesetz schaltet er die Demokratie aus. Politische Gegner werden in erste Konzentrationslager gesperrt.", question: "Wie gelang es den Nationalsozialisten, die Demokratie scheinbar legal abzuschaffen?" },
+          { id: "w2_2", start: 1935, title: "Wehrpflicht & Nürnberger Gesetze", track: "top", cat: "gesellschaft", icon: "verfolgung", wiki: "Nürnberger Gesetze", desc: "Deutschland führt entgegen dem Versailler Vertrag die Wehrpflicht wieder ein. Die Nürnberger Gesetze nehmen Jüdinnen und Juden die Bürgerrechte und verbieten Ehen mit Nichtjuden.", question: "Welche Folgen hatten die Nürnberger Gesetze für den Alltag jüdischer Familien?" },
+          { id: "w2_3", start: 1936, title: "Rheinland & Olympische Spiele", track: "top", cat: "politik", icon: "sport", wiki: "Olympische Sommerspiele 1936", desc: "Deutsche Truppen marschieren ins entmilitarisierte Rheinland ein. Bei den Olympischen Spielen in Berlin präsentiert sich das NS-Regime der Welt als friedlich.", question: "Warum nutzte Hitler die Olympischen Spiele 1936 als Propaganda-Bühne?" },
+          { id: "w2_4", start: 1938, title: "Anschluss Österreichs, Münchner Abkommen & Pogromnacht", track: "top", cat: "politik", icon: "vertrag", wiki: "Münchner Abkommen", desc: "Hitler gliedert Österreich und das Sudetenland an. In der Pogromnacht vom 9. November zerstören Nationalsozialisten Synagogen und verschleppen rund 30 000 jüdische Männer in Konzentrationslager.", question: "Warum gaben Grossbritannien und Frankreich Hitler in München nach (Appeasement-Politik)?" },
+          { id: "w2_5", start: 1939, title: "Hitler-Stalin-Pakt & Überfall auf Polen", track: "top", cat: "krieg", icon: "krieg", wiki: "Überfall auf Polen", desc: "Deutschland und die Sowjetunion schliessen einen Nichtangriffspakt. In einem geheimen Zusatzprotokoll teilen sie Osteuropa unter sich auf. Am 1. September überfällt Deutschland Polen; Grossbritannien und Frankreich erklären Deutschland den Krieg.", question: "Warum schlossen die verfeindeten Diktatoren Hitler und Stalin kurz vor Kriegsbeginn einen Pakt?" },
+          { id: "w2_6", start: 1940, title: "Westfeldzug & Luftschlacht um England", track: "top", cat: "krieg", icon: "krieg", wiki: "Westfeldzug", desc: "Deutsche Panzer stossen überraschend durch die Ardennen vor und besiegen Frankreich in rund sechs Wochen. Die Luftschlacht um England scheitert jedoch.", question: "Warum gelang der schnelle Sieg über Frankreich?" },
+          { id: "w2_7", start: 1941, title: "Angriff auf die Sowjetunion & Pearl Harbor", track: "top", cat: "krieg", icon: "krieg", wiki: "Angriff auf Pearl Harbor", desc: "Im Juni bricht Hitler den Pakt und greift die Sowjetunion an. Im Dezember greift Japan den US-Stützpunkt Pearl Harbor an – die USA treten in den Krieg ein.", question: "Warum wurde der Krieg durch die Ereignisse von 1941 zu einem echten Weltkrieg?" },
+          { id: "w2_8", start: 1942, title: "Wannseekonferenz & Holocaust", track: "top", cat: "gesellschaft", icon: "verfolgung", wiki: "Wannseekonferenz", desc: "Schon ab 1941 ermorden deutsche Einheiten in Osteuropa Hunderttausende Jüdinnen und Juden. An der Wannseekonferenz im Januar 1942 organisieren NS-Funktionäre die Ermordung aller europäischen Juden. Im Holocaust werden rund sechs Millionen Jüdinnen und Juden ermordet, viele davon in Vernichtungslagern wie Auschwitz-Birkenau.", question: "Was unterscheidet ein Vernichtungslager von einem Konzentrationslager?" },
+          { id: "w2_9", start: 1942, end: 1943, title: "Schlacht von Stalingrad", track: "top", cat: "krieg", icon: "krieg", wiki: "Schlacht von Stalingrad", desc: "Im Februar 1943 kapituliert die eingekesselte deutsche 6. Armee in Stalingrad. Von nun an ist die Wehrmacht im Osten auf dem Rückzug.", question: "Warum gilt Stalingrad als Wendepunkt des Krieges in Europa?" },
+          { id: "w2_10", start: 1944, title: "D-Day & Attentat vom 20. Juli", track: "top", cat: "krieg", icon: "militaer", wiki: "Operation Overlord", desc: "Am 6. Juni 1944 landen die Westalliierten in der Normandie. Am 20. Juli scheitert ein Bombenattentat von Offizieren um Claus von Stauffenberg auf Hitler.", question: "Welche militärische Folge hatte die zweite Front in Frankreich?" },
+          { id: "w2_11", start: 1945, title: "Kriegsende in Europa und Asien", track: "top", cat: "politik", icon: "ende", wiki: "Bedingungslose Kapitulation der Wehrmacht", desc: "Im Januar befreit die Rote Armee das Lager Auschwitz. Nach Hitlers Suizid kapituliert Deutschland am 8. Mai 1945. Nach den US-Atombomben auf Hiroshima und Nagasaki kapituliert Japan am 2. September.", question: "Welche Folgen hatte das Kriegsende 1945 für die politische Ordnung Europas?" },
+          { id: "ch2_1", start: 1938, title: "J-Stempel in jüdischen Pässen", track: "bottom", cat: "gesellschaft", icon: "verfolgung", wiki: "Judenstempel", desc: "Auf Drängen der Schweizer Behörden kennzeichnet Deutschland die Pässe deutscher Jüdinnen und Juden mit einem «J». So kann die Schweiz jüdische Flüchtlinge an der Grenze leichter erkennen und abweisen.", question: "Warum wird der J-Stempel heute als dunkles Kapitel der Schweizer Geschichte gesehen?" },
+          { id: "ch2_2", start: 1939, title: "Landi 39 – «Geistige Landesverteidigung»", track: "bottom", cat: "politik", icon: "kultur", wiki: "Landesausstellung 1939", desc: "Die Landesausstellung in Zürich zeigt die Schweiz als vielfältiges, freies Land. Sie soll den Zusammenhalt gegen die Diktaturen in den Nachbarländern stärken.", question: "Warum war es 1939 wichtig, den Zusammenhalt der Schweiz zu betonen?" },
+          { id: "ch2_3", start: 1939, title: "Generalmobilmachung & General Guisan", track: "bottom", cat: "krieg", icon: "militaer", wiki: "Henri Guisan", desc: "Ende August 1939 wählt die Bundesversammlung Henri Guisan zum General. Kurz darauf rückt die Armee zum Aktivdienst ein und bewacht die Grenzen.", question: "Welche Probleme entstanden für Familien und Betriebe, wenn so viele Männer im Aktivdienst waren?" },
+          { id: "ch2_4", start: 1940, title: "Rütlirapport & Réduit", track: "bottom", cat: "krieg", icon: "berge", wiki: "Rütlirapport", desc: "Im Juli 1940 versammelt General Guisan die höheren Offiziere auf dem Rütli. Die Armee soll sich im Fall eines Angriffs in die Alpenfestung (Réduit) zurückziehen und dort Widerstand leisten.", question: "Welche Vor- und Nachteile hatte die Réduit-Strategie für die Bevölkerung im Mittelland?" },
+          { id: "ch2_5", start: 1940, end: 1945, title: "Anbauschlacht (Plan Wahlen)", track: "bottom", cat: "gesellschaft", icon: "landwirtschaft", wiki: "Anbauschlacht", desc: "Damit die Schweiz sich selbst ernähren kann, werden überall Kartoffeln und Getreide angepflanzt, sogar in Stadtparks. Viele Lebensmittel sind rationiert.", question: "Warum war die Lebensmittelversorgung für die Schweiz im Krieg so schwierig?" },
+          { id: "ch2_6", start: 1942, title: "Grenzschliessung für Flüchtlinge", track: "bottom", cat: "gesellschaft", icon: "flucht", wiki: "Flüchtlingspolitik der Schweiz zur Zeit des Nationalsozialismus", desc: "Im August 1942 schliesst die Schweiz die Grenze für viele Flüchtlinge: Wer nur «aus Rassegründen» verfolgt wird, gilt nicht als politischer Flüchtling. Tausende jüdische Flüchtlinge werden abgewiesen.", question: "Welche Verantwortung hatte die Schweiz gegenüber Menschen, die vor der Verfolgung flohen?" }
+        ]
+      },
+      ind: {
+        title: "Industrialisierung & Schweiz (1769–1882)",
+        layout: "dual", trackTop: "Welt / Europa", trackBottom: "Schweiz",
+        categories: [
+          { id: 'technik', label: 'Technik & Verkehr' },
+          { id: 'politik', label: 'Politik & Staat' },
+          { id: 'gesellschaft', label: 'Arbeit & Gesellschaft' }
+        ],
+        events: [
+          { id: "i1", start: 1769, title: "Watts Dampfmaschine", track: "top", cat: "technik", icon: "erfindung", wiki: "James Watt", desc: "James Watt erhält ein Patent auf seine verbesserte Dampfmaschine. Fabriken sind dadurch nach und nach nicht mehr auf Wasserkraft an Flüssen angewiesen.", question: "Warum konnten Fabriken dank der Dampfmaschine auch in Städten gebaut werden?" },
+          { id: "i2", start: 1789, title: "Französische Revolution", track: "top", cat: "politik", icon: "revolution", wiki: "Französische Revolution", desc: "Die Bevölkerung in Frankreich stürzt die absolute Monarchie. Menschenrechte, Freiheit und Gleichheit werden gefordert.", question: "Welche Auswirkungen hatten diese neuen Ideen auf die alten Herrschaftsverhältnisse in der Schweiz?" },
+          { id: "i3", start: 1801, title: "Erste Spinnmaschinen in der Schweiz", track: "bottom", cat: "technik", icon: "industrie", wiki: "Spinnerei im Hard", desc: "1801 werden in St. Gallen erstmals in der Schweiz Spinnmaschinen eingesetzt. Bei Winterthur entsteht die Spinnerei im Hard, die erste Schweizer Fabrik mit Maschinen, die von Wasserkraft angetrieben werden.", question: "Warum eignete sich die Ostschweiz besonders gut für die Textilindustrie?" },
+          { id: "i4", start: 1825, title: "Erste öffentliche Eisenbahn in England", track: "top", cat: "technik", icon: "verkehr", wiki: "Stockton and Darlington Railway", desc: "Zwischen Stockton und Darlington fährt die erste öffentliche Eisenbahn mit Dampflokomotive.", question: "Wie veränderte die Eisenbahn den Handel zwischen weit entfernten Regionen?" },
+          { id: "i5", start: 1847, title: "Spanisch-Brötli-Bahn (Zürich–Baden)", track: "bottom", cat: "technik", icon: "verkehr", wiki: "Spanisch-Brötli-Bahn", desc: "Die erste Eisenbahnlinie, die ganz auf Schweizer Boden liegt, wird eröffnet.", question: "Warum hinkte die Schweiz beim Eisenbahnbau England rund 20 Jahre hinterher?" },
+          { id: "i6", start: 1848, title: "Gründung des Bundesstaates", track: "bottom", cat: "politik", icon: "staat", wiki: "Bundesstaat (Schweiz)", desc: "Die Schweiz wird ein Bundesstaat mit moderner Verfassung. Der Bund übernimmt Zölle, Post und Münzwesen: Die Binnenzölle fallen weg, und ab 1850 gilt der Franken als einheitliche Währung.", question: "Warum waren einheitliche Zölle und eine gemeinsame Währung für die Schweizer Wirtschaft wichtig?" },
+          { id: "i7", start: 1872, end: 1882, title: "Bau des Gotthardtunnels", track: "bottom", cat: "technik", icon: "bau", wiki: "Gotthardtunnel", desc: "In zehn Jahren entsteht der rund 15 km lange Eisenbahntunnel durch die Alpen. Beim Bau sterben viele Arbeiter, die meisten aus Italien.", question: "Welche Bedeutung hatte die Gotthardbahn für die Schweiz als Transitland?" },
+          { id: "i8", start: 1877, title: "Eidgenössisches Fabrikgesetz", track: "bottom", cat: "gesellschaft", icon: "recht", wiki: "Fabrikgesetz (Schweiz)", desc: "Das Gesetz begrenzt die Arbeit in Fabriken auf 11 Stunden pro Tag und verbietet Fabrikarbeit für Kinder unter 14 Jahren.", question: "Warum wehrten sich viele Fabrikbesitzer zuerst gegen das Verbot der Kinderarbeit?" }
+        ]
+      },
+      ww1: {
+        title: "Erster Weltkrieg & Schweiz (1914–1918)",
+        layout: "dual", trackTop: "Europa / Welt", trackBottom: "Schweiz",
+        categories: [
+          { id: 'politik', label: 'Politik' },
+          { id: 'krieg', label: 'Krieg & Militär' },
+          { id: 'gesellschaft', label: 'Gesellschaft & Alltag' }
+        ],
+        events: [
+          { id: "w1", start: 1914, title: "Attentat von Sarajevo & Kriegsausbruch", track: "top", cat: "politik", icon: "krieg", wiki: "Attentat von Sarajevo", desc: "Nach der Ermordung des österreichischen Thronfolgers im Juni lösen die Bündnisse Ende Juli und Anfang August den Ersten Weltkrieg aus.", question: "Wie konnte aus einem Attentat innerhalb weniger Wochen ein Weltkrieg entstehen?" },
+          { id: "w2", start: 1914, title: "Mobilmachung der Schweizer Armee", track: "bottom", cat: "krieg", icon: "militaer", wiki: "Ulrich Wille", desc: "Die Schweiz erklärt ihre Neutralität, und die Bundesversammlung wählt Ulrich Wille zum General. Rund 220 000 Soldaten bewachen die Grenzen.", question: "Welche Probleme entstanden für Familien, wenn die Väter monatelang an der Grenze standen?" },
+          { id: "w2b", start: 1914, end: 1918, title: "Graben zwischen Deutsch- und Westschweiz", track: "bottom", cat: "gesellschaft", icon: "gesellschaft", wiki: "Schweiz im Ersten Weltkrieg", desc: "Viele Deutschschweizer halten zu Deutschland, viele Westschweizer zu Frankreich. Der Streit darüber belastet den Zusammenhalt des Landes.", question: "Warum ist es für ein mehrsprachiges Land schwierig, neutral zu bleiben?" },
+          { id: "w3", start: 1914, end: 1918, title: "Stellungskrieg & neue Waffen", track: "top", cat: "krieg", icon: "krieg", wiki: "Stellungskrieg", desc: "Ab Herbst 1914 erstarren die Fronten im Westen in Schützengräben. Maschinengewehre, Giftgas und später Panzer fordern Millionen Opfer.", question: "Warum unterschied sich dieser Krieg technisch stark von früheren Kriegen?" },
+          { id: "w4", start: 1917, title: "Kriegseintritt der USA & Russische Revolution", track: "top", cat: "politik", icon: "revolution", wiki: "Russische Revolution 1917", desc: "Im April treten die USA auf Seiten der Alliierten in den Krieg ein. In Russland stürzt die Revolution den Zaren; die neue Regierung der Bolschewiki schliesst 1918 Frieden mit Deutschland.", question: "Warum veränderte der Eintritt der USA das Kräfteverhältnis in Europa?" },
+          { id: "w4b", start: 1917, title: "Rationierung von Lebensmitteln", track: "bottom", cat: "gesellschaft", icon: "hunger", wiki: "Rationierung", desc: "Weil Importe fehlen, werden Lebensmittel wie Zucker und Brot rationiert. Die Preise steigen stark, viele Arbeiterfamilien leiden Hunger.", question: "Warum traf die Teuerung Arbeiterfamilien besonders hart?" },
+          { id: "w5", start: 1918, title: "Spanische Grippe", track: "bottom", cat: "gesellschaft", icon: "krankheit", wiki: "Spanische Grippe", desc: "Eine weltweite Grippewelle erreicht die Schweiz. Rund 25 000 Menschen sterben, darunter viele junge Erwachsene und Soldaten.", question: "Warum verbreitete sich die Grippe unter Soldaten besonders schnell?" },
+          { id: "w6", start: 1918, title: "Landesstreik", track: "bottom", cat: "gesellschaft", icon: "revolution", wiki: "Landesstreik", desc: "Wegen Hunger und Armut streiken im November rund 250 000 Arbeiterinnen und Arbeiter. Der Bundesrat setzt die Armee ein, nach drei Tagen wird der Streik abgebrochen.", question: "Welche Forderungen des Landesstreiks wurden später in der Schweiz umgesetzt?" },
+          { id: "w7", start: 1918, title: "Waffenstillstand (11. November)", track: "top", cat: "politik", icon: "frieden", wiki: "Waffenstillstand von Compiègne (1918)", desc: "Deutschland unterzeichnet den Waffenstillstand, die Kämpfe enden. Das Deutsche Kaiserreich, Österreich-Ungarn, Russland und das Osmanische Reich sind zerfallen oder zerfallen kurz darauf.", question: "Wie veränderte sich die Landkarte Europas nach dem Kriegsende?" }
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 3. THEMEN NORMALISIEREN (für KI-Antworten, Dateien, alte Daten)
+    // =========================================================================
+    function toInt(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Math.round(Number(String(v).replace(/[^\d.\-−]/g, '').replace('−', '-')));
+      return Number.isFinite(n) ? n : null;
+    }
+    function normalizeImage(img) {
+      if (!img) return null;
+      if (typeof img === 'string') return /^(https:|data:image\/)/.test(img) ? { url: img } : null;
+      if (typeof img === 'object' && typeof img.url === 'string' && /^(https:|data:image\/)/.test(img.url)) {
+        return {
+          url: img.url,
+          file: String(img.file || '').slice(0, 200),
+          artist: String(img.artist || '').slice(0, 200),
+          license: String(img.license || '').slice(0, 60),
+          source: /^https:/.test(img.source || '') ? String(img.source) : ''
+        };
+      }
+      return null;
+    }
+    function normalizeTopic(raw) {
+      if (!raw || typeof raw !== 'object') throw new Error('Kein gültiger Datensatz');
+      const t = {};
+      t.title = String(raw.title || 'Eigener Zeitstrahl').slice(0, 80);
+      t.layout = raw.layout === 'single' ? 'single' : 'dual';
+      t.trackTop = String(raw.trackTop || 'Welt / Europa').slice(0, 40);
+      t.trackBottom = String(raw.trackBottom || 'Schweiz').slice(0, 40);
+      let cats = Array.isArray(raw.categories) ? raw.categories : [];
+      cats = cats.map((c, i) => typeof c === 'string' ? { id: 'k' + i, label: c } : { id: String(c.id || 'k' + i).replace(/[^a-z0-9_]/gi, '').slice(0, 24) || 'k' + i, label: String(c.label || c.name || c.id || 'Kategorie').slice(0, 40) })
+        .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i).slice(0, 4);
+      // Alte Kategorien aus den Ereignissen übernehmen, falls keine definiert sind
+      const evCats = [...new Set((raw.events || []).map(e => e && e.cat).filter(Boolean))];
+      if (cats.length === 0) {
+        const LEGACY = { politik: 'Politik & Macht', technik: 'Krieg & Technik', gesellschaft: 'Gesellschaft', krieg: 'Krieg & Konflikt', wirtschaft: 'Wirtschaft & Technik' };
+        cats = evCats.slice(0, 4).map(id => ({ id: String(id).replace(/[^a-z0-9_]/gi, '').slice(0, 24) || 'k', label: LEGACY[id] || String(id) }));
+        if (cats.length === 0) cats = DEFAULT_CATS.slice(0, 3);
+      }
+      t.categories = cats.slice(0, 4);
+      t.phases = (Array.isArray(raw.phases) ? raw.phases : []).map(p => ({ start: toInt(p.start), end: toInt(p.end), label: String(p.label || '').slice(0, 50) }))
+        .filter(p => p.start !== null && p.end !== null && p.end > p.start).slice(0, 8);
+      const events = (Array.isArray(raw.events) ? raw.events : []).map((e, i) => {
+        if (!e || typeof e !== 'object') return null;
+        const start = toInt(e.start ?? e.year ?? e.jahr);
+        if (start === null || !e.title) return null;
+        let end = toInt(e.end);
+        if (end !== null && end <= start) end = null;
+        const cat = t.categories.find(c => c.id === e.cat) ? e.cat : t.categories[0].id;
+        const icon = ICONS[e.icon] ? e.icon : '';
+        return {
+          id: /^[A-Za-z0-9_\-]{1,40}$/.test(String(e.id || '')) ? String(e.id) : 'e' + i + randomId(6),
+          start, end,
+          title: String(e.title).slice(0, 90),
+          track: e.track === 'bottom' && t.layout === 'dual' ? 'bottom' : 'top',
+          cat, icon,
+          wiki: String(e.wiki || '').slice(0, 120),
+          image: normalizeImage(e.image),
+          desc: String(e.desc || e.description || '').slice(0, 600),
+          question: String(e.question || '').slice(0, 200)
+        };
+      }).filter(Boolean).slice(0, 60);
+      // doppelte IDs vermeiden
+      const seen = new Set();
+      events.forEach(e => { while (seen.has(e.id)) e.id = 'e' + randomId(8); seen.add(e.id); });
+      t.events = events;
+      t.aiGenerated = !!raw.aiGenerated;
+      t.reviewed = t.aiGenerated ? raw.reviewed === true : true;
+      return t;
+    }
+
+    // =========================================================================
+    // 4. APP-ZUSTAND
+    // =========================================================================
+    const params = new URLSearchParams(location.search);
+    let currentUser = null;
+    let myTopics = {};               // Cloud-Themen der Lehrperson
+    let myTopicsUnsub = null;
+    let myTasks = [];
+    let myTasksUnsub = null;
+    let localTopics = loadLocalTopics();
+    let sharedTopic = null;          // per Link geöffnetes Thema (?t=)
+    let activeTopic = normalizeTopic(PRESET_TOPICS.ww2);
+    let activeRef = { kind: 'preset', id: 'ww2' };   // preset | cloud | local | shared | submission | draft
+    let dirty = false;
+    let currentMode = 'explore';
+    let currentFilter = 'all';
+    let zoomLevel = 1.1;
+    let selectedEventId = null;
+    let editingEventId = null;
+    let builderImage = null;
+    let presentationMode = false;
+    let guessQueue = [], guessIndex = 0, guessScore = 0, guessRange = { min: 0, max: 0, span: 1 };
+    let sortCurrentList = [];
+    let deviceId = getDeviceId();
+
+    function loadLocalTopics() {
+      try { return JSON.parse(localStorage.getItem('zeitstrahl_local_topics') || localStorage.getItem('zeitstrahl_custom_topics') || '{}') || {}; }
+      catch (e) { return {}; }
+    }
+    function persistLocalTopics() {
+      try {
+        localStorage.setItem('zeitstrahl_local_topics', JSON.stringify(localTopics));
+        localStorage.removeItem('zeitstrahl_custom_topics');
+        return true;
+      } catch (e) {
+        toast('Speicher auf diesem Gerät ist voll (zu viele eigene Fotos). Bitte als Datei sichern oder Fotos entfernen.', 6000);
+        return false;
+      }
+    }
+    const isTeacher = () => !!currentUser && !currentUser.isAnonymous;
+    const canEditActive = () => activeRef.kind !== 'shared' && activeRef.kind !== 'submission';
+
+    // =========================================================================
+    // 5. START & ROUTING
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', async () => {
+      populateIconSelect();
+      renderTopicDropdown();
+      setNewTab('ai');
+
+      const sharedId = params.get('t');
+      const presetKey = params.get('topic');
+      const taskCode = params.get('abgabe');
+
+      if (sharedId) await openSharedTopic(sharedId);
+      else if (presetKey && (PRESET_TOPICS[presetKey] || localTopics[presetKey])) selectTopic(presetKey);
+      else selectTopic('preset:ww2');
+
+      if (taskCode && /^\d{4}$/.test(taskCode)) {
+        document.getElementById('submit-code').value = taskCode;
+        await prepareTaskStart(taskCode);
+      } else {
+        setMode('explore');
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (currentMode !== 'explore') return;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+        if (document.querySelector('.fixed.inset-0:not(.hidden)')) return;
+        if (e.key === 'ArrowRight') stepEvent(1);
+        if (e.key === 'ArrowLeft') stepEvent(-1);
+        if (e.key === 'Escape' && presentationMode) togglePresentationMode();
+      });
+      window.addEventListener('resize', () => { if (currentMode === 'explore') renderTimeline(); });
+
+      if (auth) auth.onAuthStateChanged(onAuthChanged);
+    });
+
+    function onAuthChanged(user) {
+      currentUser = user;
+      if (myTopicsUnsub) { myTopicsUnsub(); myTopicsUnsub = null; }
+      if (myTasksUnsub) { myTasksUnsub(); myTasksUnsub = null; }
+      myTopics = {};
+      myTasks = [];
+      if (isTeacher()) {
+        myTopicsUnsub = db.collection(TOPICS_COL).where('ownerUid', '==', user.uid).onSnapshot(snap => {
+          myTopics = {};
+          snap.forEach(d => { myTopics[d.id] = d.data(); });
+          renderTopicDropdown();
+          renderAccountModal();
+        }, () => toast('Eigene Themen konnten nicht geladen werden.'));
+        myTasksUnsub = db.collection(TASKS_COL).where('ownerUid', '==', user.uid).onSnapshot(snap => {
+          myTasks = snap.docs.map(d => ({ code: d.id, ...d.data() }));
+          myTasks.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+          renderAccountModal();
+        }, () => {});
+      }
+      document.getElementById('btn-account').textContent = isTeacher() ? '👤 Konto' : '👤 Anmelden';
+      renderTopicDropdown();
+      renderAccountModal();
+      renderBanner();
+      updateBuilderHint();
+    }
+
+    function tsMs(t) { return !t ? 0 : typeof t === 'number' ? t : (typeof t.toMillis === 'function' ? t.toMillis() : 0); }
+
+    // =========================================================================
+    // 6. THEMEN-AUSWAHL
+    // =========================================================================
+    function renderTopicDropdown() {
+      const sel = document.getElementById('topic-select');
+      let html = '<optgroup label="Standard-Themen">' +
+        Object.entries(PRESET_TOPICS).map(([k, t]) => `<option value="preset:${k}">${escapeHTML(t.title)}</option>`).join('') + '</optgroup>';
+      const cloud = Object.entries(myTopics).sort((a, b) => (a[1].title || '').localeCompare(b[1].title || '', 'de'));
+      if (cloud.length) html += '<optgroup label="Meine Themen (Cloud)">' + cloud.map(([id, t]) => `<option value="cloud:${id}">${escapeHTML(t.title)}${t.aiGenerated && !t.reviewed ? ' (ungeprüft)' : ''}</option>`).join('') + '</optgroup>';
+      const local = Object.entries(localTopics);
+      if (local.length) html += '<optgroup label="Auf diesem Gerät">' + local.map(([id, t]) => `<option value="local:${id}">${escapeHTML(t.title)}</option>`).join('') + '</optgroup>';
+      if (sharedTopic) html += `<optgroup label="Geteilt"><option value="shared:${escapeHTML(sharedTopic.id)}">${escapeHTML(sharedTopic.topic.title)}</option></optgroup>`;
+      if (activeRef.kind === 'draft' || activeRef.kind === 'submission') html += `<optgroup label="Aktuell"><option value="current">${escapeHTML(activeTopic.title)}${dirty ? ' •' : ''}</option></optgroup>`;
+      sel.innerHTML = html;
+      sel.value = refKey();
+    }
+    function refKey() {
+      if (activeRef.kind === 'draft' || activeRef.kind === 'submission') return 'current';
+      return `${activeRef.kind}:${activeRef.id}`;
+    }
+
+    function selectTopic(key) {
+      if (key === 'current') return;
+      if (dirty && !confirm('Ungespeicherte Änderungen am aktuellen Zeitstrahl gehen verloren. Trotzdem wechseln?')) {
+        document.getElementById('topic-select').value = refKey();
+        return;
+      }
+      const [kind, ...rest] = String(key).includes(':') ? key.split(':') : ['preset', key];
+      const id = rest.join(':');
+      let source = null;
+      if (kind === 'preset') source = PRESET_TOPICS[id];
+      else if (kind === 'cloud') source = myTopics[id];
+      else if (kind === 'local') source = localTopics[id];
+      else if (kind === 'shared' && sharedTopic && sharedTopic.id === id) source = sharedTopic.topic;
+      if (!source) return;
+      setActiveTopic(normalizeTopic(clone(source)), { kind, id });
+    }
+
+    function setActiveTopic(topic, ref) {
+      activeTopic = topic;
+      activeRef = ref;
+      dirty = false;
+      currentFilter = 'all';
+      selectedEventId = null;
+      cancelEditEvent();
+      document.getElementById('builder-topic-title').value = activeTopic.title;
+      document.getElementById('builder-layout').value = activeTopic.layout;
+      document.getElementById('builder-track-top').value = activeTopic.trackTop;
+      document.getElementById('builder-track-bottom').value = activeTopic.trackBottom;
+      document.getElementById('builder-track-names').classList.toggle('hidden', activeTopic.layout !== 'dual');
+      populateCatSelect();
+      renderFilterBar();
+      renderTopicDropdown();
+      renderBanner();
+      updateBuilderHint();
+      resetZoom();
+      const sorted = sortedEvents();
+      if (sorted.length) showDetail(sorted[0].id, false); else clearDetail();
+      renderBuilderList();
+      if (currentMode === 'guess') initGuessChallenge();
+      if (currentMode === 'sort') initSortGame();
+      // Bilder automatisch nachladen (nur Ereignisse mit Wikipedia-Artikel)
+      loadImagesForTopic(false);
+    }
+
+    function markDirty() {
+      if (activeRef.kind === 'shared' || activeRef.kind === 'submission' || activeRef.kind === 'preset') {
+        // Änderungen an Standard-Themen, geteilten Themen oder Abgaben werden zu einer eigenen Kopie
+        if (activeRef.kind !== 'preset') toast('Du bearbeitest jetzt eine eigene Kopie.');
+        activeRef = { kind: 'draft', id: '' };
+      }
+      dirty = true;
+      renderTopicDropdown();
+      updateBuilderHint();
+    }
+
+    function renderBanner() {
+      const box = document.getElementById('topic-banner');
+      const text = document.getElementById('topic-banner-text');
+      const actions = document.getElementById('topic-banner-actions');
+      let html = '', act = '', style = '';
+      if (activeRef.kind === 'cloud' && activeTopic.aiGenerated && !activeTopic.reviewed) {
+        style = 'bg-amber-50 border-amber-200 text-amber-900';
+        html = '<strong>KI-generiert, noch nicht geprüft:</strong> Bitte Jahreszahlen, Texte und Bilder kontrollieren, bevor du das Thema mit der Klasse teilst.';
+        act = '<button onclick="markReviewed()" class="px-3 py-1 rounded-lg bg-amber-600 text-white font-semibold">✓ Als geprüft markieren</button>';
+      } else if (activeRef.kind === 'draft' && activeTopic.aiGenerated && !activeTopic.reviewed) {
+        style = 'bg-amber-50 border-amber-200 text-amber-900';
+        html = '<strong>KI-generiert:</strong> Bitte Jahreszahlen und Texte prüfen. Unter «Selbst bauen» kannst du alles korrigieren und speichern.';
+      } else if (activeRef.kind === 'submission') {
+        style = 'bg-sky-50 border-sky-200 text-sky-900';
+        html = `<strong>Abgabe von ${escapeHTML(activeTopic._submittedBy || '')}</strong> – nur Ansicht.`;
+        act = '<button onclick="saveSubmissionAsTopic()" class="px-3 py-1 rounded-lg bg-sky-600 text-white font-semibold">In meine Themen übernehmen</button>';
+      } else if (activeRef.kind === 'shared') {
+        style = 'bg-indigo-50 border-indigo-200 text-indigo-900';
+        html = 'Geteiltes Thema deiner Lehrperson. Unter «Selbst bauen» kannst du eine eigene Kopie bearbeiten.';
+      } else if (activeTask) {
+        style = 'bg-emerald-50 border-emerald-200 text-emerald-900';
+        html = `<strong>Auftrag ${escapeHTML(activeTask.code)}:</strong> ${escapeHTML(activeTask.title || '')} – baue deinen Zeitstrahl und tippe dann auf «📤 Abgeben».`;
+      }
+      box.className = html ? `px-4 py-2.5 text-xs sm:text-sm border-b ${style}` : 'hidden';
+      text.innerHTML = html;
+      actions.innerHTML = act;
+    }
+
+    function updateBuilderHint() {
+      const hint = document.getElementById('builder-save-hint');
+      if (!hint) return;
+      const where = isTeacher() ? 'in deinen Themen (Cloud)' : 'auf diesem Gerät';
+      hint.textContent = dirty ? `Ungespeicherte Änderungen – «💾 Speichern» sichert ${where}.` : `Klicke auf ✏️ zum Bearbeiten. «💾 Speichern» sichert ${where}.`;
+      hint.className = dirty ? 'text-xs text-amber-700 font-semibold' : 'text-xs text-slate-500';
+    }
+
+    // =========================================================================
+    // 7. NAVIGATION
+    // =========================================================================
+    function setMode(mode) {
+      currentMode = mode;
+      ['explore', 'guess', 'sort', 'builder'].forEach(m => {
+        document.getElementById('view-' + m).classList.toggle('hidden', m !== mode);
+        const btn = document.getElementById('tab-' + m);
+        btn.classList.toggle('tab-active', m === mode);
+      });
+      if (mode === 'explore') renderTimeline();
+      if (mode === 'guess') initGuessChallenge();
+      if (mode === 'sort') initSortGame();
+      if (mode === 'builder') renderBuilderList();
+    }
+
+    function sortedEvents(list) {
+      return [...(list || activeTopic.events || [])].sort((a, b) => a.start - b.start || (a.end || a.start) - (b.end || b.start));
+    }
+
+    // =========================================================================
+    // 8. ZEITSTRAHL ZEICHNEN
+    // =========================================================================
+    function renderFilterBar() {
+      const bar = document.getElementById('filter-bar');
+      bar.innerHTML = '<span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1">Filter:</span>' +
+        `<button onclick="setCategoryFilter('all')" class="cat-btn ${currentFilter === 'all' ? 'pill-active' : ''} text-xs px-3 py-1.5 rounded-full border border-slate-200">Alle</button>` +
+        activeTopic.categories.map((c, i) => `<button onclick="setCategoryFilter('${c.id}')" class="cat-btn ${currentFilter === c.id ? 'pill-active' : ''} text-xs px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CAT_STYLES[i % 4].dot}"></span>${escapeHTML(c.label)}</button>`).join('');
+    }
+    function setCategoryFilter(cat) {
+      currentFilter = cat;
+      renderFilterBar();
+      renderTimeline();
+    }
+    function changeZoom(delta) {
+      zoomLevel = Math.min(4, Math.max(0.6, +(zoomLevel + delta).toFixed(1)));
+      document.getElementById('zoom-label').textContent = Math.round(zoomLevel * 100) + '%';
+      renderTimeline();
+    }
+    function resetZoom() {
+      zoomLevel = 1.1;
+      document.getElementById('zoom-label').textContent = '110%';
+      renderTimeline();
+    }
+    function togglePresentationMode() {
+      presentationMode = !presentationMode;
+      document.getElementById('main-header').classList.toggle('hidden', presentationMode);
+      document.getElementById('explore-toolbar').classList.toggle('hidden', presentationMode);
+      document.getElementById('btn-exit-present').classList.toggle('hidden', !presentationMode);
+      if (presentationMode) document.getElementById('topic-banner').classList.add('hidden'); else renderBanner();
+      renderTimeline();
+    }
+    function stepEvent(dir) {
+      const events = sortedEvents().filter(e => currentFilter === 'all' || e.cat === currentFilter);
+      if (events.length === 0) return;
+      const idx = events.findIndex(e => e.id === selectedEventId);
+      const nextIdx = idx === -1 ? 0 : Math.min(events.length - 1, Math.max(0, idx + dir));
+      showDetail(events[nextIdx].id, true);
+    }
+
+    function renderTimeline() {
+      const canvas = document.getElementById('timeline-canvas');
+      const isSingle = activeTopic.layout === 'single';
+      const legendBox = document.getElementById('track-legend-box');
+      legendBox.innerHTML = isSingle
+        ? `<strong class="text-slate-800">${escapeHTML(activeTopic.title)}</strong>`
+        : `<span>Oben: <strong class="text-slate-800">${escapeHTML(activeTopic.trackTop)}</strong></span><span>•</span><span>Unten: <strong class="text-slate-800">${escapeHTML(activeTopic.trackBottom)}</strong></span>`;
+
+      const events = (activeTopic.events || []).filter(e => currentFilter === 'all' || e.cat === currentFilter);
+      if (events.length === 0) {
+        canvas.style.width = '100%';
+        canvas.innerHTML = '<div class="flex items-center justify-center h-96 text-sm text-slate-400">Noch keine Ereignisse. Unter «✏️ Selbst bauen» kannst du welche erfassen.</div>';
+        return;
+      }
+
+      const years = events.flatMap(e => [Number(e.start), Number(e.end ?? e.start)]);
+      const rawMin = Math.min(...years), rawMax = Math.max(...years);
+      const span = Math.max(8, rawMax - rawMin);
+      const padYears = Math.max(1, Math.round(span * 0.06));
+      const minYear = rawMin - padYears, maxYear = rawMax + padYears;
+      const totalYears = maxYear - minYear;
+
+      const vpWidth = document.getElementById('timeline-viewport').clientWidth || 1000;
+      const baseWidth = Math.max(1050, vpWidth, events.length * 115);
+      const totalWidth = Math.round(baseWidth * zoomLevel);
+      canvas.style.width = totalWidth + 'px';
+      const yearToX = (y) => ((y - minYear) / totalYears) * (totalWidth - 180) + 90;
+
+      const phaseColors = ['rgba(99,102,241,0.06)', 'rgba(245,158,11,0.07)', 'rgba(239,68,68,0.06)', 'rgba(16,185,129,0.07)'];
+      const phasesHTML = (activeTopic.phases || []).map((p, i) => {
+        const x1 = Math.max(0, yearToX(p.start)), x2 = Math.min(totalWidth, yearToX(p.end));
+        if (x2 <= x1) return '';
+        return `<div style="left:${x1}px; width:${x2 - x1}px; background-color:${phaseColors[i % 4]}" class="absolute top-0 bottom-0 border-r border-slate-200/60 pointer-events-none">
+            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 pt-2 truncate">${escapeHTML(p.label)}</span></div>`;
+      }).join('');
+
+      const axisY = isSingle ? 395 : 230;
+      const tickLabelY = isSingle ? 372 : 220;
+      const pxPerYear = (totalWidth - 180) / totalYears;
+      const steps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+      const step = steps.find(s => s * pxPerYear >= 60) || 1000;
+      const firstTick = Math.ceil(minYear / step) * step;
+      let ticksHTML = '';
+      for (let y = firstTick; y <= maxYear; y += step) {
+        const x = yearToX(y);
+        ticksHTML += `<div style="left:${x}px" class="absolute top-0 bottom-0 border-l border-slate-200/80 pointer-events-none">
+            <span style="top:${tickLabelY}px" class="absolute -translate-x-1/2 bg-white border border-slate-200 text-slate-700 font-mono text-[11px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">${fmtYear(y)}</span></div>`;
+      }
+
+      const sorted = sortedEvents(events);
+      const CARD_W = 200, GAP = 8;
+      const lanesTop = isSingle ? [-1e9, -1e9, -1e9, -1e9] : [-1e9, -1e9, -1e9];
+      const lanesBottom = [-1e9, -1e9, -1e9];
+      let cardsHTML = '';
+      sorted.forEach(ev => {
+        const xStart = yearToX(ev.start);
+        const xEnd = ev.end != null ? yearToX(ev.end) : xStart;
+        const barWidth = Math.max(10, xEnd - xStart);
+        const placeTop = isSingle ? true : ev.track !== 'bottom';
+        const lanes = placeTop ? lanesTop : lanesBottom;
+        // freie Etage suchen; sonst die am längsten freie
+        let chosen = lanes.findIndex(l => xStart - l >= CARD_W + GAP);
+        if (chosen === -1) chosen = lanes.indexOf(Math.min(...lanes));
+        lanes[chosen] = xStart;
+        const cardTopPx = placeTop ? ((isSingle ? 305 : 142) - chosen * 66) : (256 + chosen * 66);
+        const lineTop = placeTop ? cardTopPx + 54 : axisY;
+        const lineHeight = placeTop ? Math.max(6, axisY - (cardTopPx + 54)) : Math.max(6, cardTopPx - axisY);
+        const st = catStyle(activeTopic, ev.cat);
+        const isSelected = ev.id === selectedEventId;
+        const ringClass = isSelected ? 'ring-2 ring-indigo-600 z-20 shadow-lg' : 'hover:shadow-md z-10';
+        const visual = ev.image && ev.image.url
+          ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-black/10 bg-white" onerror="this.outerHTML='<span class=&quot;w-10 h-10 rounded-lg bg-white/80 flex items-center justify-center text-xl shrink-0&quot;>${ICONS[ev.icon] || '•'}</span>'" />`
+          : `<span class="w-10 h-10 rounded-lg bg-white/80 border border-black/5 flex items-center justify-center text-xl shrink-0">${ICONS[ev.icon] || '📌'}</span>`;
+        cardsHTML += `
+          <div style="left:${xStart}px; top:${lineTop}px; height:${lineHeight}px" class="absolute w-0.5 bg-slate-300 pointer-events-none"></div>
+          <div style="left:${xStart}px; top:${axisY - 4}px; width:${barWidth}px" class="absolute h-2.5 -translate-x-1 rounded-full ${st.dot} shadow-sm"></div>
+          <button id="ev-btn-${ev.id}" onclick="showDetail('${ev.id}', false)" style="left:${xStart}px; top:${cardTopPx}px; width:${CARD_W}px" class="absolute -translate-x-1/2 text-left p-1.5 rounded-xl border ${st.card} ${ringClass} transition cursor-pointer flex items-center gap-2">
+            ${visual}
+            <div class="min-w-0 flex-1">
+              <div class="text-[10px] font-mono font-bold opacity-75">${fmtRange(ev)}</div>
+              <div class="text-xs font-bold leading-tight line-clamp-2 mt-0.5">${escapeHTML(ev.title)}</div>
+            </div>
+          </button>`;
+      });
+
+      canvas.innerHTML = `${phasesHTML}${ticksHTML}<div style="top:${axisY}px" class="absolute left-6 right-6 h-1 bg-slate-800 rounded-full"></div>${cardsHTML}`;
+    }
+
+    function clearDetail() {
+      selectedEventId = null;
+      document.getElementById('detail-year').textContent = '–';
+      document.getElementById('detail-track').textContent = '';
+      document.getElementById('detail-cat').textContent = '';
+      document.getElementById('detail-title').textContent = 'Noch keine Ereignisse';
+      document.getElementById('detail-desc').textContent = 'Erfasse unter «✏️ Selbst bauen» das erste Ereignis.';
+      document.getElementById('detail-question-box').classList.add('hidden');
+      document.getElementById('detail-image-box').classList.add('hidden');
+      document.getElementById('detail-icon-box').classList.add('hidden');
+      document.getElementById('detail-wiki').classList.add('hidden');
+    }
+
+    function imageCreditHTML(img) {
+      if (!img) return '';
+      if (img.url && img.url.startsWith('data:')) return 'Eigenes Bild';
+      const parts = [];
+      if (img.artist) parts.push(escapeHTML(img.artist));
+      if (img.license) parts.push(escapeHTML(img.license));
+      const label = parts.length ? 'Bild: ' + parts.join(' · ') : 'Bild: Wikimedia Commons';
+      return img.source ? `<a href="${escapeHTML(img.source)}" target="_blank" rel="noopener" class="hover:underline">${label} (Wikimedia Commons)</a>` : label;
+    }
+
+    function showDetail(id, scrollIntoView) {
+      const ev = (activeTopic.events || []).find(e => e.id === id);
+      if (!ev) return;
+      selectedEventId = id;
+      renderTimeline();
+      if (scrollIntoView) {
+        const btn = document.getElementById('ev-btn-' + id);
+        const vp = document.getElementById('timeline-viewport');
+        if (btn && vp) vp.scrollTo({ left: Math.max(0, btn.offsetLeft - vp.clientWidth / 2), behavior: 'smooth' });
+      }
+      const st = catStyle(activeTopic, ev.cat);
+      document.getElementById('detail-year').textContent = fmtRange(ev).replace('–', ' – ');
+      document.getElementById('detail-track').textContent = activeTopic.layout === 'single' ? activeTopic.title : (ev.track === 'bottom' ? activeTopic.trackBottom : activeTopic.trackTop);
+      const catEl = document.getElementById('detail-cat');
+      catEl.textContent = catLabel(activeTopic, ev.cat);
+      catEl.className = `text-xs font-semibold px-2.5 py-0.5 rounded-lg ${st.chip}`;
+      document.getElementById('detail-title').textContent = ev.title;
+      document.getElementById('detail-desc').textContent = ev.desc || 'Keine Beschreibung hinterlegt.';
+      document.getElementById('detail-question-box').classList.remove('hidden');
+      document.getElementById('detail-question').textContent = ev.question || 'Wie hängt dieses Ereignis mit den anderen Ereignissen auf dem Zeitstrahl zusammen?';
+      const wikiA = document.getElementById('detail-wiki');
+      if (ev.wiki) { wikiA.href = 'https://de.wikipedia.org/wiki/' + encodeURIComponent(ev.wiki.replace(/ /g, '_')); wikiA.classList.remove('hidden'); }
+      else wikiA.classList.add('hidden');
+
+      const imgBox = document.getElementById('detail-image-box');
+      const iconBox = document.getElementById('detail-icon-box');
+      if (ev.image && ev.image.url) {
+        const imgEl = document.getElementById('detail-img');
+        imgEl.onerror = () => { imgBox.classList.add('hidden'); showIconBox(ev); };
+        imgEl.src = ev.image.url;
+        imgEl.alt = ev.title;
+        document.getElementById('detail-img-caption').innerHTML = imageCreditHTML(ev.image);
+        imgBox.classList.remove('hidden');
+        iconBox.classList.add('hidden');
+      } else {
+        imgBox.classList.add('hidden');
+        showIconBox(ev);
+      }
+    }
+    function showIconBox(ev) {
+      const iconBox = document.getElementById('detail-icon-box');
+      iconBox.textContent = ICONS[ev.icon] || '📌';
+      iconBox.className = `w-full md:w-72 h-40 shrink-0 rounded-xl border border-slate-200 flex items-center justify-center text-7xl ${catStyle(activeTopic, ev.cat).soft}`;
+    }
+
+    // =========================================================================
+    // 9. BILDER AUS WIKIPEDIA / WIKIMEDIA COMMONS (mit Urheber & Lizenz)
+    // =========================================================================
+    const WIKI_API = 'https://de.wikipedia.org/w/api.php';
+    const BAD_FILE = /(logo|icon|symbol|flag|flagge|wappen|coat[_ ]of[_ ]arms|signature|unterschrift|commons-logo|wiktionary|disambig|edit-|question_book|ambox|locator|lagekarte|portal|stub|nuvola|crystal|pictogram|pfeil|arrow)/i;
+    let imageCache = {};
+    try { imageCache = JSON.parse(localStorage.getItem('zeitstrahl_img_cache') || '{}') || {}; } catch (e) { imageCache = {}; }
+    function saveImageCache() {
+      try { localStorage.setItem('zeitstrahl_img_cache', JSON.stringify(imageCache)); } catch (e) { imageCache = {}; }
+    }
+
+    async function wikiQuery(params) {
+      const url = WIKI_API + '?' + new URLSearchParams({ format: 'json', formatversion: '2', origin: '*', ...params }).toString();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Wikipedia nicht erreichbar');
+      return res.json();
+    }
+
+    // Urheber, Lizenz und Vorschaubild zu Dateien holen (max. 50 pro Anfrage)
+    async function fileInfos(files, width = 640) {
+      if (!files.length) return [];
+      const data = await wikiQuery({
+        action: 'query', titles: files.map(f => 'File:' + f.replace(/^(Datei|File):/i, '')).join('|'),
+        prop: 'imageinfo', iiprop: 'url|extmetadata|mime', iiurlwidth: String(width)
+      });
+      return (data.query?.pages || []).map(p => {
+        const ii = p.imageinfo && p.imageinfo[0];
+        if (!ii || !/^image\/(jpeg|png|webp)$/.test(ii.mime || '')) return null;
+        const md = ii.extmetadata || {};
+        return {
+          url: ii.thumburl || ii.url,
+          file: p.title.replace(/^(Datei|File):/i, ''),
+          artist: stripHtml(md.Artist?.value || '').slice(0, 160),
+          license: stripHtml(md.LicenseShortName?.value || '').slice(0, 60),
+          source: ii.descriptionurl || ''
+        };
+      }).filter(Boolean);
+    }
+
+    // Artikel finden: exakter Titel, sonst Suche
+    async function resolveArticle(title) {
+      const data = await wikiQuery({ action: 'query', titles: title, redirects: '1', prop: 'pageimages', piprop: 'name' });
+      const page = (data.query?.pages || [])[0];
+      if (page && !page.missing) return { title: page.title, pageimage: page.pageimage || '' };
+      const s = await wikiQuery({ action: 'query', list: 'search', srsearch: title, srlimit: '1' });
+      const hit = (s.query?.search || [])[0];
+      if (!hit) return null;
+      const d2 = await wikiQuery({ action: 'query', titles: hit.title, redirects: '1', prop: 'pageimages', piprop: 'name' });
+      const p2 = (d2.query?.pages || [])[0];
+      return p2 && !p2.missing ? { title: p2.title, pageimage: p2.pageimage || '' } : null;
+    }
+
+    // Hauptbild eines Artikels (Fallback: erstes brauchbares Bild im Artikel)
+    async function mainImageForArticle(title) {
+      const key = title.toLowerCase();
+      if (imageCache[key] !== undefined) return imageCache[key];
+      let result = null;
+      const art = await resolveArticle(title);
+      if (art) {
+        if (art.pageimage && !BAD_FILE.test(art.pageimage)) {
+          const infos = await fileInfos([art.pageimage]);
+          result = infos[0] || null;
+        }
+        if (!result) {
+          const imgs = await articleImageFiles(art.title, 8);
+          const infos = await fileInfos(imgs.slice(0, 5));
+          result = infos[0] || null;
+        }
+      }
+      imageCache[key] = result;
+      saveImageCache();
+      return result;
+    }
+
+    async function articleImageFiles(title, limit = 30) {
+      const data = await wikiQuery({ action: 'query', titles: title, redirects: '1', prop: 'images', imlimit: '50' });
+      const page = (data.query?.pages || [])[0];
+      return (page?.images || []).map(i => i.title.replace(/^(Datei|File):/i, ''))
+        .filter(f => /\.(jpe?g|png|webp)$/i.test(f) && !BAD_FILE.test(f)).slice(0, limit);
+    }
+
+    let imageLoadRunning = false;
+    async function loadImagesForTopic(manual) {
+      if (imageLoadRunning) return;
+      const topic = activeTopic;
+      const missing = (topic.events || []).filter(e => !e.image && (e.wiki || manual) && !e._noImage);
+      if (missing.length === 0) { if (manual) toast('Alle Ereignisse haben bereits ein Bild.'); return; }
+      imageLoadRunning = true;
+      const btn = document.getElementById('btn-auto-images');
+      let done = 0, found = 0;
+      const update = () => { btn.textContent = `⏳ Bilder (${done}/${missing.length})`; };
+      update();
+      const queue = [...missing];
+      const worker = async () => {
+        while (queue.length) {
+          const ev = queue.shift();
+          try {
+            const img = await mainImageForArticle(ev.wiki || ev.title);
+            if (img && activeTopic === topic && !ev.image) { ev.image = img; found++; }
+            else if (!img) ev._noImage = true;
+          } catch (e) { /* offline */ }
+          done++;
+          update();
+        }
+      };
+      await Promise.all([worker(), worker(), worker()]);
+      imageLoadRunning = false;
+      btn.textContent = '🖼️ Bilder laden';
+      if (activeTopic !== topic) return;
+      // Gefundene Bilder bei gespeicherten Themen gleich mitspeichern
+      if (found && !dirty && activeRef.kind === 'cloud' && isTeacher()) {
+        db.collection(TOPICS_COL).doc(activeRef.id).update({ events: topicForStorage(activeTopic).events, updatedAt: FV.serverTimestamp() }).catch(() => {});
+      } else if (found && !dirty && activeRef.kind === 'local') {
+        localTopics[activeRef.id] = topicForStorage(activeTopic);
+        persistLocalTopics();
+      }
+      renderTimeline();
+      renderBuilderList();
+      if (selectedEventId) showDetail(selectedEventId, false);
+      if (manual) toast(found ? `${found} Bilder geladen.` : 'Keine weiteren passenden Bilder gefunden.');
+    }
+
+    // ---------- Bildauswahl im Baukasten ----------
+    function openImagePicker() {
+      const q = document.getElementById('b-wiki').value.trim() || document.getElementById('b-title').value.trim();
+      document.getElementById('image-query').value = q;
+      document.getElementById('image-grid').innerHTML = '';
+      document.getElementById('image-status').textContent = '';
+      openModal('image-modal');
+      if (q) runImageSearch();
+    }
+
+    let lastImageResults = [];
+    async function runImageSearch() {
+      const q = document.getElementById('image-query').value.trim();
+      const status = document.getElementById('image-status');
+      const grid = document.getElementById('image-grid');
+      if (!q) return;
+      status.textContent = 'Suche Bilder …';
+      grid.innerHTML = '';
+      try {
+        const art = await resolveArticle(q);
+        let files = [];
+        if (art) {
+          if (!document.getElementById('b-wiki').value.trim()) document.getElementById('b-wiki').value = art.title;
+          if (art.pageimage) files.push(art.pageimage);
+          files.push(...await articleImageFiles(art.title, 20));
+        }
+        // weitere Artikel aus der Suche
+        const s = await wikiQuery({ action: 'query', generator: 'search', gsrsearch: q, gsrlimit: '6', prop: 'pageimages', piprop: 'name' });
+        (s.query?.pages || []).forEach(p => { if (p.pageimage) files.push(p.pageimage); });
+        files = [...new Set(files)].filter(f => !BAD_FILE.test(f)).slice(0, 20);
+        lastImageResults = await fileInfos(files, 400);
+        if (!lastImageResults.length) { status.textContent = 'Keine passenden Bilder gefunden. Versuche den genauen Namen des Wikipedia-Artikels.'; return; }
+        status.textContent = art ? `Bilder aus dem Artikel «${art.title}» und verwandten Artikeln – antippen zum Übernehmen:` : 'Bild antippen zum Übernehmen:';
+        grid.innerHTML = lastImageResults.map((img, i) => `
+          <button type="button" onclick="pickImage(${i})" class="group text-left rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-500 bg-slate-50">
+            <img src="${escapeHTML(img.url)}" alt="" loading="lazy" class="w-full h-24 object-cover" />
+            <div class="text-[9px] leading-tight px-1.5 py-1 text-slate-500 line-clamp-2">${escapeHTML(img.artist || '')}${img.license ? ' · ' + escapeHTML(img.license) : ''}</div>
+          </button>`).join('');
+      } catch (e) {
+        status.textContent = 'Bildersuche gerade nicht erreichbar.';
+      }
+    }
+    function pickImage(i) {
+      const img = lastImageResults[i];
+      if (!img) return;
+      // für die Anzeige grösseres Vorschaubild verwenden
+      setBuilderImage({ ...img, url: img.url.replace(/\/(\d+)px-/, '/640px-') });
+      closeModal('image-modal');
+    }
+    function setBuilderImage(img) {
+      builderImage = img ? normalizeImage(img) : null;
+      const prev = document.getElementById('b-img-preview');
+      const credit = document.getElementById('b-img-credit');
+      if (builderImage) {
+        prev.src = builderImage.url;
+        prev.classList.remove('hidden');
+        credit.innerHTML = imageCreditHTML(builderImage);
+        credit.classList.remove('hidden');
+        document.getElementById('b-img-clear').classList.remove('hidden');
+      } else {
+        prev.classList.add('hidden');
+        credit.classList.add('hidden');
+        document.getElementById('b-img-clear').classList.add('hidden');
+      }
+    }
+    function handleLocalImageUpload(event) {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 480;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          setBuilderImage({ url: canvas.toDataURL('image/jpeg', 0.7), artist: 'Eigenes Bild' });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =========================================================================
+    // 10. MODUS: DATUM SCHÄTZEN
+    // =========================================================================
+    function initGuessChallenge() {
+      const events = activeTopic.events || [];
+      const distinctYears = new Set(events.map(e => e.start));
+      const enough = events.length >= 4 && distinctYears.size >= 3;
+      document.getElementById('guess-empty').classList.toggle('hidden', enough);
+      document.getElementById('guess-body').classList.toggle('hidden', !enough);
+      if (!enough) return;
+      guessQueue = shuffle(events).slice(0, Math.min(5, events.length));
+      guessIndex = 0;
+      guessScore = 0;
+      document.getElementById('guess-total').textContent = guessQueue.length;
+      document.getElementById('guess-score').textContent = '0';
+      const years = events.map(e => e.start);
+      const rawMin = Math.min(...years), rawMax = Math.max(...years);
+      const span = Math.max(4, rawMax - rawMin);
+      const pad = Math.max(2, Math.round(span * 0.1));
+      guessRange = { min: rawMin - pad, max: rawMax + pad, span };
+      const slider = document.getElementById('guess-slider');
+      slider.min = guessRange.min;
+      slider.max = guessRange.max;
+      slider.step = 1;
+      document.getElementById('guess-min-label').textContent = fmtYear(guessRange.min);
+      document.getElementById('guess-max-label').textContent = fmtYear(guessRange.max);
+      document.getElementById('btn-guess-restart').classList.add('hidden');
+      loadGuessRound();
+    }
+
+    function loadGuessRound() {
+      const item = guessQueue[guessIndex];
+      document.getElementById('guess-round').textContent = guessIndex + 1;
+      document.getElementById('guess-card-title').textContent = item.title;
+      document.getElementById('guess-card-desc').textContent = hideYears(item.desc || '');
+      const imgEl = document.getElementById('guess-card-img');
+      const iconEl = document.getElementById('guess-card-icon');
+      if (item.image && item.image.url) {
+        imgEl.src = item.image.url;
+        imgEl.onerror = () => { imgEl.classList.add('hidden'); iconEl.textContent = ICONS[item.icon] || '📌'; iconEl.classList.remove('hidden'); };
+        imgEl.classList.remove('hidden');
+        iconEl.classList.add('hidden');
+      } else {
+        imgEl.classList.add('hidden');
+        iconEl.textContent = ICONS[item.icon] || '📌';
+        iconEl.classList.remove('hidden');
+      }
+      // Orientierungspunkte: nie das gefragte Ereignis und nie dasselbe Jahr
+      const others = sortedEvents().filter(e => e.id !== item.id && e.start !== item.start);
+      const anchors = others.length <= 3 ? others : [others[0], others[Math.floor(others.length / 2)], others[others.length - 1]];
+      document.getElementById('guess-anchors').innerHTML = anchors.map(a =>
+        `<span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium"><strong class="font-mono">${fmtYear(a.start)}:</strong> ${escapeHTML(a.title)}</span>`).join('');
+      const slider = document.getElementById('guess-slider');
+      const mid = Math.round((guessRange.min + guessRange.max) / 2);
+      slider.value = mid;
+      updateGuessSlider(mid);
+      slider.disabled = false;
+      document.getElementById('guess-feedback').classList.add('hidden');
+      document.getElementById('btn-guess-check').classList.remove('hidden');
+      document.getElementById('btn-guess-next').classList.add('hidden');
+    }
+    // Jahreszahlen im Text verdecken, damit die Lösung nicht im Beschreibungstext steht
+    function hideYears(text) {
+      return text.replace(/\b(1[0-9]{3}|20[0-9]{2})\b/g, '····');
+    }
+    function updateGuessSlider(val) { document.getElementById('guess-slider-value').textContent = fmtYear(val); }
+
+    function checkGuess() {
+      const item = guessQueue[guessIndex];
+      const guessed = Number(document.getElementById('guess-slider').value);
+      const diff = Math.abs(guessed - item.start);
+      // Toleranz wächst mit der Länge des Zeitraums (Weltkrieg: 1 Jahr, Industrialisierung: rund 3 Jahre)
+      const tol = Math.max(1, Math.round(guessRange.span * 0.025));
+      let pts, style, msg;
+      const right = `Richtig ist ${fmtRange(item)}`;
+      if (diff === 0) { pts = 100; style = 'bg-emerald-50 border-emerald-300 text-emerald-900'; msg = `Volltreffer! ${right} (+100 Punkte).`; }
+      else if (diff <= tol) { pts = 80; style = 'bg-emerald-50 border-emerald-300 text-emerald-900'; msg = `Sehr nah dran! ${right} (${diff} ${diff === 1 ? 'Jahr' : 'Jahre'} daneben, +80 Punkte).`; }
+      else if (diff <= tol * 3) { pts = 50; style = 'bg-amber-50 border-amber-300 text-amber-900'; msg = `Gute Richtung! ${right} (${diff} Jahre daneben, +50 Punkte).`; }
+      else if (diff <= tol * 6) { pts = 20; style = 'bg-amber-50 border-amber-300 text-amber-900'; msg = `Noch etwas weit weg. ${right} (${diff} Jahre daneben, +20 Punkte).`; }
+      else { pts = 0; style = 'bg-rose-50 border-rose-300 text-rose-900'; msg = `Daneben. ${right} (${diff} Jahre daneben).`; }
+      guessScore += pts;
+      document.getElementById('guess-score').textContent = guessScore;
+      const fb = document.getElementById('guess-feedback');
+      fb.className = `rounded-xl p-4 border text-sm font-medium ${style}`;
+      fb.textContent = msg;
+      document.getElementById('guess-slider').disabled = true;
+      document.getElementById('btn-guess-check').classList.add('hidden');
+      if (guessIndex < guessQueue.length - 1) {
+        document.getElementById('btn-guess-next').classList.remove('hidden');
+      } else {
+        fb.textContent += ` • Challenge beendet: ${guessScore} von ${guessQueue.length * 100} Punkten.`;
+        document.getElementById('btn-guess-restart').classList.remove('hidden');
+      }
+    }
+    function nextGuessRound() { guessIndex++; loadGuessRound(); }
+
+    // =========================================================================
+    // 11. MODUS: SORTIER-SPRINT
+    // =========================================================================
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+    function initSortGame() {
+      // nur Ereignisse mit verschiedenen Startjahren, damit die Reihenfolge eindeutig ist
+      const byYear = {};
+      shuffle(activeTopic.events || []).forEach(e => { if (!byYear[e.start]) byYear[e.start] = e; });
+      const pool = Object.values(byYear);
+      document.getElementById('sort-feedback').classList.add('hidden');
+      if (pool.length < 3) {
+        sortCurrentList = [];
+        document.getElementById('sort-list').innerHTML = '<div class="text-sm text-slate-500">Für den Sortier-Sprint braucht das Thema mindestens 3 Ereignisse mit verschiedenen Jahren.</div>';
+        document.getElementById('btn-sort-check').classList.add('hidden');
+        return;
+      }
+      document.getElementById('btn-sort-check').classList.remove('hidden');
+      const sample = shuffle(pool).slice(0, Math.min(5, pool.length));
+      let list = shuffle(sample);
+      for (let i = 0; i < 10 && isSorted(list); i++) list = shuffle(sample);
+      sortCurrentList = list;
+      renderSortList(false);
+    }
+    function isSorted(list) { return list.every((e, i) => i === 0 || list[i - 1].start <= e.start); }
+    function renderSortList(showYears) {
+      const box = document.getElementById('sort-list');
+      box.innerHTML = sortCurrentList.map((ev, idx) => {
+        const visual = ev.image && ev.image.url
+          ? `<img src="${escapeHTML(ev.image.url)}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-200" />`
+          : `<span class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-xl shrink-0">${ICONS[ev.icon] || '📌'}</span>`;
+        return `
+          <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-300 bg-white">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">${idx + 1}</span>
+              ${visual}
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-slate-900">${escapeHTML(ev.title)}</div>
+                ${showYears ? `<div class="text-xs font-mono font-bold text-indigo-600">${fmtRange(ev)}</div>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="moveSortItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="px-2.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 text-xs font-bold">↑</button>
+              <button onclick="moveSortItem(${idx}, 1)" ${idx === sortCurrentList.length - 1 ? 'disabled' : ''} class="px-2.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 text-xs font-bold">↓</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+    function moveSortItem(idx, dir) {
+      const target = idx + dir;
+      if (target < 0 || target >= sortCurrentList.length) return;
+      [sortCurrentList[idx], sortCurrentList[target]] = [sortCurrentList[target], sortCurrentList[idx]];
+      document.getElementById('sort-feedback').classList.add('hidden');
+      renderSortList(false);
+    }
+    function checkSortOrder() {
+      const correct = sortCurrentList.filter((e, i) => i === 0 || sortCurrentList[i - 1].start <= e.start).length;
+      const allRight = isSorted(sortCurrentList);
+      renderSortList(true);
+      const fb = document.getElementById('sort-feedback');
+      fb.classList.remove('hidden');
+      if (allRight) {
+        fb.className = 'rounded-xl p-4 text-sm font-semibold bg-emerald-50 border border-emerald-300 text-emerald-900';
+        fb.textContent = '✓ Perfekt! Alle Ereignisse sind in der richtigen Reihenfolge.';
+      } else {
+        fb.className = 'rounded-xl p-4 text-sm font-semibold bg-amber-50 border border-amber-300 text-amber-900';
+        fb.textContent = '△ Noch nicht ganz richtig – vergleiche die eingeblendeten Jahreszahlen und korrigiere die Reihenfolge.';
+      }
+    }
+
+    // =========================================================================
+    // 12. MODUS: SELBST BAUEN
+    // =========================================================================
+    function populateIconSelect() {
+      document.getElementById('b-icon').innerHTML = '<option value="">– kein –</option>' +
+        Object.keys(ICONS).map(k => `<option value="${k}">${ICONS[k]} ${ICON_LABELS[k]}</option>`).join('');
+    }
+    function populateCatSelect() {
+      document.getElementById('b-cat').innerHTML = activeTopic.categories.map(c => `<option value="${c.id}">${escapeHTML(c.label)}</option>`).join('');
+    }
+    function startEmptyBuilder() {
+      if (dirty && !confirm('Ungespeicherte Änderungen gehen verloren. Neuen leeren Zeitstrahl beginnen?')) return;
+      setActiveTopic(normalizeTopic({ title: 'Mein Zeitstrahl', layout: 'single', categories: DEFAULT_CATS.slice(0, 3), events: [] }), { kind: 'draft', id: '' });
+      dirty = false;
+      renderTopicDropdown();
+    }
+    function updateBuilderMeta() {
+      activeTopic.title = document.getElementById('builder-topic-title').value.trim() || 'Mein Zeitstrahl';
+      activeTopic.layout = document.getElementById('builder-layout').value;
+      activeTopic.trackTop = document.getElementById('builder-track-top').value.trim() || 'Welt / Europa';
+      activeTopic.trackBottom = document.getElementById('builder-track-bottom').value.trim() || 'Schweiz';
+      document.getElementById('builder-track-names').classList.toggle('hidden', activeTopic.layout !== 'dual');
+      markDirty();
+      renderTimeline();
+    }
+    function editBuilderEvent(id) {
+      const ev = activeTopic.events.find(e => e.id === id);
+      if (!ev) return;
+      editingEventId = id;
+      document.getElementById('builder-form-heading').textContent = 'Ereignis bearbeiten';
+      document.getElementById('btn-builder-save').textContent = '✓ Änderungen übernehmen';
+      document.getElementById('btn-builder-cancel').classList.remove('hidden');
+      document.getElementById('b-start').value = ev.start;
+      document.getElementById('b-end').value = ev.end ?? '';
+      document.getElementById('b-title').value = ev.title;
+      document.getElementById('b-track').value = ev.track || 'top';
+      document.getElementById('b-cat').value = ev.cat;
+      document.getElementById('b-icon').value = ev.icon || '';
+      document.getElementById('b-wiki').value = ev.wiki || '';
+      document.getElementById('b-desc').value = ev.desc || '';
+      document.getElementById('b-question').value = ev.question || '';
+      setBuilderImage(ev.image);
+      document.getElementById('view-builder').scrollIntoView({ behavior: 'smooth' });
+    }
+    function cancelEditEvent() {
+      editingEventId = null;
+      document.getElementById('builder-form-heading').textContent = 'Ereignis hinzufügen';
+      document.getElementById('btn-builder-save').textContent = '+ Auf Zeitstrahl setzen';
+      document.getElementById('btn-builder-cancel').classList.add('hidden');
+      ['b-start', 'b-end', 'b-title', 'b-wiki', 'b-desc', 'b-question'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('b-icon').value = '';
+      setBuilderImage(null);
+    }
+    function saveBuilderEvent() {
+      const start = toInt(document.getElementById('b-start').value);
+      const end = toInt(document.getElementById('b-end').value);
+      const title = document.getElementById('b-title').value.trim();
+      if (start === null || !title) return toast('Bitte mindestens Startjahr und Titel eingeben.');
+      if (end !== null && end <= start) return toast('Das Endjahr muss nach dem Startjahr liegen.');
+      const payload = {
+        id: editingEventId || ('e' + randomId(10)),
+        start, end,
+        title: title.slice(0, 90),
+        track: activeTopic.layout === 'dual' ? document.getElementById('b-track').value : 'top',
+        cat: document.getElementById('b-cat').value || activeTopic.categories[0].id,
+        icon: document.getElementById('b-icon').value,
+        wiki: document.getElementById('b-wiki').value.trim().slice(0, 120),
+        image: builderImage,
+        desc: document.getElementById('b-desc').value.trim().slice(0, 600),
+        question: document.getElementById('b-question').value.trim().slice(0, 200)
+      };
+      if (editingEventId) {
+        const idx = activeTopic.events.findIndex(e => e.id === editingEventId);
+        if (idx !== -1) activeTopic.events[idx] = payload;
+      } else {
+        activeTopic.events.push(payload);
+      }
+      markDirty();
+      cancelEditEvent();
+      renderBuilderList();
+      renderTimeline();
+      toast('Ereignis übernommen. Speichern nicht vergessen.');
+    }
+    function removeBuilderEvent(id) {
+      if (!confirm('Dieses Ereignis löschen?')) return;
+      if (editingEventId === id) cancelEditEvent();
+      activeTopic.events = activeTopic.events.filter(e => e.id !== id);
+      if (selectedEventId === id) selectedEventId = null;
+      markDirty();
+      renderBuilderList();
+      renderTimeline();
+    }
+    function renderBuilderList() {
+      const list = document.getElementById('builder-events-list');
+      const sorted = sortedEvents();
+      document.getElementById('builder-count').textContent = sorted.length;
+      if (sorted.length === 0) {
+        list.innerHTML = '<div class="text-xs text-slate-400 italic py-6 text-center">Noch keine Ereignisse erfasst.</div>';
+        return;
+      }
+      list.innerHTML = sorted.map(ev => {
+        const st = catStyle(activeTopic, ev.cat);
+        const visual = ev.image && ev.image.url
+          ? `<img src="${escapeHTML(ev.image.url)}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-200" />`
+          : `<span class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xl shrink-0">${ICONS[ev.icon] || '📌'}</span>`;
+        return `
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              ${visual}
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs font-mono font-bold text-indigo-700">${fmtRange(ev)}</span>
+                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${st.chip}">${escapeHTML(catLabel(activeTopic, ev.cat))}</span>
+                  ${activeTopic.layout === 'dual' ? `<span class="text-[10px] text-slate-400">${escapeHTML(ev.track === 'bottom' ? activeTopic.trackBottom : activeTopic.trackTop)}</span>` : ''}
+                </div>
+                <div class="text-sm font-bold text-slate-900 truncate">${escapeHTML(ev.title)}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="editBuilderEvent('${ev.id}')" title="Bearbeiten" class="text-sm px-2 py-1 hover:bg-white rounded">✏️</button>
+              <button onclick="removeBuilderEvent('${ev.id}')" title="Löschen" class="text-xs text-slate-400 hover:text-rose-600 px-2 py-1">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Speichern: Lehrperson → Cloud, sonst → dieses Gerät
+    function topicForStorage(topic) {
+      const t = clone(topic);
+      delete t._submittedBy;
+      (t.events || []).forEach(e => { delete e._noImage; });
+      return t;
+    }
+    async function saveCurrentTopic() {
+      updateBuilderMetaSilent();
+      if (!activeTopic.events.length) return toast('Der Zeitstrahl hat noch keine Ereignisse.');
+      const data = topicForStorage(activeTopic);
+      if (isTeacher()) {
+        const size = JSON.stringify(data).length;
+        if (size > 900000) return toast('Das Thema ist zu gross zum Speichern (zu viele eigene Fotos). Bitte einige eigene Fotos durch Wikipedia-Bilder ersetzen.', 6000);
+        const id = activeRef.kind === 'cloud' ? activeRef.id : randomId(20);
+        const existing = myTopics[id];
+        try {
+          await db.collection(TOPICS_COL).doc(id).set({
+            ...data,
+            ownerUid: currentUser.uid,
+            shared: existing ? !!existing.shared : false,
+            createdAt: existing && existing.createdAt ? existing.createdAt : FV.serverTimestamp(),
+            updatedAt: FV.serverTimestamp()
+          });
+          activeRef = { kind: 'cloud', id };
+          dirty = false;
+          renderTopicDropdown();
+          renderBanner();
+          updateBuilderHint();
+          toast('Thema in deinen Themen gespeichert.');
+        } catch (e) {
+          toast('Speichern fehlgeschlagen. Bitte nochmals versuchen.');
+        }
+      } else {
+        const id = activeRef.kind === 'local' ? activeRef.id : 'l' + randomId(12);
+        localTopics[id] = data;
+        if (!persistLocalTopics()) { delete localTopics[id]; return; }
+        activeRef = { kind: 'local', id };
+        dirty = false;
+        renderTopicDropdown();
+        updateBuilderHint();
+        toast('Auf diesem Gerät gespeichert. Tipp: zusätzlich als Datei sichern.');
+      }
+    }
+    function updateBuilderMetaSilent() {
+      activeTopic.title = document.getElementById('builder-topic-title').value.trim() || activeTopic.title;
+    }
+
+    // =========================================================================
+    // 13. KI: PROMPT, DIREKTE ERSTELLUNG, IMPORT
+    // =========================================================================
+    function setNewTab(tab) {
+      ['ai', 'prompt', 'manual'].forEach(t => {
+        document.getElementById('newtab-' + t).classList.toggle('tab-active', t === tab);
+        document.getElementById('newpane-' + t).classList.toggle('hidden', t !== tab);
+      });
+      document.getElementById('new-ai-fields').classList.toggle('hidden', tab === 'manual');
+      if (tab === 'ai') refreshGenerateState();
+    }
+    function openNewModal() {
+      openModal('new-modal');
+      setNewTab(isTeacher() ? 'ai' : 'prompt');
+    }
+    async function refreshGenerateState() {
+      const loginHint = document.getElementById('gen-login-hint');
+      const keyBox = document.getElementById('gen-key-box');
+      const btn = document.getElementById('btn-generate');
+      loginHint.classList.toggle('hidden', isTeacher());
+      btn.disabled = !isTeacher();
+      keyBox.classList.add('hidden');
+      if (isTeacher()) {
+        const keys = await loadAiKeys();
+        keyBox.classList.toggle('hidden', !!(keys.gemini || keys.claude));
+      }
+    }
+
+    function buildPrompt() {
+      const topic = document.getElementById('gen-topic').value.trim();
+      const level = document.getElementById('gen-level').value;
+      const count = Number(document.getElementById('gen-count').value);
+      const dual = document.getElementById('gen-layout').value === 'dual';
+      const extra = document.getElementById('gen-extra').value.trim();
+      const iconList = Object.keys(ICONS).join(', ');
+      return `Du bist eine erfahrene Geschichtslehrperson in der Schweiz. Erstelle einen Zeitstrahl für den Unterricht.
+
+Thema: ${topic}
+Zielstufe: ${level}
+Anzahl Ereignisse: ${count}
+${dual ? `Zwei Spuren: oben die Welt/Europa ("top"), unten die Schweiz ("bottom"). Mindestens ein Drittel der Ereignisse betrifft die Schweiz. Gibt es zum Thema kaum Schweizer Ereignisse, nimm passende Auswirkungen auf die Schweiz.` : 'Eine Spur: alle Ereignisse mit "track": "top".'}
+${extra ? 'Zusatzwünsche: ' + extra : ''}
+
+Regeln:
+- Nur gesicherte historische Fakten. Nimm nur Jahreszahlen auf, bei denen du dir sicher bist. Lieber weniger Ereignisse als unsichere.
+- Schreibe auf Deutsch mit Schweizer Rechtschreibung (ss statt ß), passend zur Zielstufe.
+- "desc": 2–3 kurze Sätze: Was geschah und warum ist es wichtig?
+- "question": eine Denkfrage, die zum Nachdenken über Ursachen oder Folgen anregt (keine reine Wissensfrage).
+- "wiki": der GENAUE Titel des passenden Artikels in der deutschsprachigen Wikipedia (z. B. "Rütlirapport"). Er wird für das Bild verwendet. Wenn du unsicher bist, nimm den allgemeineren Artikel.
+- "icon": genau eines dieser Wörter: ${iconList}
+- "cat": eine der 3 bis 4 Kategorien, die du unter "categories" festlegst (kurze ids in Kleinbuchstaben, z. B. "politik").
+- "start"/"end": ganze Jahreszahlen, vor Christus negativ (z. B. -44). "end" nur bei Zeiträumen, sonst null.
+- "phases": 2 bis 5 grosse Abschnitte des Zeitraums (optional).
+
+Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor oder danach:
+{
+  "title": "Kurzer Titel mit Zeitraum",
+  "layout": "${dual ? 'dual' : 'single'}",
+  "trackTop": "${dual ? 'Welt / Europa' : ''}",
+  "trackBottom": "${dual ? 'Schweiz' : ''}",
+  "categories": [{"id": "politik", "label": "Politik & Staat"}],
+  "phases": [{"start": 1939, "end": 1945, "label": "Kriegsjahre"}],
+  "events": [
+    {"start": 1940, "end": null, "title": "Kurzer Titel", "track": "${dual ? 'bottom' : 'top'}", "cat": "politik", "icon": "militaer", "wiki": "Rütlirapport", "desc": "…", "question": "…"}
+  ]
+}`;
+    }
+    function copyPrompt() {
+      if (!document.getElementById('gen-topic').value.trim()) return toast('Bitte zuerst ein Thema eintragen.');
+      const p = buildPrompt();
+      navigator.clipboard.writeText(p).then(() => toast('Prompt kopiert – jetzt in den KI-Chat einfügen.'))
+        .catch(() => { document.getElementById('prompt-answer').value = p; toast('Kopieren nicht möglich – der Prompt steht im Feld unten.'); });
+    }
+    function extractJson(text) {
+      let t = String(text || '').trim();
+      t = t.replace(/^```(?:json)?/i, '').replace(/```\s*$/i, '').trim();
+      const a = t.indexOf('{'), b = t.lastIndexOf('}');
+      if (a === -1 || b <= a) throw new Error('Keine JSON-Daten gefunden');
+      t = t.slice(a, b + 1).replace(/[“”„]/g, '"').replace(/,\s*([}\]])/g, '$1');
+      return JSON.parse(t);
+    }
+    function importFromPromptAnswer() {
+      try {
+        const obj = extractJson(document.getElementById('prompt-answer').value);
+        obj.aiGenerated = true;
+        obj.reviewed = false;
+        applyGeneratedTopic(normalizeTopic(obj));
+        document.getElementById('prompt-answer').value = '';
+      } catch (e) {
+        toast('Die Antwort konnte nicht gelesen werden. Bitte die ganze Antwort der KI kopieren.', 5000);
+      }
+    }
+    async function applyGeneratedTopic(topic) {
+      if (!topic.events.length) return toast('Die KI-Antwort enthält keine Ereignisse.');
+      topic.aiGenerated = true;
+      topic.reviewed = false;
+      closeModal('new-modal');
+      setActiveTopic(topic, { kind: 'draft', id: '' });
+      dirty = true;
+      setMode('explore');
+      if (isTeacher()) await saveCurrentTopic();   // als Entwurf in der Cloud sichern
+      else { renderTopicDropdown(); updateBuilderHint(); }
+      renderBanner();
+      toast(`${topic.events.length} Ereignisse erstellt. Bilder werden geladen …`);
+    }
+
+    // ---------- KI-Schlüssel (gleiches Konto-Dokument wie im Sek Planer) ----------
+    let aiKeysCache = null;
+    async function loadAiKeys() {
+      if (!isTeacher()) return {};
+      if (aiKeysCache && aiKeysCache.uid === currentUser.uid) return aiKeysCache;
+      let keys = { uid: currentUser.uid, gemini: '', claude: '', preferred: 'gemini' };
+      try {
+        const snap = await db.collection('sekSync').doc('apikeys_' + currentUser.uid).get();
+        if (snap.exists) {
+          const d = snap.data() || {};
+          keys.gemini = typeof d.geminiKey === 'string' ? d.geminiKey : '';
+          keys.claude = typeof d.claudeKey === 'string' ? d.claudeKey : '';
+          keys.preferred = d.preferredAi === 'claude' ? 'claude' : 'gemini';
+        }
+      } catch (e) {}
+      aiKeysCache = keys;
+      return keys;
+    }
+    async function saveGeminiKey(key) {
+      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, geminiKey: key }, { merge: true });
+      aiKeysCache = null;
+    }
+
+    function fetchWithTimeout(url, opts, ms) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
+    }
+    async function geminiModels(key) {
+      try {
+        const res = await fetchWithTimeout('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers: { 'x-goog-api-key': key } }, 8000);
+        const data = await res.json();
+        const ver = (n) => parseFloat((n.match(/^gemini-(\d+(?:\.\d+)?)/) || [0, 0])[1]);
+        const names = (data.models || [])
+          .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+          .map(m => String(m.name || '').replace(/^models\//, ''))
+          .filter(n => /^gemini-\d+(\.\d+)?-flash$/.test(n) && ver(n) >= 3)
+          .sort((a, b) => ver(b) - ver(a));
+        if (names.length) return names.slice(0, 3);
+      } catch (e) {}
+      return ['gemini-3.5-flash', 'gemini-3.1-flash'];
+    }
+    async function callGemini(key, prompt) {
+      const models = await geminiModels(key);
+      let lastErr = null;
+      for (const model of models) {
+        try {
+          const res = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.4 } })
+          }, 120000);
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const msg = data?.error?.message || `HTTP ${res.status}`;
+            if (res.status === 400 && /API key/i.test(msg) || res.status === 401 || res.status === 403) throw Object.assign(new Error('Der Gemini-Schlüssel ist ungültig.'), { fatal: true });
+            throw new Error(msg);
+          }
+          const text = (data?.candidates?.[0]?.content?.parts || []).filter(p => typeof p.text === 'string' && !p.thought).map(p => p.text).join('');
+          if (!text.trim()) throw new Error('Leere Antwort');
+          return text;
+        } catch (e) {
+          lastErr = e;
+          if (e.fatal) throw e;
+        }
+      }
+      throw lastErr || new Error('Gemini nicht erreichbar');
+    }
+    async function callClaude(key, prompt) {
+      let lastErr = null;
+      for (const model of ['claude-sonnet-5-5', 'claude-haiku-5-5']) {
+        try {
+          const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+            body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
+          }, 120000);
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+          const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+          if (!text.trim()) throw new Error('Leere Antwort');
+          return text;
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error('Claude nicht erreichbar');
+    }
+
+    async function generateWithAI() {
+      if (!isTeacher()) return toast('Bitte zuerst anmelden.');
+      if (!document.getElementById('gen-topic').value.trim()) return toast('Bitte ein Thema eintragen.');
+      const status = document.getElementById('gen-status');
+      const btn = document.getElementById('btn-generate');
+      const newKey = document.getElementById('gen-key-input').value.trim();
+      btn.disabled = true;
+      status.classList.remove('hidden');
+      status.className = 'text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-3';
+      try {
+        if (newKey) { status.textContent = 'Schlüssel wird gespeichert …'; await saveGeminiKey(newKey); document.getElementById('gen-key-input').value = ''; }
+        const keys = await loadAiKeys();
+        if (!keys.gemini && !keys.claude) throw new Error('Kein KI-Schlüssel hinterlegt.');
+        status.textContent = '✨ Die KI erstellt den Zeitstrahl … das dauert meist 20–60 Sekunden.';
+        const prompt = buildPrompt();
+        let text;
+        const order = keys.preferred === 'claude' ? ['claude', 'gemini'] : ['gemini', 'claude'];
+        let lastErr = null;
+        for (const p of order) {
+          if (!keys[p]) continue;
+          try { text = p === 'gemini' ? await callGemini(keys.gemini, prompt) : await callClaude(keys.claude, prompt); break; }
+          catch (e) { lastErr = e; }
+        }
+        if (!text) throw lastErr || new Error('Keine Antwort der KI');
+        const topic = normalizeTopic({ ...extractJson(text), aiGenerated: true, reviewed: false });
+        status.classList.add('hidden');
+        await applyGeneratedTopic(topic);
+      } catch (e) {
+        status.className = 'text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-xl p-3';
+        status.textContent = 'Das hat nicht geklappt: ' + (e.message || e) + ' Alternativ geht es über «📋 KI-Chat».';
+      } finally {
+        btn.disabled = !isTeacher();
+        refreshGenerateState();
+      }
+    }
+
+    async function markReviewed() {
+      activeTopic.reviewed = true;
+      if (activeRef.kind === 'cloud') {
+        try { await db.collection(TOPICS_COL).doc(activeRef.id).update({ reviewed: true, updatedAt: FV.serverTimestamp() }); }
+        catch (e) { return toast('Konnte nicht gespeichert werden.'); }
+      }
+      renderBanner();
+      renderTopicDropdown();
+      toast('Als geprüft markiert.');
+    }
+
+    // =========================================================================
+    // 14. TEILEN (QR-CODE)
+    // =========================================================================
+    function qrSvg(text) {
+      const qr = qrcode(0, 'M');
+      qr.addData(text);
+      qr.make();
+      return qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    }
+    function baseUrl() { return location.origin + location.pathname; }
+    function openShareModal() {
+      const body = document.getElementById('share-body');
+      let link = '', note = '';
+      if (activeRef.kind === 'preset') {
+        link = `${baseUrl()}?topic=${encodeURIComponent(activeRef.id)}`;
+        note = 'Standard-Thema: Schüler öffnen den Zeitstrahl direkt, ohne Login.';
+      } else if (activeRef.kind === 'cloud') {
+        const t = myTopics[activeRef.id] || {};
+        if (dirty) { body.innerHTML = '<p class="text-sm text-slate-600">Bitte zuerst unter «Selbst bauen» speichern.</p>'; openModal('share-modal'); return; }
+        if (!t.shared) {
+          body.innerHTML = `<p class="text-sm text-slate-600">Dieses Thema ist noch privat. Wer den Link hat, kann es nach der Freigabe ansehen, aber nicht verändern.</p>
+            ${activeTopic.aiGenerated && !activeTopic.reviewed ? '<p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">Achtung: KI-generiert und noch nicht als geprüft markiert.</p>' : ''}
+            <button onclick="setShared(true)" class="btn-primary w-full py-2.5 text-sm">Für Schüler freigeben</button>`;
+          openModal('share-modal');
+          return;
+        }
+        link = `${baseUrl()}?t=${activeRef.id}`;
+        note = 'Freigegeben: Schüler können das Thema ansehen und üben.';
+      } else if (activeRef.kind === 'shared') {
+        link = `${baseUrl()}?t=${activeRef.id}`;
+      } else {
+        body.innerHTML = isTeacher()
+          ? '<p class="text-sm text-slate-600">Bitte das Thema zuerst unter «Selbst bauen» speichern. Danach kannst du es freigeben.</p>'
+          : '<p class="text-sm text-slate-600">Eigene Themen kann man ohne Anmeldung nicht teilen. Sichere es unter «Selbst bauen» als Datei oder gib es mit «📤 Abgeben» ab.</p>';
+        openModal('share-modal');
+        return;
+      }
+      body.innerHTML = `
+        <div id="share-qr" class="mx-auto w-52 h-52 p-2 bg-white border border-slate-200 rounded-xl">${qrSvg(link)}</div>
+        <p class="text-xs text-slate-500">${escapeHTML(note)}</p>
+        <div class="flex gap-2">
+          <input readonly value="${escapeHTML(link)}" class="flex-1 text-xs rounded-lg border border-slate-300 px-2 py-1.5 bg-slate-50" onclick="this.select()" />
+          <button onclick="navigator.clipboard.writeText('${link}').then(()=>toast('Link kopiert'))" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold">Kopieren</button>
+        </div>
+        ${activeRef.kind === 'cloud' ? '<button onclick="setShared(false)" class="text-xs text-rose-600 hover:underline">Freigabe aufheben</button>' : ''}`;
+      openModal('share-modal');
+    }
+    async function setShared(on) {
+      try {
+        await db.collection(TOPICS_COL).doc(activeRef.id).update({ shared: on, updatedAt: FV.serverTimestamp() });
+        if (myTopics[activeRef.id]) myTopics[activeRef.id].shared = on;
+        openShareModal();
+      } catch (e) { toast('Änderung fehlgeschlagen.'); }
+    }
+    async function openSharedTopic(id) {
+      if (!db || !/^[A-Za-z0-9]{16,40}$/.test(id)) return;
+      try {
+        const snap = await db.collection(TOPICS_COL).doc(id).get();
+        if (!snap.exists) throw new Error('nicht gefunden');
+        sharedTopic = { id, topic: snap.data() };
+        setActiveTopic(normalizeTopic(clone(snap.data())), { kind: 'shared', id });
+      } catch (e) {
+        toast('Das geteilte Thema ist nicht (mehr) freigegeben.', 5000);
+        selectTopic('preset:ww2');
+      }
+    }
+
+    // =========================================================================
+    // 15. LOGIN & KONTO
+    // =========================================================================
+    function openAccountModal() {
+      renderAccountModal();
+      openModal('account-modal');
+    }
+    function renderAccountModal() {
+      const teacher = isTeacher();
+      document.getElementById('login-form').classList.toggle('hidden', teacher);
+      document.getElementById('account-body').classList.toggle('hidden', !teacher);
+      document.getElementById('account-title').textContent = teacher ? 'Mein Konto' : 'Anmelden (Lehrperson)';
+      if (!teacher) return;
+      document.getElementById('account-email').textContent = currentUser.email || '';
+      const entries = Object.entries(myTopics).sort((a, b) => tsMs(b[1].updatedAt) - tsMs(a[1].updatedAt));
+      document.getElementById('my-topics-count').textContent = entries.length;
+      document.getElementById('my-topics-list').innerHTML = entries.length ? entries.map(([id, t]) => `
+        <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs">
+          <button onclick="closeModal('account-modal'); selectTopic('cloud:${id}')" class="text-left min-w-0 flex-1">
+            <div class="font-semibold text-slate-900 truncate">${escapeHTML(t.title)}</div>
+            <div class="text-slate-500">${(t.events || []).length} Ereignisse${t.shared ? ' · 📲 freigegeben' : ''}${t.aiGenerated && !t.reviewed ? ' · ⚠️ ungeprüft' : ''}</div>
+          </button>
+          <button onclick="deleteCloudTopic('${id}')" class="text-rose-600 hover:underline shrink-0">Löschen</button>
+        </div>`).join('') : '<p class="text-xs text-slate-400 italic">Noch keine eigenen Themen. Erstelle eines mit «✨ Neu».</p>';
+      const localCount = Object.keys(localTopics).length;
+      const lb = document.getElementById('local-topics-box');
+      lb.classList.toggle('hidden', localCount === 0);
+      lb.innerHTML = localCount ? `Auf diesem Gerät liegen ${localCount} Themen, die noch nicht in der Cloud sind. <button onclick="migrateLocalTopics()" class="underline font-semibold">In meine Themen übernehmen</button>` : '';
+      renderTaskList();
+    }
+    async function handleTeacherLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const err = document.getElementById('login-error');
+      const btn = document.getElementById('login-submit');
+      err.classList.add('hidden');
+      btn.disabled = true; btn.textContent = 'Anmelden…';
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        await auth.signInWithEmailAndPassword(email, password);
+        document.getElementById('login-password').value = '';
+      } catch (e) {
+        err.textContent = 'Anmeldung fehlgeschlagen: Bitte E-Mail und Passwort prüfen.';
+        err.classList.remove('hidden');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Anmelden';
+      }
+    }
+    async function handlePasswordReset() {
+      const email = document.getElementById('login-email').value.trim();
+      const err = document.getElementById('login-error'), info = document.getElementById('login-info');
+      err.classList.add('hidden'); info.classList.add('hidden');
+      if (!email) { err.textContent = 'Bitte zuerst die E-Mail-Adresse eingeben.'; err.classList.remove('hidden'); return; }
+      try { await auth.sendPasswordResetEmail(email); info.textContent = 'Falls ein Konto existiert, wurde eine E-Mail verschickt.'; info.classList.remove('hidden'); }
+      catch (e) { err.textContent = 'E-Mail konnte nicht verschickt werden.'; err.classList.remove('hidden'); }
+    }
+    async function logoutTeacher() {
+      if (dirty && !confirm('Ungespeicherte Änderungen gehen verloren. Trotzdem abmelden?')) return;
+      aiKeysCache = null;
+      await auth.signOut();
+      closeModal('account-modal');
+      if (activeRef.kind === 'cloud') selectTopic('preset:ww2');
+    }
+    async function deleteCloudTopic(id) {
+      const t = myTopics[id];
+      if (!confirm(`Thema «${t ? t.title : ''}» endgültig löschen? Geteilte Links funktionieren danach nicht mehr.`)) return;
+      try {
+        await db.collection(TOPICS_COL).doc(id).delete();
+        if (activeRef.kind === 'cloud' && activeRef.id === id) { dirty = false; selectTopic('preset:ww2'); }
+        toast('Thema gelöscht.');
+      } catch (e) { toast('Löschen fehlgeschlagen.'); }
+    }
+    async function migrateLocalTopics() {
+      const entries = Object.entries(localTopics);
+      let ok = 0;
+      for (const [id, t] of entries) {
+        try {
+          await db.collection(TOPICS_COL).doc(randomId(20)).set({ ...topicForStorage(normalizeTopic(t)), ownerUid: currentUser.uid, shared: false, createdAt: FV.serverTimestamp(), updatedAt: FV.serverTimestamp() });
+          delete localTopics[id];
+          ok++;
+        } catch (e) {}
+      }
+      persistLocalTopics();
+      renderTopicDropdown();
+      renderAccountModal();
+      toast(`${ok} Themen übernommen.`);
+    }
+
+    // =========================================================================
+    // 16. ABGABEN: AUFTRÄGE (LEHRPERSON) & ABGEBEN (SCHÜLER)
+    // =========================================================================
+    let activeTask = null;   // Auftrag, der per ?abgabe= geöffnet wurde
+
+    async function createTask() {
+      const title = document.getElementById('task-title').value.trim();
+      if (!title) return toast('Bitte einen Titel für den Auftrag eingeben.');
+      const withTopic = document.getElementById('task-with-topic').checked;
+      const data = { ownerUid: currentUser.uid, title: title.slice(0, 80), open: true, createdAt: FV.serverTimestamp() };
+      if (withTopic) {
+        const t = topicForStorage(activeTopic);
+        if (JSON.stringify(t).length > 500000) return toast('Das aktuelle Thema ist zu gross als Startpunkt.');
+        data.startTopic = t;
+      }
+      for (let i = 0; i < 15; i++) {
+        const code = String(Math.floor(1000 + Math.random() * 9000));
+        try {
+          const ok = await db.runTransaction(async (tx) => {
+            const ref = db.collection(TASKS_COL).doc(code);
+            const s = await tx.get(ref);
+            if (s.exists) return false;
+            tx.set(ref, data);
+            return true;
+          });
+          if (ok) {
+            document.getElementById('task-title').value = '';
+            toast(`Auftrag erstellt – Code ${code}`);
+            return;
+          }
+        } catch (e) { if (e.code !== 'permission-denied' && e.code !== 'aborted') break; }
+      }
+      toast('Auftrag konnte nicht erstellt werden.');
+    }
+    function renderTaskList() {
+      const box = document.getElementById('task-list');
+      if (!myTasks.length) { box.innerHTML = '<p class="text-xs text-slate-400 italic">Noch keine Aufträge.</p>'; return; }
+      box.innerHTML = myTasks.map(t => {
+        const link = `${baseUrl()}?abgabe=${t.code}`;
+        return `
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-slate-900 truncate">${escapeHTML(t.title)}</div>
+              <div class="text-xs text-slate-500">Code <strong class="font-mono text-slate-900 text-sm">${t.code}</strong> · ${t.open ? '🟢 offen' : '🔒 geschlossen'}${t.startTopic ? ' · mit Startpunkt' : ''}</div>
+            </div>
+            <div class="w-16 h-16 bg-white border border-slate-200 rounded-lg p-1 shrink-0" title="QR-Code für Schüler">${qrSvg(link)}</div>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <button onclick="openSubmissions('${t.code}')" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold">📥 Abgaben ansehen</button>
+            <button onclick="navigator.clipboard.writeText('${link}').then(()=>toast('Link kopiert'))" class="px-2.5 py-1 rounded-lg border border-slate-300">🔗 Link</button>
+            <button onclick="toggleTaskOpen('${t.code}', ${!t.open})" class="px-2.5 py-1 rounded-lg border border-slate-300">${t.open ? '🔒 Schliessen' : '🟢 Öffnen'}</button>
+            <button onclick="deleteTask('${t.code}')" class="px-2.5 py-1 rounded-lg text-rose-600 hover:underline">Löschen</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    async function toggleTaskOpen(code, open) {
+      try { await db.collection(TASKS_COL).doc(code).update({ open }); } catch (e) { toast('Änderung fehlgeschlagen.'); }
+    }
+    async function deleteTask(code) {
+      if (!confirm(`Auftrag ${code} mit allen Abgaben löschen?`)) return;
+      try {
+        const subs = await db.collection(TASKS_COL).doc(code).collection('submissions').get();
+        const batch = db.batch();
+        subs.forEach(s => batch.delete(s.ref));
+        batch.delete(db.collection(TASKS_COL).doc(code));
+        await batch.commit();
+        toast('Auftrag gelöscht.');
+      } catch (e) { toast('Löschen fehlgeschlagen.'); }
+    }
+    let currentSubs = [];
+    async function openSubmissions(code) {
+      const t = myTasks.find(x => x.code === code);
+      document.getElementById('subs-title').textContent = `Abgaben: ${t ? t.title : code}`;
+      const list = document.getElementById('subs-list');
+      list.innerHTML = '<p class="text-sm text-slate-400">Lade …</p>';
+      openModal('subs-modal');
+      try {
+        const snap = await db.collection(TASKS_COL).doc(code).collection('submissions').get();
+        currentSubs = snap.docs.map(d => ({ id: d.id, code, ...d.data() })).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'de'));
+        list.innerHTML = currentSubs.length ? currentSubs.map((s, i) => `
+          <div class="flex items-center justify-between gap-2 p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-slate-900">${escapeHTML(s.name)}</div>
+              <div class="text-xs text-slate-500">${(s.topic?.events || []).length} Ereignisse · ${tsMs(s.updatedAt) ? new Date(tsMs(s.updatedAt)).toLocaleString('de-CH', { dateStyle: 'short', timeStyle: 'short' }) : ''}</div>
+            </div>
+            <div class="flex gap-2 shrink-0 text-xs">
+              <button onclick="viewSubmission(${i})" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold">Ansehen</button>
+              <button onclick="deleteSubmission(${i})" class="px-2 py-1 text-rose-600 hover:underline">Löschen</button>
+            </div>
+          </div>`).join('') : '<p class="text-sm text-slate-400 italic">Noch keine Abgaben.</p>';
+      } catch (e) {
+        list.innerHTML = '<p class="text-sm text-rose-700">Abgaben konnten nicht geladen werden.</p>';
+      }
+    }
+    function viewSubmission(i) {
+      const s = currentSubs[i];
+      if (!s) return;
+      if (dirty && !confirm('Ungespeicherte Änderungen gehen verloren. Trotzdem die Abgabe öffnen?')) return;
+      const topic = normalizeTopic(clone(s.topic || {}));
+      topic._submittedBy = s.name;
+      closeModal('subs-modal');
+      closeModal('account-modal');
+      setActiveTopic(topic, { kind: 'submission', id: s.id });
+      setMode('explore');
+    }
+    async function deleteSubmission(i) {
+      const s = currentSubs[i];
+      if (!s || !confirm(`Abgabe von ${s.name} löschen?`)) return;
+      try { await db.collection(TASKS_COL).doc(s.code).collection('submissions').doc(s.id).delete(); openSubmissions(s.code); }
+      catch (e) { toast('Löschen fehlgeschlagen.'); }
+    }
+    async function saveSubmissionAsTopic() {
+      const name = activeTopic._submittedBy;
+      activeRef = { kind: 'draft', id: '' };
+      activeTopic.title = `${activeTopic.title} (${name})`.slice(0, 80);
+      dirty = true;
+      await saveCurrentTopic();
+    }
+
+    // ---------- Schüler: Auftrag öffnen & abgeben ----------
+    async function prepareTaskStart(code) {
+      try {
+        const snap = await db.collection(TASKS_COL).doc(code).get();
+        if (!snap.exists) { toast('Auftrag nicht gefunden.'); setMode('explore'); return; }
+        const t = snap.data();
+        activeTask = { code, title: t.title, open: t.open };
+        // Eigener Zwischenstand auf diesem Gerät hat Vorrang
+        const draftKey = 'zeitstrahl_task_' + code;
+        let draft = null;
+        try { draft = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch (e) {}
+        if (draft) setActiveTopic(normalizeTopic(draft), { kind: 'draft', id: '' });
+        else if (t.startTopic) setActiveTopic(normalizeTopic(clone(t.startTopic)), { kind: 'draft', id: '' });
+        else setActiveTopic(normalizeTopic({ title: t.title || 'Mein Zeitstrahl', layout: 'single', categories: DEFAULT_CATS.slice(0, 3), events: [] }), { kind: 'draft', id: '' });
+        renderBanner();
+        setMode('builder');
+      } catch (e) {
+        toast('Auftrag konnte nicht geladen werden.');
+        setMode('explore');
+      }
+    }
+    function openSubmitModal() {
+      const info = document.getElementById('submit-info');
+      info.classList.add('hidden');
+      if (!document.getElementById('submit-name').value) document.getElementById('submit-name').value = localStorage.getItem('zeitstrahl_student_name') || '';
+      openModal('submit-modal');
+    }
+    async function submitTopic() {
+      const code = document.getElementById('submit-code').value.trim();
+      const name = document.getElementById('submit-name').value.trim();
+      const info = document.getElementById('submit-info');
+      const showInfo = (msg, ok) => {
+        info.className = `text-sm rounded-xl p-3 border ${ok ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`;
+        info.textContent = msg;
+      };
+      if (!/^\d{4}$/.test(code)) return showInfo('Bitte den 4-stelligen Code eingeben.', false);
+      if (!name) return showInfo('Bitte deinen Vornamen eingeben.', false);
+      updateBuilderMetaSilent();
+      if (!activeTopic.events.length) return showInfo('Dein Zeitstrahl hat noch keine Ereignisse.', false);
+      const topic = topicForStorage(activeTopic);
+      delete topic.aiGenerated; delete topic.reviewed;
+      if (JSON.stringify(topic).length > 900000) return showInfo('Der Zeitstrahl ist zu gross (zu viele eigene Fotos). Bitte einige Fotos entfernen.', false);
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      try {
+        const task = await db.collection(TASKS_COL).doc(code).get();
+        if (!task.exists) throw new Error('Code nicht gefunden.');
+        if (!task.data().open) throw new Error('Dieser Auftrag ist geschlossen.');
+        await db.collection(TASKS_COL).doc(code).collection('submissions').doc(deviceId).set({ name: name.slice(0, 40), topic, updatedAt: FV.serverTimestamp() });
+        localStorage.setItem('zeitstrahl_student_name', name);
+        try { localStorage.setItem('zeitstrahl_task_' + code, JSON.stringify(topic)); } catch (e) {}
+        showInfo(`✓ Abgegeben: «${task.data().title}». Du kannst später nochmals abgeben.`, true);
+      } catch (e) {
+        showInfo(e.code === 'permission-denied' ? 'Abgabe nicht möglich – ist der Auftrag noch offen?' : (e.message || 'Abgabe fehlgeschlagen.'), false);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // =========================================================================
+    // 17. DATEI EXPORT / IMPORT
+    // =========================================================================
+    function downloadJsonFile() {
+      updateBuilderMetaSilent();
+      const blob = new Blob([JSON.stringify(topicForStorage(activeTopic), null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (activeTopic.title || 'zeitstrahl').toLowerCase().replace(/[äöü]/g, c => ({ 'ä': 'ae', 'ö': 'oe', 'ü': 'ue' }[c])).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function uploadJsonFile(event) {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const topic = normalizeTopic(extractJson(e.target.result));
+          closeModal('new-modal');
+          setActiveTopic(topic, { kind: 'draft', id: '' });
+          dirty = true;
+          renderTopicDropdown();
+          updateBuilderHint();
+          setMode('explore');
+          toast('Datei geladen. Speichern nicht vergessen.');
+        } catch (err) {
+          toast('Die Datei ist kein gültiger Zeitstrahl.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Entwurf eines Auftrags laufend auf dem Gerät sichern
+    setInterval(() => {
+      if (activeTask && dirty) {
+        try { localStorage.setItem('zeitstrahl_task_' + activeTask.code, JSON.stringify(topicForStorage(activeTopic))); } catch (e) {}
+      }
+    }, 5000);
+
+    window.addEventListener('beforeunload', (e) => {
+      if (dirty && !activeTask) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
