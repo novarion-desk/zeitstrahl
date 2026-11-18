@@ -1,6 +1,12 @@
 # Changelog
 
 ## v1 – 18.11.2026
+- Import per Drag & Drop oder Einfügen: Text, Excel/Numbers-Tabellen, .docx, .xlsx, .csv, .pdf, .json – mit Anleitung, Vorlage und Excel-Vorlage.
+- Fliesstext (z. B. aus dem Lehrmittel) liest die KI aus (mit Login).
+- Kontrollübersicht vor dem Erstellen: jede Zeile anpassen oder löschen; fehlende Texte, Denkfragen, Bild-Artikel und Symbole auf Wunsch mit KI ergänzen.
+- Farbpaletten (Standard, Pastell, Kräftig, Erdtöne, Graustufen), eigene Farbe und Name pro Kategorie.
+- Beamer-Modus: dunkel, grosse Karten und Schrift, Vollbild.
+- Export: Poster als PDF (A4/A3), Arbeitsblatt mit Lösung als PDF, eigene Webseite (.html, offline, Bilder eingebettet), Bild (.png), Datei (.json).
 - Grundlage mit Gemini erstellt, überarbeitet.
 - Drei zusätzliche Beispielthemen: Alte Eidgenossenschaft, Frauenstimmrecht & Gleichstellung, Kalter Krieg & Schweiz.
 - Zeitstrahl verteilt Karten automatisch auf genügend Etagen, nichts überlappt mehr.

@@ -24,6 +24,24 @@
     .timeline-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     .tab-active { background: #ffffff; color: #4338ca; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
     #share-qr svg { display: block; width: 100%; height: 100%; }
+    /* Beamer: dunkel und gross */
+    body.beamer-mode { background: #0b1220; color: #e5e7eb; }
+    body.beamer-mode .card { background: #111827; border-color: #1f2937; box-shadow: none; }
+    body.beamer-mode #timeline-viewport { background: #0f172a; border-color: #1f2937; }
+    body.beamer-mode .tick-label { background: #0f172a; color: #cbd5e1; }
+    body.beamer-mode .axis-line { background: #e2e8f0; }
+    body.beamer-mode .tl-line { background: #475569; }
+    body.beamer-mode .phase-label { color: #64748b; }
+    body.beamer-mode #track-legend-box, body.beamer-mode #track-legend-box strong { color: #cbd5e1; font-size: 0.95rem; }
+    body.beamer-mode #detail-title { color: #ffffff; font-size: 2.25rem; line-height: 1.15; }
+    body.beamer-mode #detail-desc { color: #e5e7eb; font-size: 1.35rem; line-height: 1.6; }
+    body.beamer-mode #detail-question-box { background: #1e1b4b; border-color: #312e81; }
+    body.beamer-mode #detail-question { color: #e0e7ff; font-size: 1.15rem; }
+    body.beamer-mode #detail-year { font-size: 1.1rem; }
+    body.beamer-mode #detail-img { height: 18rem; }
+    body.beamer-mode #detail-image-box { width: 26rem; max-width: 100%; }
+    body.beamer-mode #btn-exit-present { background: #4f46e5; }
+    body.beamer-mode main { max-width: none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -50,8 +68,8 @@
       <!-- Thema & Aktionen -->
       <div class="flex items-center gap-2 flex-wrap">
         <select id="topic-select" onchange="selectTopic(this.value)" class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium max-w-[210px] sm:max-w-xs"></select>
-        <button onclick="openNewModal()" title="Neues Thema" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-semibold">✨ Neu</button>
-        <button onclick="openShareModal()" title="Mit der Klasse teilen" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">📲 Teilen</button>
+        <button onclick="openNewModal()" id="btn-new" title="Neues Thema" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-semibold">✨ Neu</button>
+        <button onclick="openShareModal()" id="btn-share" title="Mit der Klasse teilen" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">📲 Teilen</button>
         <button onclick="openAccountModal()" id="btn-account" title="Konto" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">👤 Anmelden</button>
       </div>
     </div>
@@ -76,7 +94,8 @@
         <div id="filter-bar" class="flex flex-wrap items-center gap-1.5"></div>
         <div class="flex flex-wrap items-center gap-2">
           <button onclick="loadImagesForTopic(true)" id="btn-auto-images" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-semibold">🖼️ Bilder laden</button>
-          <button onclick="togglePresentationMode()" class="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-semibold">🖥️ Beamer-Fokus</button>
+          <button onclick="togglePresentationMode()" class="text-xs bg-slate-800 text-white hover:bg-slate-900 px-3 py-1.5 rounded-xl font-semibold">🖥️ Beamer</button>
+          <button onclick="openExportModal()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">⬇️ Export</button>
           <div class="flex items-center gap-1.5 pl-1">
             <button onclick="changeZoom(-0.3)" class="w-7 h-7 rounded-lg border border-slate-300 bg-white font-bold text-sm hover:bg-slate-50">−</button>
             <span id="zoom-label" class="text-xs font-mono font-semibold w-11 text-center">110%</span>
@@ -226,6 +245,18 @@
           <input type="text" id="builder-track-bottom" maxlength="40" onchange="updateBuilderMeta()" placeholder="Untere Spur" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs" />
         </div>
 
+        <details id="builder-design" class="bg-slate-50 rounded-xl border border-slate-200 p-3">
+          <summary class="text-xs font-semibold uppercase tracking-wider text-slate-500 cursor-pointer">🎨 Kategorien & Farben</summary>
+          <div class="space-y-2 pt-3">
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-600 w-20">Farbpalette</label>
+              <select id="builder-palette" onchange="setPalette(this.value)" class="flex-1 rounded-lg border border-slate-300 px-2 py-1.5 text-xs bg-white"></select>
+            </div>
+            <div id="builder-cats" class="space-y-1.5"></div>
+            <button type="button" onclick="addCategory()" id="btn-add-cat" class="text-xs text-indigo-600 hover:underline">+ Kategorie hinzufügen (max. 4)</button>
+          </div>
+        </details>
+
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Startjahr *</label>
@@ -302,8 +333,8 @@
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="saveCurrentTopic()" id="btn-save-topic" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold hover:bg-emerald-100">💾 Speichern</button>
-            <button onclick="openSubmitModal()" class="px-3 py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold hover:bg-amber-100">📤 Abgeben</button>
-            <button onclick="downloadJsonFile()" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold hover:bg-slate-50">⬇️ Datei</button>
+            <button onclick="openSubmitModal()" id="btn-submit-open" class="px-3 py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold hover:bg-amber-100">📤 Abgeben</button>
+            <button onclick="openExportModal()" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold hover:bg-slate-50">⬇️ Export</button>
             <button onclick="setMode('explore')" class="btn-primary px-4 py-2 text-xs">Zeitstrahl ansehen →</button>
           </div>
         </div>
@@ -325,7 +356,8 @@
       <div class="flex gap-1 bg-slate-100 p-1 rounded-xl text-xs sm:text-sm">
         <button onclick="setNewTab('ai')" id="newtab-ai" class="newtab flex-1 px-2 py-1.5 rounded-lg">✨ KI direkt</button>
         <button onclick="setNewTab('prompt')" id="newtab-prompt" class="newtab flex-1 px-2 py-1.5 rounded-lg">📋 KI-Chat</button>
-        <button onclick="setNewTab('manual')" id="newtab-manual" class="newtab flex-1 px-2 py-1.5 rounded-lg">✏️ Leer / Datei</button>
+        <button onclick="setNewTab('import')" id="newtab-import" class="newtab flex-1 px-2 py-1.5 rounded-lg">📥 Importieren</button>
+        <button onclick="setNewTab('manual')" id="newtab-manual" class="newtab flex-1 px-2 py-1.5 rounded-lg">✏️ Leer</button>
       </div>
 
       <!-- gemeinsame Angaben für KI -->
@@ -376,7 +408,7 @@
         </div>
         <div id="gen-status" class="hidden text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-3"></div>
         <div class="flex justify-end">
-          <button onclick="generateWithAI()" id="btn-generate" class="btn-primary px-5 py-2.5 text-sm">✨ Zeitstrahl erstellen</button>
+          <button onclick="generateWithAI()" id="btn-generate" class="btn-primary px-5 py-2.5 text-sm">✨ Vorschlag erstellen</button>
         </div>
       </div>
 
@@ -385,26 +417,153 @@
         <ol class="text-sm text-slate-600 list-decimal pl-5 space-y-1">
           <li>Thema oben eintragen und auf <strong>«Prompt kopieren»</strong> tippen.</li>
           <li>Den Prompt in Gemini, ChatGPT oder Claude einfügen.</li>
-          <li>Die ganze Antwort kopieren, unten einfügen und auf <strong>«Zeitstrahl erstellen»</strong> tippen.</li>
+          <li>Die ganze Antwort kopieren, unten einfügen und auf <strong>«Weiter zur Kontrolle»</strong> tippen.</li>
         </ol>
         <button onclick="copyPrompt()" class="px-4 py-2 rounded-xl border border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 text-sm font-semibold">📋 Prompt kopieren</button>
         <textarea id="prompt-answer" rows="7" placeholder="Antwort der KI hier einfügen…" class="w-full font-mono text-xs rounded-xl border border-slate-300 p-3"></textarea>
         <div class="flex justify-end">
-          <button onclick="importFromPromptAnswer()" class="btn-primary px-5 py-2.5 text-sm">Zeitstrahl erstellen</button>
+          <button onclick="importFromPromptAnswer()" class="btn-primary px-5 py-2.5 text-sm">Weiter zur Kontrolle →</button>
         </div>
       </div>
 
-      <!-- Tab: Leer / Datei -->
-      <div id="newpane-manual" class="newpane hidden space-y-3">
-        <p class="text-sm text-slate-600">Einen leeren Zeitstrahl selbst aufbauen oder eine gespeicherte Zeitstrahl-Datei (.json) öffnen.</p>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="closeModal('new-modal'); startEmptyBuilder(); setMode('builder');" class="btn-primary px-4 py-2.5 text-sm">✏️ Leeren Zeitstrahl bauen</button>
-          <label class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium cursor-pointer hover:bg-slate-50">
-            📂 Datei öffnen (.json)
-            <input type="file" accept=".json,application/json" onchange="uploadJsonFile(event)" class="hidden" />
+      <!-- Tab: Importieren -->
+      <div id="newpane-import" class="newpane hidden space-y-3">
+        <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 transition">
+          <div class="text-3xl mb-1">📥</div>
+          <p class="text-sm font-semibold text-slate-700">Datei hierher ziehen</p>
+          <p class="text-xs text-slate-500">Word (.docx), Excel (.xlsx / .csv), PDF, Text (.txt) oder Zeitstrahl-Datei (.json)</p>
+          <label class="inline-block mt-3 px-4 py-2 rounded-xl border border-slate-300 bg-white text-sm font-medium cursor-pointer hover:bg-slate-100">
+            Datei auswählen
+            <input type="file" accept=".txt,.md,.csv,.tsv,.xlsx,.xls,.docx,.pdf,.json" onchange="handleImportFile(this.files[0]); this.value='';" class="hidden" />
           </label>
         </div>
+        <textarea id="import-text" rows="8" placeholder="…oder Text bzw. Tabelle hier einfügen (eine Zeile pro Ereignis, siehe Anleitung)" class="w-full font-mono text-xs rounded-xl border border-slate-300 p-3"></textarea>
+        <div id="import-status" class="hidden text-sm rounded-xl p-3 border"></div>
+        <details class="text-sm bg-indigo-50/60 border border-indigo-100 rounded-xl p-3">
+          <summary class="font-semibold text-indigo-800 cursor-pointer">📖 Anleitung: So notierst du die Inhalte</summary>
+          <div class="space-y-2 pt-2 text-slate-700 text-xs sm:text-sm">
+            <p><strong>Eine Zeile pro Ereignis.</strong> Felder mit <code>|</code> trennen. Aus Excel- oder Word-Tabellen einfach kopieren – jede Spalte ist ein Feld.</p>
+            <p class="font-mono text-[11px] bg-white border border-slate-200 rounded-lg p-2">Jahr | Titel | Spur | Kategorie | Erklärung | Denkfrage | Wikipedia-Artikel</p>
+            <ul class="list-disc pl-5 space-y-0.5">
+              <li>Pflicht sind nur <strong>Jahr</strong> und <strong>Titel</strong>, alles andere darf fehlen.</li>
+              <li>Zeiträume: <code>1950-1953</code> · vor Christus: <code>-44</code> oder <code>44 v. Chr.</code> · ungefähr: <code>um 1450</code></li>
+              <li>Freiwillige Kopfzeilen: <code>Titel:</code>, <code>Spuren: Welt | Schweiz</code>, <code>Kategorien: Politik, Krieg, Alltag</code></li>
+              <li>Ohne «Spuren» gibt es eine Spur. Bei «Spur» genügt <code>Schweiz</code> bzw. <code>Welt</code> (oder <code>oben</code>/<code>unten</code>).</li>
+              <li>Kategorien entstehen automatisch aus den Zeilen (höchstens 4).</li>
+              <li>Tabellen mit Kopfzeile (Jahr, Titel, …) dürfen die Spalten in beliebiger Reihenfolge haben.</li>
+              <li>Auch einfache Listen gehen: <code>1961: Bau der Berliner Mauer – Die DDR riegelt West-Berlin ab.</code></li>
+              <li>Normaler Fliesstext (z. B. aus dem Lehrmittel): Mit Anmeldung liest die KI die Ereignisse heraus.</li>
+              <li>Danach siehst du alles in der <strong>Kontrollübersicht</strong> und kannst anpassen oder löschen.</li>
+            </ul>
+            <pre class="font-mono text-[11px] bg-white border border-slate-200 rounded-lg p-2 whitespace-pre-wrap">Titel: Kalter Krieg &amp; Schweiz
+Spuren: Welt | Schweiz
+Kategorien: Politik, Konflikte, Alltag
+
+1949 | Gründung der NATO | Welt | Politik | Westliche Staaten gründen ein Verteidigungsbündnis. | Warum trat die Schweiz nicht bei? | NATO
+1950-1953 | Koreakrieg | Welt | Konflikte | Nord- und Südkorea führen Krieg. | Was ist ein Stellvertreterkrieg?
+1956 | Ungarnflüchtlinge | Schweiz | Alltag | Die Schweiz nimmt rund 14 000 Flüchtlinge auf.
+1961 | Bau der Berliner Mauer</pre>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="copyImportTemplate()" class="px-3 py-1.5 rounded-lg border border-indigo-300 bg-white text-indigo-700 text-xs font-semibold">📋 Vorlage kopieren</button>
+              <button type="button" onclick="downloadCsvTemplate()" class="px-3 py-1.5 rounded-lg border border-indigo-300 bg-white text-indigo-700 text-xs font-semibold">⬇️ Excel-Vorlage (.csv)</button>
+            </div>
+          </div>
+        </details>
+        <div class="flex justify-end">
+          <button onclick="importFromText()" id="btn-import" class="btn-primary px-5 py-2.5 text-sm">Weiter zur Kontrolle →</button>
+        </div>
       </div>
+
+      <!-- Tab: Leer -->
+      <div id="newpane-manual" class="newpane hidden space-y-3">
+        <p class="text-sm text-slate-600">Einen leeren Zeitstrahl Schritt für Schritt selbst aufbauen.</p>
+        <button onclick="closeModal('new-modal'); startEmptyBuilder(); setMode('builder');" class="btn-primary px-4 py-2.5 text-sm">✏️ Leeren Zeitstrahl bauen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KONTROLLÜBERSICHT -->
+  <div id="review-modal" class="hidden fixed inset-0 bg-slate-900/50 z-[56] flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-5xl w-full p-4 sm:p-6 shadow-xl max-h-[96vh] flex flex-col gap-3">
+      <div class="flex justify-between items-start gap-3">
+        <div>
+          <h3 class="font-bold text-lg text-slate-900">Kontrollübersicht</h3>
+          <p id="review-info" class="text-xs text-slate-500"></p>
+        </div>
+        <button onclick="closeModal('review-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <input id="rv-title" maxlength="80" placeholder="Titel des Zeitstrahls" onchange="reviewTopic.title=this.value.trim()||'Mein Zeitstrahl'" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+        <select id="rv-layout" onchange="reviewSetLayout(this.value)" class="rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+          <option value="single">1 Spur</option>
+          <option value="dual">2 Spuren</option>
+        </select>
+        <div id="rv-tracks" class="grid grid-cols-2 gap-2">
+          <input id="rv-track-top" maxlength="40" placeholder="Oben" onchange="reviewTopic.trackTop=this.value.trim()||'Welt'; renderReview()" class="rounded-xl border border-slate-300 px-2 py-2 text-xs" />
+          <input id="rv-track-bottom" maxlength="40" placeholder="Unten" onchange="reviewTopic.trackBottom=this.value.trim()||'Schweiz'; renderReview()" class="rounded-xl border border-slate-300 px-2 py-2 text-xs" />
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div id="review-warn" class="text-xs"></div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="reviewAddRow()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold hover:bg-slate-50">＋ Ereignis</button>
+          <button onclick="reviewCompleteWithAI()" id="btn-review-ai" class="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold hover:bg-indigo-100">✨ Fehlendes mit KI ergänzen</button>
+        </div>
+      </div>
+      <div id="review-status" class="hidden text-sm rounded-xl p-3 border"></div>
+      <div id="review-list" class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[8rem]"></div>
+      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-slate-100">
+        <p class="text-[11px] text-slate-400">Die Reihenfolge spielt keine Rolle, der Zeitstrahl sortiert nach Jahr.</p>
+        <div class="flex gap-2">
+          <button onclick="closeModal('review-modal')" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm">Abbrechen</button>
+          <button onclick="reviewCreate()" id="btn-review-create" class="btn-primary px-5 py-2.5 text-sm">✓ Zeitstrahl erstellen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EXPORT -->
+  <div id="export-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-slate-900">Exportieren</h3>
+        <button onclick="closeModal('export-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div class="space-y-2.5">
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="font-semibold text-sm text-slate-900">🖨️ Poster (PDF)</div>
+          <p class="text-xs text-slate-500">Zeitstrahl mit Bildern, danach alle Steckbriefe und die Bildnachweise.</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="printPoster('A4')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">A4 quer</button>
+            <button onclick="printPoster('A3')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">A3 quer</button>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="font-semibold text-sm text-slate-900">📝 Arbeitsblatt + Lösung (PDF)</div>
+          <p class="text-xs text-slate-500">Jahreszahlen ergänzen, Ereignisse auf einem leeren Zeitstrahl einordnen, Denkfragen. Lösungsblatt auf separater Seite.</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="printWorksheet(true)" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Arbeitsblatt + Lösung</button>
+            <button onclick="printWorksheet(false)" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold">Nur Arbeitsblatt</button>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="font-semibold text-sm text-slate-900">🌐 Eigene Webseite (.html)</div>
+          <p class="text-xs text-slate-500">Eine einzige Datei mit Zeitstrahl, Datum schätzen und Sortier-Sprint. Funktioniert ohne Login und ohne Internet – zum Verschicken, für Teams/OneDrive oder offline am Beamer.</p>
+          <button onclick="exportHtml()" id="btn-export-html" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Webseite herunterladen</button>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="font-semibold text-sm text-slate-900">🖼️ Bild (.png)</div>
+          <p class="text-xs text-slate-500">Der Zeitstrahl als Bild, z. B. für Präsentationen oder OneNote.</p>
+          <button onclick="exportPng()" id="btn-export-png" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Bild herunterladen</button>
+        </div>
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="font-semibold text-sm text-slate-900">💾 Zeitstrahl-Datei (.json)</div>
+          <p class="text-xs text-slate-500">Zum Sichern und später wieder Importieren und Bearbeiten.</p>
+          <button onclick="downloadJsonFile()" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold">Datei herunterladen</button>
+        </div>
+      </div>
+      <div id="export-status" class="hidden text-sm rounded-xl p-3 border"></div>
+      <p class="text-[11px] text-slate-400">PDF: Im Druckfenster «Als PDF speichern» wählen. Am Handy: Teilen → Drucken → Als PDF speichern.</p>
     </div>
   </div>
 
@@ -560,12 +719,27 @@
       bildung: 'Bildung', medien: 'Medien', sport: 'Sport', entdeckung: 'Entdeckung', bau: 'Bauwerk', stadt: 'Stadt', berge: 'Alpen/Schweiz',
       umwelt: 'Umwelt', katastrophe: 'Katastrophe', ende: 'Ende/Ergebnis'
     };
-    const CAT_STYLES = [
-      { card: 'border-indigo-400 bg-indigo-50/95 text-indigo-950', dot: 'bg-indigo-600', chip: 'bg-indigo-100 text-indigo-800', soft: 'bg-indigo-50' },
-      { card: 'border-amber-400 bg-amber-50/95 text-amber-950', dot: 'bg-amber-500', chip: 'bg-amber-100 text-amber-800', soft: 'bg-amber-50' },
-      { card: 'border-emerald-400 bg-emerald-50/95 text-emerald-950', dot: 'bg-emerald-600', chip: 'bg-emerald-100 text-emerald-800', soft: 'bg-emerald-50' },
-      { card: 'border-rose-400 bg-rose-50/95 text-rose-950', dot: 'bg-rose-500', chip: 'bg-rose-100 text-rose-800', soft: 'bg-rose-50' }
-    ];
+    const PALETTES = {
+      standard: { label: 'Standard', colors: ['#4f46e5', '#f59e0b', '#059669', '#e11d48'] },
+      pastell: { label: 'Pastell', colors: ['#818cf8', '#fbbf24', '#34d399', '#fb7185'] },
+      kraeftig: { label: 'Kräftig', colors: ['#1d4ed8', '#dc2626', '#16a34a', '#9333ea'] },
+      erde: { label: 'Erdtöne', colors: ['#92400e', '#3f6212', '#1e3a8a', '#9f1239'] },
+      grau: { label: 'Graustufen (Kopien)', colors: ['#111827', '#4b5563', '#9ca3af', '#374151'] }
+    };
+    function hexToRgb(h) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return [79, 70, 229]; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+    function mix(hex, withHex, amount) {
+      const a = hexToRgb(hex), b = hexToRgb(withHex);
+      return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * amount).toString(16).padStart(2, '0')).join('');
+    }
+    function catColor(topic, catId) {
+      const cats = topic.categories || [];
+      let idx = cats.findIndex(c => c.id === catId);
+      if (idx < 0) idx = 0;
+      const cat = cats[idx] || {};
+      const pal = (PALETTES[topic.palette] || PALETTES.standard).colors;
+      const base = /^#[0-9a-f]{6}$/i.test(cat.color || '') ? cat.color : pal[idx % pal.length];
+      return { base, soft: mix(base, '#ffffff', 0.9), softer: mix(base, '#ffffff', 0.94), border: mix(base, '#ffffff', 0.35), text: mix(base, '#000000', 0.6), chipBg: mix(base, '#ffffff', 0.82), chipText: mix(base, '#000000', 0.45) };
+    }
     const DEFAULT_CATS = [
       { id: 'politik', label: 'Politik & Staat' },
       { id: 'krieg', label: 'Krieg & Konflikt' },
@@ -612,7 +786,6 @@
       const i = (topic.categories || []).findIndex(c => c.id === catId);
       return i < 0 ? 0 : i;
     }
-    function catStyle(topic, catId) { return CAT_STYLES[catIndex(topic, catId) % CAT_STYLES.length]; }
     function catLabel(topic, catId) {
       const c = (topic.categories || []).find(x => x.id === catId);
       return c ? c.label : catId;
@@ -820,7 +993,12 @@
         cats = evCats.slice(0, 4).map(id => ({ id: String(id).replace(/[^a-z0-9_]/gi, '').slice(0, 24) || 'k', label: LEGACY[id] || String(id) }));
         if (cats.length === 0) cats = DEFAULT_CATS.slice(0, 3);
       }
-      t.categories = cats.slice(0, 4);
+      t.categories = cats.slice(0, 4).map((c, i) => {
+        const src = Array.isArray(raw.categories) ? raw.categories.find(x => x && (x.id === c.id)) : null;
+        const color = src && /^#[0-9a-f]{6}$/i.test(src.color || '') ? src.color : '';
+        return color ? { ...c, color } : { id: c.id, label: c.label };
+      });
+      t.palette = PALETTES[raw.palette] ? raw.palette : 'standard';
       t.phases = (Array.isArray(raw.phases) ? raw.phases : []).map(p => ({ start: toInt(p.start), end: toInt(p.end), label: String(p.label || '').slice(0, 50) }))
         .filter(p => p.start !== null && p.end !== null && p.end > p.start).slice(0, 8);
       const events = (Array.isArray(raw.events) ? raw.events : []).map((e, i) => {
@@ -906,6 +1084,13 @@
       const presetKey = params.get('topic');
       const taskCode = params.get('abgabe');
 
+      if (window.EMBED_TOPIC) {
+        ['btn-new', 'btn-share', 'btn-account', 'btn-submit-open'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        setActiveTopic(normalizeTopic(clone(window.EMBED_TOPIC)), { kind: 'embed', id: 'x' });
+        setMode('explore');
+        setupDragDrop();
+        return;
+      }
       if (sharedId) await openSharedTopic(sharedId);
       else if (presetKey && (PRESET_TOPICS[presetKey] || localTopics[presetKey])) selectTopic(presetKey);
       else selectTopic('preset:ww2');
@@ -928,6 +1113,7 @@
       window.addEventListener('resize', () => { if (currentMode === 'explore') renderTimeline(); });
 
       if (auth) auth.onAuthStateChanged(onAuthChanged);
+      setupDragDrop();
     });
 
     function onAuthChanged(user) {
@@ -963,6 +1149,10 @@
     // =========================================================================
     function renderTopicDropdown() {
       const sel = document.getElementById('topic-select');
+      if (window.EMBED_TOPIC) {
+        sel.innerHTML = `<option value="${refKey()}">${escapeHTML(activeTopic.title)}${dirty ? ' •' : ''}</option>`;
+        return;
+      }
       let html = '<optgroup label="Standard-Themen">' +
         Object.entries(PRESET_TOPICS).map(([k, t]) => `<option value="preset:${k}">${escapeHTML(t.title)}</option>`).join('') + '</optgroup>';
       const cloud = Object.entries(myTopics).sort((a, b) => (a[1].title || '').localeCompare(b[1].title || '', 'de'));
@@ -1024,6 +1214,7 @@
     }
 
     function markDirty() {
+      if (window.EMBED_TOPIC) { dirty = true; renderTopicDropdown(); updateBuilderHint(); return; }
       if (activeRef.kind === 'shared' || activeRef.kind === 'submission' || activeRef.kind === 'preset') {
         // Änderungen an Standard-Themen, geteilten Themen oder Abgaben werden zu einer eigenen Kopie
         if (activeRef.kind !== 'preset') toast('Du bearbeitest jetzt eine eigene Kopie.');
@@ -1097,7 +1288,7 @@
       const bar = document.getElementById('filter-bar');
       bar.innerHTML = '<span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1">Filter:</span>' +
         `<button onclick="setCategoryFilter('all')" class="cat-btn ${currentFilter === 'all' ? 'pill-active' : ''} text-xs px-3 py-1.5 rounded-full border border-slate-200">Alle</button>` +
-        activeTopic.categories.map((c, i) => `<button onclick="setCategoryFilter('${c.id}')" class="cat-btn ${currentFilter === c.id ? 'pill-active' : ''} text-xs px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CAT_STYLES[i % 4].dot}"></span>${escapeHTML(c.label)}</button>`).join('');
+        activeTopic.categories.map((c, i) => `<button onclick="setCategoryFilter('${c.id}')" class="cat-btn ${currentFilter === c.id ? 'pill-active' : ''} text-xs px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:${catColor(activeTopic, c.id).base}"></span>${escapeHTML(c.label)}</button>`).join('');
     }
     function setCategoryFilter(cat) {
       currentFilter = cat;
@@ -1116,6 +1307,11 @@
     }
     function togglePresentationMode() {
       presentationMode = !presentationMode;
+      document.body.classList.toggle('beamer-mode', presentationMode);
+      try {
+        if (presentationMode && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+        if (!presentationMode && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      } catch (e) {}
       document.getElementById('main-header').classList.toggle('hidden', presentationMode);
       document.getElementById('explore-toolbar').classList.toggle('hidden', presentationMode);
       document.getElementById('btn-exit-present').classList.toggle('hidden', !presentationMode);
@@ -1130,108 +1326,110 @@
       showDetail(events[nextIdx].id, true);
     }
 
-    function renderTimeline() {
-      const canvas = document.getElementById('timeline-canvas');
-      const isSingle = activeTopic.layout === 'single';
-      const legendBox = document.getElementById('track-legend-box');
-      legendBox.innerHTML = isSingle
-        ? `<strong class="text-slate-800">${escapeHTML(activeTopic.title)}</strong>`
-        : `<span>Oben: <strong class="text-slate-800">${escapeHTML(activeTopic.trackTop)}</strong></span><span>•</span><span>Unten: <strong class="text-slate-800">${escapeHTML(activeTopic.trackBottom)}</strong></span>`;
-
-      const events = (activeTopic.events || []).filter(e => currentFilter === 'all' || e.cat === currentFilter);
-      if (events.length === 0) {
-        canvas.style.width = '100%';
-        canvas.innerHTML = '<div class="flex items-center justify-center h-96 text-sm text-slate-400">Noch keine Ereignisse. Unter «✏️ Selbst bauen» kannst du welche erfassen.</div>';
-        return;
-      }
-
+    // Gemeinsame Berechnung für Bildschirm, Druck und Bild-Export
+    function computeLayout(events, isSingle, baseWidth, opts = {}) {
+      const cardW = opts.cardW || 200, cardH = opts.cardH || 54, laneH = opts.laneH || 66, gap = 8;
+      const maxTop = isSingle ? 6 : 4, maxBottom = 4;
       const years = events.flatMap(e => [Number(e.start), Number(e.end ?? e.start)]);
       const rawMin = Math.min(...years), rawMax = Math.max(...years);
       const span = Math.max(8, rawMax - rawMin);
       const padYears = Math.max(1, Math.round(span * 0.06));
-      const minYear = rawMin - padYears, maxYear = rawMax + padYears;
-      const totalYears = maxYear - minYear;
-
-      const vpWidth = document.getElementById('timeline-viewport').clientWidth || 1000;
-      let totalWidth = Math.round(Math.max(1050, vpWidth, events.length * 115) * zoomLevel);
+      const minYear = rawMin - padYears, maxYear = rawMax + padYears, totalYears = maxYear - minYear;
+      const margin = Math.round(cardW / 2) + 10;
+      let totalWidth = Math.round(baseWidth);
       const sorted = sortedEvents(events);
-      const CARD_W = 200, GAP = 8, LANE_H = 66, CARD_H = 54;
-      const MAX_TOP = isSingle ? 6 : 4, MAX_BOTTOM = 4;
-
-      // Karten auf Etagen verteilen; wenn es zu eng wird, den Zeitstrahl breiter machen
       let yearToX, placement, nTop, nBottom;
       for (let attempt = 0; attempt < 6; attempt++) {
-        yearToX = (y) => ((y - minYear) / totalYears) * (totalWidth - 180) + 90;
+        yearToX = (y) => ((y - minYear) / totalYears) * (totalWidth - 2 * margin) + margin;
         const lanesTop = [], lanesBottom = [];
         placement = sorted.map(ev => {
           const x = yearToX(ev.start);
           const top = isSingle || ev.track !== 'bottom';
           const lanes = top ? lanesTop : lanesBottom;
-          let lane = lanes.findIndex(l => x - l >= CARD_W + GAP);
+          let lane = lanes.findIndex(l => x - l >= cardW + gap);
           if (lane === -1) { lane = lanes.length; lanes.push(x); } else lanes[lane] = x;
           return { ev, top, lane };
         });
         nTop = lanesTop.length; nBottom = lanesBottom.length;
-        if (nTop <= MAX_TOP && nBottom <= MAX_BOTTOM) break;
+        if ((nTop <= maxTop && nBottom <= maxBottom) || opts.fixedWidth) break;
         totalWidth = Math.round(totalWidth * 1.3);
       }
-      // Falls immer noch zu viele Etagen: überzählige Karten auf die oberste Etage legen
-      placement.forEach(pl => { pl.lane = Math.min(pl.lane, (pl.top ? MAX_TOP : MAX_BOTTOM) - 1); });
-      nTop = Math.max(1, Math.min(nTop, MAX_TOP));
-      nBottom = isSingle ? 0 : Math.max(1, Math.min(nBottom, MAX_BOTTOM));
-      canvas.style.width = totalWidth + 'px';
-
-      const axisY = 34 + nTop * LANE_H + 34;
-      const canvasHeight = isSingle ? axisY + 50 : axisY + 26 + nBottom * LANE_H + 16;
-      canvas.style.height = canvasHeight + 'px';
-      canvas.style.minHeight = canvasHeight + 'px';
-
-      const phaseColors = ['rgba(99,102,241,0.06)', 'rgba(245,158,11,0.07)', 'rgba(239,68,68,0.06)', 'rgba(16,185,129,0.07)'];
-      const phasesHTML = (activeTopic.phases || []).map((p, i) => {
-        const x1 = Math.max(0, yearToX(p.start)), x2 = Math.min(totalWidth, yearToX(p.end));
-        if (x2 <= x1) return '';
-        return `<div style="left:${x1}px; width:${x2 - x1}px; background-color:${phaseColors[i % 4]}" class="absolute top-0 bottom-0 border-r border-slate-200/60 pointer-events-none">
-            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 pt-2 truncate">${escapeHTML(p.label)}</span></div>`;
-      }).join('');
-
-      const pxPerYear = (totalWidth - 180) / totalYears;
+      placement.forEach(pl => { pl.lane = Math.min(pl.lane, (pl.top ? maxTop : maxBottom) - 1); });
+      nTop = Math.max(1, Math.min(nTop, maxTop));
+      nBottom = isSingle ? 0 : Math.max(1, Math.min(nBottom, maxBottom));
+      const axisY = 34 + nTop * laneH + 34;
+      const height = isSingle ? axisY + 50 : axisY + 26 + nBottom * laneH + 16;
+      placement.forEach(pl => {
+        pl.x = yearToX(pl.ev.start);
+        pl.xEnd = pl.ev.end != null ? yearToX(pl.ev.end) : pl.x;
+        pl.y = pl.top ? (axisY - 34 - cardH - pl.lane * laneH) : (axisY + 26 + pl.lane * laneH);
+      });
+      const pxPerYear = (totalWidth - 2 * margin) / totalYears;
       const steps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
-      const step = steps.find(st => st * pxPerYear >= 60) || 1000;
-      const firstTick = Math.ceil(minYear / step) * step;
-      let ticksHTML = '';
-      for (let y = firstTick; y <= maxYear; y += step) {
-        const x = yearToX(y);
-        ticksHTML += `<div style="left:${x}px" class="absolute top-0 bottom-0 border-l border-slate-200/70 pointer-events-none">
-            <span style="top:${axisY + 9}px" class="absolute -translate-x-1/2 text-slate-500 font-mono text-[10px] font-bold whitespace-nowrap bg-slate-50/90 px-1 rounded">${fmtYear(y)}</span></div>`;
-      }
+      const step = steps.find(st => st * pxPerYear >= (opts.tickPx || 60)) || 1000;
+      const ticks = [];
+      for (let y = Math.ceil(minYear / step) * step; y <= maxYear; y += step) ticks.push(y);
+      return { totalWidth, yearToX, placement, axisY, height, ticks, cardW, cardH, minYear, maxYear };
+    }
 
-      let cardsHTML = '';
-      placement.forEach(({ ev, top, lane }) => {
-        const xStart = yearToX(ev.start);
-        const xEnd = ev.end != null ? yearToX(ev.end) : xStart;
-        const barWidth = Math.max(10, xEnd - xStart);
-        const cardTopPx = top ? (axisY - 34 - CARD_H - lane * LANE_H) : (axisY + 26 + lane * LANE_H);
-        const lineTop = top ? cardTopPx + CARD_H : axisY;
-        const lineHeight = top ? Math.max(6, axisY - (cardTopPx + CARD_H)) : Math.max(6, cardTopPx - axisY);
-        const st = catStyle(activeTopic, ev.cat);
+    function renderTimeline() {
+      const canvas = document.getElementById('timeline-canvas');
+      const isSingle = activeTopic.layout === 'single';
+      const legendBox = document.getElementById('track-legend-box');
+      legendBox.innerHTML = isSingle
+        ? `<strong>${escapeHTML(activeTopic.title)}</strong>`
+        : `<span>Oben: <strong>${escapeHTML(activeTopic.trackTop)}</strong></span><span>•</span><span>Unten: <strong>${escapeHTML(activeTopic.trackBottom)}</strong></span>`;
+
+      const events = (activeTopic.events || []).filter(e => currentFilter === 'all' || e.cat === currentFilter);
+      if (events.length === 0) {
+        canvas.style.width = '100%';
+        canvas.style.height = '';
+        canvas.style.minHeight = '';
+        canvas.innerHTML = '<div class="flex items-center justify-center h-96 text-sm text-slate-400">Noch keine Ereignisse. Unter «✏️ Selbst bauen» kannst du welche erfassen.</div>';
+        return;
+      }
+      const big = presentationMode;
+      const vpWidth = document.getElementById('timeline-viewport').clientWidth || 1000;
+      const L = computeLayout(events, isSingle, Math.max(1050, vpWidth, events.length * (big ? 150 : 115)) * zoomLevel,
+        big ? { cardW: 270, cardH: 66, laneH: 80, tickPx: 70 } : {});
+      canvas.style.width = L.totalWidth + 'px';
+      canvas.style.height = L.height + 'px';
+      canvas.style.minHeight = L.height + 'px';
+
+      const phaseColors = ['rgba(99,102,241,0.07)', 'rgba(245,158,11,0.08)', 'rgba(239,68,68,0.07)', 'rgba(16,185,129,0.08)'];
+      const phasesHTML = (activeTopic.phases || []).map((p, i) => {
+        const x1 = Math.max(0, L.yearToX(p.start)), x2 = Math.min(L.totalWidth, L.yearToX(p.end));
+        if (x2 <= x1) return '';
+        return `<div style="left:${x1}px; width:${x2 - x1}px; background-color:${phaseColors[i % 4]}" class="absolute top-0 bottom-0 border-r border-slate-300/30 pointer-events-none">
+            <span class="phase-label block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 pt-2 truncate">${escapeHTML(p.label)}</span></div>`;
+      }).join('');
+      const ticksHTML = L.ticks.map(y => `<div style="left:${L.yearToX(y)}px" class="absolute top-0 bottom-0 border-l border-slate-300/40 pointer-events-none">
+            <span style="top:${L.axisY + 9}px" class="tick-label absolute -translate-x-1/2 text-slate-500 font-mono ${big ? 'text-sm' : 'text-[10px]'} font-bold whitespace-nowrap bg-slate-50/90 px-1 rounded">${fmtYear(y)}</span></div>`).join('');
+
+      const vis = big ? 'w-12 h-12 text-2xl' : 'w-10 h-10 text-xl';
+      const cardsHTML = L.placement.map(({ ev, top, x, xEnd, y }) => {
+        const barWidth = Math.max(10, xEnd - x);
+        const lineTop = top ? y + L.cardH : L.axisY;
+        const lineHeight = top ? Math.max(6, L.axisY - (y + L.cardH)) : Math.max(6, y - L.axisY);
+        const c = catColor(activeTopic, ev.cat);
         const isSelected = ev.id === selectedEventId;
         const ringClass = isSelected ? 'ring-2 ring-indigo-600 z-20 shadow-lg' : 'hover:shadow-md hover:z-20 z-10';
+        const icon = ICONS[ev.icon] || '📌';
         const visual = ev.image && ev.image.url
-          ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-black/10 bg-white" onerror="this.outerHTML='<span class=&quot;w-10 h-10 rounded-lg bg-white/80 flex items-center justify-center text-xl shrink-0&quot;>${ICONS[ev.icon] || '•'}</span>'" />`
-          : `<span class="w-10 h-10 rounded-lg bg-white/80 border border-black/5 flex items-center justify-center text-xl shrink-0">${ICONS[ev.icon] || '📌'}</span>`;
-        cardsHTML += `
-          <div style="left:${xStart}px; top:${lineTop}px; height:${lineHeight}px" class="absolute w-0.5 bg-slate-300 pointer-events-none"></div>
-          <div style="left:${xStart}px; top:${axisY - 4}px; width:${barWidth}px" class="absolute h-2.5 -translate-x-1 rounded-full ${st.dot} shadow-sm"></div>
-          <button id="ev-btn-${ev.id}" onclick="showDetail('${ev.id}', false)" style="left:${xStart}px; top:${cardTopPx}px; width:${CARD_W}px" class="absolute -translate-x-1/2 text-left p-1.5 rounded-xl border ${st.card} ${ringClass} transition cursor-pointer flex items-center gap-2">
+          ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="${vis} rounded-lg object-cover shrink-0 border border-black/10 bg-white" onerror="this.outerHTML='<span class=&quot;${vis} rounded-lg bg-white/80 flex items-center justify-center shrink-0&quot;>${icon}</span>'" />`
+          : `<span class="${vis} rounded-lg bg-white/80 border border-black/5 flex items-center justify-center shrink-0">${icon}</span>`;
+        return `
+          <div style="left:${x}px; top:${lineTop}px; height:${lineHeight}px" class="tl-line absolute w-0.5 bg-slate-300 pointer-events-none"></div>
+          <div style="left:${x}px; top:${L.axisY - 4}px; width:${barWidth}px; background:${c.base}" class="absolute h-2.5 -translate-x-1 rounded-full shadow-sm"></div>
+          <button id="ev-btn-${ev.id}" onclick="showDetail('${ev.id}', false)" style="left:${x}px; top:${y}px; width:${L.cardW}px; height:${L.cardH}px; background:${c.soft}; border-color:${c.border}; color:${c.text}" class="absolute -translate-x-1/2 text-left p-1.5 rounded-xl border ${ringClass} transition cursor-pointer flex items-center gap-2">
             ${visual}
             <div class="min-w-0 flex-1">
-              <div class="text-[10px] font-mono font-bold opacity-75">${fmtRange(ev)}</div>
-              <div class="text-xs font-bold leading-tight line-clamp-2 mt-0.5">${escapeHTML(ev.title)}</div>
+              <div class="${big ? 'text-xs' : 'text-[10px]'} font-mono font-bold opacity-75">${fmtRange(ev)}</div>
+              <div class="${big ? 'text-sm' : 'text-xs'} font-bold leading-tight line-clamp-2 mt-0.5">${escapeHTML(ev.title)}</div>
             </div>
           </button>`;
-      });
-
-      canvas.innerHTML = `${phasesHTML}${ticksHTML}<div style="top:${axisY}px" class="absolute left-6 right-6 h-1 bg-slate-800 rounded-full"></div>${cardsHTML}`;
+      }).join('');
+      canvas.innerHTML = `${phasesHTML}${ticksHTML}<div style="top:${L.axisY}px" class="axis-line absolute left-6 right-6 h-1 bg-slate-800 rounded-full"></div>${cardsHTML}`;
     }
 
     function clearDetail() {
@@ -1267,12 +1465,14 @@
         const vp = document.getElementById('timeline-viewport');
         if (btn && vp) vp.scrollTo({ left: Math.max(0, btn.offsetLeft - vp.clientWidth / 2), behavior: 'smooth' });
       }
-      const st = catStyle(activeTopic, ev.cat);
+      const st = catColor(activeTopic, ev.cat);
       document.getElementById('detail-year').textContent = fmtRange(ev).replace('–', ' – ');
       document.getElementById('detail-track').textContent = activeTopic.layout === 'single' ? activeTopic.title : (ev.track === 'bottom' ? activeTopic.trackBottom : activeTopic.trackTop);
       const catEl = document.getElementById('detail-cat');
       catEl.textContent = catLabel(activeTopic, ev.cat);
-      catEl.className = `text-xs font-semibold px-2.5 py-0.5 rounded-lg ${st.chip}`;
+      catEl.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-lg';
+      catEl.style.background = st.chipBg;
+      catEl.style.color = st.chipText;
       document.getElementById('detail-title').textContent = ev.title;
       document.getElementById('detail-desc').textContent = ev.desc || 'Keine Beschreibung hinterlegt.';
       document.getElementById('detail-question-box').classList.remove('hidden');
@@ -1299,7 +1499,8 @@
     function showIconBox(ev) {
       const iconBox = document.getElementById('detail-icon-box');
       iconBox.textContent = ICONS[ev.icon] || '📌';
-      iconBox.className = `w-full md:w-72 h-40 shrink-0 rounded-xl border border-slate-200 flex items-center justify-center text-7xl ${catStyle(activeTopic, ev.cat).soft}`;
+      iconBox.className = 'w-full md:w-72 h-40 shrink-0 rounded-xl border border-slate-200 flex items-center justify-center text-7xl';
+      iconBox.style.background = catColor(activeTopic, ev.cat).soft;
     }
 
     // =========================================================================
@@ -1573,7 +1774,7 @@
     }
     // Jahreszahlen im Text verdecken, damit die Lösung nicht im Beschreibungstext steht
     function hideYears(text) {
-      return text.replace(/\b(1[0-9]{3}|20[0-9]{2})\b/g, '····');
+      return text.replace(/(^|[^\d])(1\d{3}|20\d{2})(?!\d)/g, '$1····');
     }
     function updateGuessSlider(val) { document.getElementById('guess-slider-value').textContent = fmtYear(val); }
 
@@ -1687,7 +1888,59 @@
         Object.keys(ICONS).map(k => `<option value="${k}">${ICONS[k]} ${ICON_LABELS[k]}</option>`).join('');
     }
     function populateCatSelect() {
-      document.getElementById('b-cat').innerHTML = activeTopic.categories.map(c => `<option value="${c.id}">${escapeHTML(c.label)}</option>`).join('');
+      const sel = document.getElementById('b-cat');
+      const cur = sel.value;
+      sel.innerHTML = activeTopic.categories.map(c => `<option value="${c.id}">${escapeHTML(c.label)}</option>`).join('');
+      if (activeTopic.categories.find(c => c.id === cur)) sel.value = cur;
+      renderCategoryEditor();
+    }
+    function renderCategoryEditor() {
+      const palSel = document.getElementById('builder-palette');
+      palSel.innerHTML = Object.entries(PALETTES).map(([k, p]) => `<option value="${k}">${p.label}</option>`).join('');
+      palSel.value = activeTopic.palette || 'standard';
+      document.getElementById('builder-cats').innerHTML = activeTopic.categories.map((c, i) => {
+        const col = catColor(activeTopic, c.id).base;
+        const used = activeTopic.events.filter(e => e.cat === c.id).length;
+        return `<div class="flex items-center gap-2">
+            <input type="color" value="${col}" onchange="setCategoryColor(${i}, this.value)" title="Farbe wählen" class="w-8 h-8 rounded border border-slate-300 bg-white p-0.5 cursor-pointer shrink-0" />
+            <input type="text" value="${escapeHTML(c.label)}" maxlength="40" onchange="renameCategory(${i}, this.value)" class="flex-1 min-w-0 rounded-lg border border-slate-300 px-2 py-1.5 text-xs bg-white" />
+            <span class="text-[10px] text-slate-400 shrink-0">${used}×</span>
+            ${activeTopic.categories.length > 1 ? `<button type="button" onclick="removeCategory(${i})" title="Kategorie entfernen" class="text-xs text-slate-400 hover:text-rose-600 px-1">✕</button>` : ''}
+          </div>`;
+      }).join('');
+      document.getElementById('btn-add-cat').classList.toggle('hidden', activeTopic.categories.length >= 4);
+    }
+    function afterCategoryChange() {
+      markDirty();
+      populateCatSelect();
+      renderFilterBar();
+      renderTimeline();
+      renderBuilderList();
+      if (selectedEventId) showDetail(selectedEventId, false);
+    }
+    function setPalette(key) {
+      activeTopic.palette = PALETTES[key] ? key : 'standard';
+      activeTopic.categories.forEach(c => { delete c.color; });   // Palette gilt für alle Kategorien
+      afterCategoryChange();
+    }
+    function setCategoryColor(i, color) { activeTopic.categories[i].color = color; afterCategoryChange(); }
+    function renameCategory(i, label) { activeTopic.categories[i].label = String(label).trim().slice(0, 40) || 'Kategorie'; afterCategoryChange(); }
+    function addCategory() {
+      if (activeTopic.categories.length >= 4) return;
+      let n = activeTopic.categories.length + 1, id = 'k' + n;
+      while (activeTopic.categories.find(c => c.id === id)) id = 'k' + (++n);
+      activeTopic.categories.push({ id, label: 'Neue Kategorie' });
+      afterCategoryChange();
+    }
+    function removeCategory(i) {
+      const cat = activeTopic.categories[i];
+      const used = activeTopic.events.filter(e => e.cat === cat.id).length;
+      if (used && !confirm(`${used} Ereignisse gehören zu «${cat.label}». Sie werden der ersten anderen Kategorie zugeordnet. Fortfahren?`)) return;
+      activeTopic.categories.splice(i, 1);
+      const fallback = activeTopic.categories[0].id;
+      activeTopic.events.forEach(e => { if (e.cat === cat.id) e.cat = fallback; });
+      if (currentFilter === cat.id) currentFilter = 'all';
+      afterCategoryChange();
     }
     function startEmptyBuilder() {
       if (dirty && !confirm('Ungespeicherte Änderungen gehen verloren. Neuen leeren Zeitstrahl beginnen?')) return;
@@ -1780,7 +2033,7 @@
         return;
       }
       list.innerHTML = sorted.map(ev => {
-        const st = catStyle(activeTopic, ev.cat);
+        const st = catColor(activeTopic, ev.cat);
         const visual = ev.image && ev.image.url
           ? `<img src="${escapeHTML(ev.image.url)}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-200" />`
           : `<span class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xl shrink-0">${ICONS[ev.icon] || '📌'}</span>`;
@@ -1791,7 +2044,7 @@
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="text-xs font-mono font-bold text-indigo-700">${fmtRange(ev)}</span>
-                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${st.chip}">${escapeHTML(catLabel(activeTopic, ev.cat))}</span>
+                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background:${st.chipBg};color:${st.chipText}">${escapeHTML(catLabel(activeTopic, ev.cat))}</span>
                   ${activeTopic.layout === 'dual' ? `<span class="text-[10px] text-slate-400">${escapeHTML(ev.track === 'bottom' ? activeTopic.trackBottom : activeTopic.trackTop)}</span>` : ''}
                 </div>
                 <div class="text-sm font-bold text-slate-900 truncate">${escapeHTML(ev.title)}</div>
@@ -1814,6 +2067,7 @@
     }
     async function saveCurrentTopic() {
       updateBuilderMetaSilent();
+      if (window.EMBED_TOPIC) { downloadJsonFile(); dirty = false; renderTopicDropdown(); updateBuilderHint(); toast('Als Datei gesichert.'); return; }
       if (!activeTopic.events.length) return toast('Der Zeitstrahl hat noch keine Ereignisse.');
       const data = topicForStorage(activeTopic);
       if (isTeacher()) {
@@ -1857,11 +2111,11 @@
     // 13. KI: PROMPT, DIREKTE ERSTELLUNG, IMPORT
     // =========================================================================
     function setNewTab(tab) {
-      ['ai', 'prompt', 'manual'].forEach(t => {
+      ['ai', 'prompt', 'import', 'manual'].forEach(t => {
         document.getElementById('newtab-' + t).classList.toggle('tab-active', t === tab);
         document.getElementById('newpane-' + t).classList.toggle('hidden', t !== tab);
       });
-      document.getElementById('new-ai-fields').classList.toggle('hidden', tab === 'manual');
+      document.getElementById('new-ai-fields').classList.toggle('hidden', tab === 'manual' || tab === 'import');
       if (tab === 'ai') refreshGenerateState();
     }
     function openNewModal() {
@@ -1939,16 +2193,16 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
         const obj = extractJson(document.getElementById('prompt-answer').value);
         obj.aiGenerated = true;
         obj.reviewed = false;
-        applyGeneratedTopic(normalizeTopic(obj));
+        openReview(normalizeTopic(obj), { source: 'Antwort aus dem KI-Chat', ai: true });
         document.getElementById('prompt-answer').value = '';
       } catch (e) {
         toast('Die Antwort konnte nicht gelesen werden. Bitte die ganze Antwort der KI kopieren.', 5000);
       }
     }
-    async function applyGeneratedTopic(topic) {
-      if (!topic.events.length) return toast('Die KI-Antwort enthält keine Ereignisse.');
-      topic.aiGenerated = true;
-      topic.reviewed = false;
+    async function applyGeneratedTopic(topic, ai = true) {
+      if (!topic.events.length) return toast('Keine Ereignisse vorhanden.');
+      topic.aiGenerated = !!ai;
+      topic.reviewed = !ai;
       closeModal('new-modal');
       setActiveTopic(topic, { kind: 'draft', id: '' });
       dirty = true;
@@ -1956,7 +2210,7 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
       if (isTeacher()) await saveCurrentTopic();   // als Entwurf in der Cloud sichern
       else { renderTopicDropdown(); updateBuilderHint(); }
       renderBanner();
-      toast(`${topic.events.length} Ereignisse erstellt. Bilder werden geladen …`);
+      toast(isTeacher() ? `${topic.events.length} Ereignisse erstellt und gespeichert. Bilder werden geladen …` : `${topic.events.length} Ereignisse erstellt. Unter «Selbst bauen» speichern nicht vergessen.`, 5000);
     }
 
     // ---------- KI-Schlüssel (gleiches Konto-Dokument wie im Sek Planer) ----------
@@ -2046,6 +2300,512 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
       throw lastErr || new Error('Claude nicht erreichbar');
     }
 
+    async function markReviewed() {
+      activeTopic.reviewed = true;
+      if (activeRef.kind === 'cloud') {
+        try { await db.collection(TOPICS_COL).doc(activeRef.id).update({ reviewed: true, updatedAt: FV.serverTimestamp() }); }
+        catch (e) { return toast('Konnte nicht gespeichert werden.'); }
+      }
+      renderBanner();
+      renderTopicDropdown();
+      toast('Als geprüft markiert.');
+    }
+
+    // =========================================================================
+    // 13b. IMPORT (Drag & Drop, Einfügen, Dateien) & KONTROLLÜBERSICHT
+    // =========================================================================
+    const IMPORT_TEMPLATE = `Titel: Kalter Krieg & Schweiz
+Spuren: Welt | Schweiz
+Kategorien: Politik, Konflikte, Alltag
+
+1949 | Gründung der NATO | Welt | Politik | Westliche Staaten gründen ein Verteidigungsbündnis. | Warum trat die Schweiz nicht bei? | NATO
+1950-1953 | Koreakrieg | Welt | Konflikte | Nord- und Südkorea führen Krieg. | Was ist ein Stellvertreterkrieg?
+1956 | Ungarnflüchtlinge | Schweiz | Alltag | Die Schweiz nimmt rund 14 000 Flüchtlinge auf.
+1961 | Bau der Berliner Mauer`;
+
+    function copyImportTemplate() {
+      navigator.clipboard.writeText(IMPORT_TEMPLATE).then(() => toast('Vorlage kopiert')).catch(() => {
+        document.getElementById('import-text').value = IMPORT_TEMPLATE;
+      });
+    }
+    function downloadCsvTemplate() {
+      const rows = [['Jahr', 'Titel', 'Spur', 'Kategorie', 'Erklärung', 'Denkfrage', 'Wikipedia-Artikel'],
+        ['1949', 'Gründung der NATO', 'Welt', 'Politik', 'Westliche Staaten gründen ein Verteidigungsbündnis.', 'Warum trat die Schweiz nicht bei?', 'NATO'],
+        ['1950-1953', 'Koreakrieg', 'Welt', 'Konflikte', 'Nord- und Südkorea führen Krieg.', 'Was ist ein Stellvertreterkrieg?', 'Koreakrieg'],
+        ['1956', 'Ungarnflüchtlinge', 'Schweiz', 'Alltag', 'Die Schweiz nimmt rund 14 000 Flüchtlinge auf.', '', '']];
+      const csv = '﻿' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'zeitstrahl_vorlage.csv');
+    }
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+    function importStatus(msg, kind) {
+      const el = document.getElementById('import-status');
+      if (!msg) { el.classList.add('hidden'); return; }
+      const styles = { info: 'bg-indigo-50 border-indigo-200 text-indigo-800', error: 'bg-rose-50 border-rose-200 text-rose-800' };
+      el.className = `text-sm rounded-xl p-3 border ${styles[kind || 'info']}`;
+      el.textContent = msg;
+    }
+
+    // Bibliotheken nur bei Bedarf laden
+    const loadedScripts = {};
+    function loadScript(src) {
+      if (!loadedScripts[src]) loadedScripts[src] = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = src; sc.onload = resolve; sc.onerror = () => reject(new Error('Bibliothek konnte nicht geladen werden'));
+        document.head.appendChild(sc);
+      });
+      return loadedScripts[src];
+    }
+
+    function parseCsv(text) {
+      const firstLine = text.split(/\r?\n/)[0] || '';
+      const delim = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ';' : ',';
+      const rows = [];
+      let row = [], cell = '', q = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (q) {
+          if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+          else if (ch === '"') q = false;
+          else cell += ch;
+        } else if (ch === '"') q = true;
+        else if (ch === delim) { row.push(cell); cell = ''; }
+        else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+        else if (ch !== '\r') cell += ch;
+      }
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      return rows.map(r => r.map(c => c.replace(/\t/g, ' ').replace(/\n/g, ' ')).join('\t')).join('\n');
+    }
+
+    async function handleImportFile(file) {
+      if (!file) return;
+      const name = file.name.toLowerCase();
+      importStatus(`Lese «${file.name}» …`);
+      try {
+        let text = '';
+        if (name.endsWith('.json')) {
+          const topic = normalizeTopic(extractJson(await file.text()));
+          importStatus('');
+          openReview(topic, { source: `Datei «${file.name}»`, ai: !!topic.aiGenerated });
+          return;
+        } else if (name.endsWith('.docx')) {
+          await loadScript('vendor/mammoth.browser.min.js');
+          text = (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+        } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+          await loadScript('vendor/xlsx.full.min.js');
+          const wb = XLSX.read(await file.arrayBuffer());
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false });
+          text = rows.filter(r => r && r.some(c => String(c ?? '').trim())).map(r => Array.from(r, c => String(c ?? '').replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+        } else if (name.endsWith('.pdf')) {
+          await loadScript('vendor/pdf.min.js');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+          const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const content = await (await pdf.getPage(i)).getTextContent();
+            text += content.items.map(it => it.str + (it.hasEOL ? '\n' : ' ')).join('') + '\n';
+          }
+        } else if (name.endsWith('.csv')) {
+          text = parseCsv(await file.text());
+        } else if (name.endsWith('.doc')) {
+          throw new Error('Altes Word-Format (.doc) – bitte in Word als .docx speichern.');
+        } else {
+          text = await file.text();
+        }
+        document.getElementById('import-text').value = text.trim();
+        importStatus('');
+        await importFromText(file.name);
+      } catch (e) {
+        importStatus('Die Datei konnte nicht gelesen werden: ' + (e.message || e), 'error');
+      }
+    }
+
+    // ---------- Text verstehen ----------
+    function parseYearSpec(str) {
+      let t = String(str || '').trim().replace(/[–—−]/g, '-').replace(/^(ca\.?|um|circa|etwa|ab|seit)\s*/i, '').replace(/\s+/g, ' ');
+      const bc = /v\.?\s*Chr\.?/i.test(t);
+      t = t.replace(/[vn]\.?\s*Chr\.?/ig, '').replace(/\s*\bbis\b\s*/ig, '-').trim().replace(/\s*-\s*$/, '');
+      let m = t.match(/^(-?\d{1,4})\s*-\s*(-?\d{1,4})$/);
+      if (m) {
+        let a = Number(m[1]), b = Number(m[2]);
+        if (bc) { a = -Math.abs(a); b = -Math.abs(b); }
+        else if (b < a && m[2].length <= 2) b = Math.floor(a / 100) * 100 + b;   // 1950-53
+        return { start: a, end: b > a ? b : null };
+      }
+      m = t.match(/^(-?\d{1,4})(?:er(?:-jahre| jahre)?)?$/i);
+      if (m) { let a = Number(m[1]); if (bc) a = -Math.abs(a); return { start: a, end: null }; }
+      return null;
+    }
+    const YEAR_RX = /^\s*((?:ca\.?|um|circa|etwa|ab|seit)\s*)?(-?\d{1,4}(?:\s*(?:[-–—]|bis)\s*-?\d{1,4})?(?:\s*[vn]\.?\s*Chr\.?)?)/i;
+
+    function splitCells(line) {
+      if (line.includes('\t')) return line.split('\t');
+      if (line.includes('|')) return line.split('|');
+      return null;
+    }
+    const COL_ALIASES = {
+      year: /^(jahr|jahre|datum|zeit|year|von|start)/i, end: /^(bis|ende|endjahr|end)$/i, title: /^(titel|ereignis|title|was)/i,
+      track: /^(spur|bereich|ebene|track)/i, cat: /^(kategorie|thema|category|kat)/i, desc: /^(erkl|beschreib|text|info|desc|inhalt)/i,
+      question: /^(denkfrage|frage|question|auftrag)/i, wiki: /^(wiki|artikel|wikipedia)/i, icon: /^(symbol|icon)/i
+    };
+    const DEFAULT_COLS = ['year', 'title', 'track', 'cat', 'desc', 'question', 'wiki'];
+
+    function guessIcon(text) {
+      const t = String(text || '').toLowerCase();
+      const rules = [
+        [/krieg|schlacht|angriff|überfall|front|invasion|feldzug/, 'krieg'], [/armee|general|mobilmach|soldat|militär/, 'militaer'],
+        [/vertrag|abkommen|pakt|bündnis|bundesbrief|konferenz/, 'vertrag'], [/revolution|aufstand|streik|protest|demonstr/, 'revolution'],
+        [/verfassung|bundesstaat|gründung|staat|republik/, 'staat'], [/wahl|abstimm|stimmrecht|demokrat/, 'demokratie'], [/gesetz|gericht|recht/, 'recht'],
+        [/könig|kaiser|herrsch|krönung|reichskanzler|diktat/, 'herrschaft'], [/flücht|flucht|emigr|auswander/, 'flucht'], [/verfolg|pogrom|holocaust|deportation/, 'verfolgung'],
+        [/pest|grippe|seuche|epidemie|pandemie/, 'krankheit'], [/bahn|eisenbahn|tunnel|lokomotive/, 'verkehr'], [/fabrik|industrie|spinnerei/, 'industrie'],
+        [/erfind|patent|buchdruck|dampfmaschine/, 'erfindung'], [/entdeck|expedition|kolumbus|seeweg/, 'entdeckung'], [/mond|rakete|satellit|raumfahrt/, 'raumfahrt'],
+        [/flugzeug|luftbrücke|luftfahrt/, 'luftfahrt'], [/schiff|hafen/, 'schifffahrt'], [/kirche|reformation|papst|religion|kloster|thesen|luther|zwingli|calvin/, 'religion'], [/kunst|ausstellung|musik|kultur/, 'kultur'],
+        [/schule|universität|bildung/, 'bildung'], [/hunger|rationier|lebensmittel|versorgung/, 'hunger'], [/frau/, 'frauen'], [/wirtschaft|bank|börse|krise|geld|franken/, 'wirtschaft'],
+        [/mauer|\bbau\b|tunnel|brücke|kathedrale/, 'bau'], [/attentat|ermord|mord\b/, 'katastrophe'], [/brand|erdbeben|katastrophe|zerstör/, 'katastrophe'], [/frieden|waffenstillstand/, 'frieden'], [/ende|zerfall|kapitulation|auflösung/, 'ende']
+      ];
+      const hit = rules.find(([rx]) => rx.test(t));
+      return hit ? hit[1] : '';
+    }
+
+    function parseStructuredText(text) {
+      const lines = String(text || '').replace(/\r/g, '').split('\n').map(l => l.replace(/^\s*(?:[-•*▪]|\d{1,2}[.)])\s+(?=\S)/, '').trimEnd());
+      const meta = { title: '', tracks: null, cats: [] };
+      let colMap = null;
+      const rows = [];
+      let candidates = 0;
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+        let m;
+        if ((m = line.match(/^(titel|thema|title)\s*:\s*(.+)$/i))) { meta.title = m[2].trim(); continue; }
+        if ((m = line.match(/^(spuren|spur)\s*:\s*(.+)$/i))) { meta.tracks = m[2].split(/\s*[|\/;,]\s*/).map(x => x.trim()).filter(Boolean).slice(0, 2); continue; }
+        if ((m = line.match(/^(kategorien|kategorie|categories)\s*:\s*(.+)$/i))) { meta.cats = m[2].split(/\s*[|;,]\s*/).map(x => x.trim()).filter(Boolean).slice(0, 4); continue; }
+        candidates++;
+        const cells = splitCells(line);
+        if (cells) {
+          const c = cells.map(x => x.trim());
+          // Kopfzeile einer Tabelle?
+          if (!parseYearSpec(c[0]) && c.some(x => COL_ALIASES.year.test(x)) && c.some(x => COL_ALIASES.title.test(x))) {
+            colMap = c.map(h => Object.keys(COL_ALIASES).find(k => COL_ALIASES[k].test(h)) || null);
+            candidates--;
+            continue;
+          }
+          const map = colMap || DEFAULT_COLS;
+          const rec = {};
+          map.forEach((key, i) => { if (key && c[i] !== undefined && c[i] !== '') rec[key] = c[i]; });
+          const ys = parseYearSpec(rec.year);
+          if (!ys || !rec.title) continue;
+          if (rec.end) { const e = parseYearSpec(rec.end); if (e && e.start > ys.start) ys.end = e.start; }
+          rows.push({ ...rec, start: ys.start, end: ys.end });
+          continue;
+        }
+        // Freie Zeile: «1961: Titel – Erklärung»
+        const ym = line.match(YEAR_RX);
+        if (!ym && !rows.length && !meta.titleGuess && line.length <= 70 && !/:$/.test(line)) meta.titleGuess = line;
+        if (ym) {
+          const ys = parseYearSpec((ym[1] || '') + ym[2]);
+          let rest = line.slice(ym[0].length).replace(/^\s*(?:[:.,–—)\]]|-(?=\s))\s*/, '').trim();
+          if (ys && rest.length >= 3 && !/^\d/.test(rest)) {
+            let title = rest, desc = '';
+            const sep = rest.match(/\s[–—-]\s|:\s/);
+            if (sep && sep.index > 2) { title = rest.slice(0, sep.index).trim(); desc = rest.slice(sep.index + sep[0].length).trim(); }
+            else if (rest.length > 90) {
+              const dot = rest.indexOf('. ');
+              if (dot > 5 && dot < 90) { title = rest.slice(0, dot); desc = rest.slice(dot + 2); }
+            }
+            rows.push({ start: ys.start, end: ys.end, title, desc });
+          }
+        }
+      }
+      const structured = rows.length >= 2 && rows.length >= candidates * 0.5;
+      return { structured, rows, meta };
+    }
+
+    function buildTopicFromRows(parsed, sourceName) {
+      const { rows, meta } = parsed;
+      const isBottomWord = (v) => /schweiz|^ch$|unten|bottom|^2$|eidgenoss/i.test(v || '');
+      let tracks = meta.tracks;
+      const trackValues = [...new Set(rows.map(r => (r.track || '').trim()).filter(Boolean))];
+      let dual = !!(tracks && tracks.length === 2);
+      if (!tracks && trackValues.length >= 2) {
+        dual = true;
+        const bottom = trackValues.find(isBottomWord) || trackValues[1];
+        const top = trackValues.find(v => v !== bottom) || 'Welt / Europa';
+        tracks = [top, bottom];
+      }
+      const trackOf = (v) => {
+        if (!dual || !v) return 'top';
+        const lv = v.toLowerCase();
+        if (/^(oben|top|1)$/.test(lv)) return 'top';
+        if (/^(unten|bottom|2)$/.test(lv)) return 'bottom';
+        if (tracks[1] && tracks[1].toLowerCase().startsWith(lv.slice(0, 4))) return 'bottom';
+        if (tracks[0] && tracks[0].toLowerCase().startsWith(lv.slice(0, 4))) return 'top';
+        return isBottomWord(v) ? 'bottom' : 'top';
+      };
+      const slug = (x) => x.toLowerCase().replace(/[äöü]/g, c => ({ 'ä': 'ae', 'ö': 'oe', 'ü': 'ue' }[c])).replace(/[^a-z0-9]+/g, '').slice(0, 20) || 'k';
+      let catLabels = meta.cats.length ? [...meta.cats] : [];
+      rows.forEach(r => { const c = (r.cat || '').trim(); if (c && !catLabels.some(l => l.toLowerCase() === c.toLowerCase()) && catLabels.length < 4) catLabels.push(c); });
+      if (!catLabels.length) catLabels = ['Ereignisse'];
+      const categories = [];
+      catLabels.forEach(l => { let id = slug(l); while (categories.find(c => c.id === id)) id += '2'; categories.push({ id, label: l }); });
+      const catOf = (v) => {
+        const lv = (v || '').trim().toLowerCase();
+        const hit = categories.find(c => c.label.toLowerCase() === lv) || categories.find(c => lv && c.label.toLowerCase().startsWith(lv.slice(0, 4)));
+        return (hit || categories[0]).id;
+      };
+      const iconOf = (v, r) => {
+        const raw = (v || '').trim(), lv = raw.toLowerCase();
+        if (ICONS[lv]) return lv;
+        const byEmoji = Object.keys(ICONS).find(k => ICONS[k] === raw);
+        if (byEmoji) return byEmoji;
+        const byLabel = lv ? Object.keys(ICON_LABELS).find(k => ICON_LABELS[k].toLowerCase().startsWith(lv)) : '';
+        return byLabel || guessIcon(r.title + ' ' + (r.desc || ''));
+      };
+      return normalizeTopic({
+        title: meta.title || meta.titleGuess || (sourceName ? sourceName.replace(/\.[a-z0-9]+$/i, '') : 'Mein Zeitstrahl'),
+        layout: dual ? 'dual' : 'single',
+        trackTop: dual ? tracks[0] : 'Welt / Europa',
+        trackBottom: dual ? tracks[1] : 'Schweiz',
+        categories,
+        events: rows.map((r, i) => ({
+          id: 'r' + i + randomId(6), start: r.start, end: r.end, title: r.title, track: trackOf(r.track),
+          cat: catOf(r.cat), icon: iconOf(r.icon, r), wiki: r.wiki || '', desc: r.desc || '', question: r.question || ''
+        }))
+      });
+    }
+
+    async function importFromText(sourceName) {
+      const text = document.getElementById('import-text').value.trim();
+      if (!text) return importStatus('Bitte Text einfügen oder eine Datei hineinziehen.', 'error');
+      if (/^\s*[{\[]/.test(text) || /```json/i.test(text)) {
+        try { openReview(normalizeTopic(extractJson(text)), { source: sourceName ? `Datei «${sourceName}»` : 'eingefügte Daten', ai: false }); return; } catch (e) { /* weiter als Text */ }
+      }
+      const parsed = parseStructuredText(text);
+      if (parsed.structured) {
+        importStatus('');
+        openReview(buildTopicFromRows(parsed, sourceName), { source: sourceName ? `«${sourceName}»` : 'eingefügter Text', ai: false });
+        return;
+      }
+      if (!isTeacher()) {
+        return importStatus(`Ich habe ${parsed.rows.length ? 'nur ' + parsed.rows.length + ' Ereignis(se)' : 'keine Ereignisse'} im erwarteten Format gefunden. Bitte die Anleitung beachten (eine Zeile pro Ereignis: Jahr | Titel | …). Fliesstext kann nur mit Anmeldung von der KI gelesen werden.`, 'error');
+      }
+      const btn = document.getElementById('btn-import');
+      btn.disabled = true;
+      importStatus('✨ Kein Tabellenformat erkannt – die KI liest die Ereignisse aus dem Text heraus … (20–60 Sekunden)');
+      try {
+        const answer = await callAI(buildExtractPrompt(text));
+        const topic = normalizeTopic({ ...extractJson(answer), aiGenerated: true, reviewed: false });
+        importStatus('');
+        openReview(topic, { source: sourceName ? `KI aus «${sourceName}»` : 'KI aus eingefügtem Text', ai: true });
+      } catch (e) {
+        importStatus('Das hat nicht geklappt: ' + (e.message || e), 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ---------- Kontrollübersicht ----------
+    let reviewTopic = null;
+    let reviewMeta = { ai: false, source: '' };
+
+    function openReview(topic, meta) {
+      reviewTopic = clone(topic);
+      reviewTopic.events = sortedEvents(reviewTopic.events);
+      reviewMeta = { ai: !!meta.ai, source: meta.source || '' };
+      closeModal('new-modal');
+      document.getElementById('rv-title').value = reviewTopic.title;
+      document.getElementById('rv-layout').value = reviewTopic.layout;
+      document.getElementById('rv-track-top').value = reviewTopic.trackTop;
+      document.getElementById('rv-track-bottom').value = reviewTopic.trackBottom;
+      document.getElementById('review-status').classList.add('hidden');
+      document.getElementById('btn-review-ai').classList.toggle('hidden', !isTeacher());
+      renderReview();
+      openModal('review-modal');
+    }
+    function reviewSetLayout(v) {
+      reviewTopic.layout = v === 'dual' ? 'dual' : 'single';
+      if (reviewTopic.layout === 'single') reviewTopic.events.forEach(e => { e.track = 'top'; });
+      renderReview();
+    }
+    function reviewSet(i, field, value) {
+      const ev = reviewTopic.events[i];
+      if (!ev) return;
+      if (field === 'year') {
+        const ys = parseYearSpec(value);
+        if (ys) { ev.start = ys.start; ev.end = ys.end; ev._badYear = false; } else { ev._badYear = true; ev._yearText = value; }
+      } else {
+        const max = field === 'desc' ? 600 : field === 'question' ? 200 : field === 'title' ? 90 : 120;
+        ev[field] = String(value).slice(0, max);
+      }
+      renderReviewWarnings();
+      if (field === 'desc' || field === 'question' || field === 'wiki') renderReviewRowStatus(i);
+    }
+    function reviewDelete(i) {
+      reviewTopic.events.splice(i, 1);
+      renderReview();
+    }
+    function reviewAddRow() {
+      reviewTopic.events.push({ id: 'r' + randomId(8), start: null, end: null, title: '', track: 'top', cat: reviewTopic.categories[0].id, icon: '', wiki: '', desc: '', question: '', _badYear: true, _yearText: '' });
+      renderReview();
+      const list = document.getElementById('review-list');
+      list.scrollTop = list.scrollHeight;
+    }
+    function reviewRowStatusHTML(ev) {
+      const chip = (ok, label) => `<span class="px-1.5 py-0.5 rounded ${ok ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400'}">${ok ? '✓' : '–'} ${label}</span>`;
+      return chip(!!ev.desc, 'Erklärung') + chip(!!ev.question, 'Denkfrage') + chip(!!ev.wiki || !!ev.image, 'Bild');
+    }
+    function renderReviewRowStatus(i) {
+      const el = document.getElementById('rv-status-' + i);
+      if (el) el.innerHTML = reviewRowStatusHTML(reviewTopic.events[i]);
+    }
+    function isReviewRowInvalid(e) { return e._badYear || e.start === null || e.start === undefined || !String(e.title || '').trim(); }
+    function renderReviewWarnings() {
+      const evs = reviewTopic.events;
+      const bad = evs.filter(isReviewRowInvalid).length;
+      const missing = evs.filter(e => !e.desc || !e.question || !e.wiki).length;
+      document.getElementById('review-warn').innerHTML =
+        (bad ? `<span class="text-rose-700 font-semibold">⚠️ ${bad} Zeile(n) ohne gültiges Jahr oder Titel – werden weggelassen.</span> ` : '') +
+        (missing ? `<span class="text-slate-500">${missing} Ereignis(se) ohne Erklärung, Denkfrage oder Bild-Artikel.</span>` : '<span class="text-emerald-700">Alle Ereignisse vollständig.</span>');
+      const ok = evs.length - bad;
+      const btn = document.getElementById('btn-review-create');
+      btn.textContent = `✓ Zeitstrahl erstellen (${ok})`;
+      btn.disabled = ok === 0;
+      document.getElementById('review-info').textContent = `Quelle: ${reviewMeta.source}${reviewMeta.ai ? ' · von der KI erstellt – bitte Jahreszahlen prüfen' : ''} · ${evs.length} Ereignisse. Hier kannst du alles anpassen oder löschen, bevor der Zeitstrahl erstellt wird.`;
+    }
+    function renderReview() {
+      const t = reviewTopic;
+      document.getElementById('rv-tracks').classList.toggle('hidden', t.layout !== 'dual');
+      const catOpts = (sel) => t.categories.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${escapeHTML(c.label)}</option>`).join('');
+      const iconOpts = (sel) => '<option value="">– Symbol –</option>' + Object.keys(ICONS).map(k => `<option value="${k}" ${k === sel ? 'selected' : ''}>${ICONS[k]} ${ICON_LABELS[k]}</option>`).join('');
+      const inp = 'rounded-lg border border-slate-300 px-2 py-1.5 text-xs bg-white';
+      const dual = t.layout === 'dual';
+      document.getElementById('review-list').innerHTML = t.events.length ? t.events.map((ev, i) => {
+        const yearVal = ev._badYear ? (ev._yearText || '') : (ev.end != null ? `${ev.start}-${ev.end}` : String(ev.start ?? ''));
+        const invalid = isReviewRowInvalid(ev);
+        return `
+          <div class="rounded-xl border ${invalid ? 'border-rose-300 bg-rose-50/40' : 'border-slate-200 bg-slate-50/60'} p-2.5 space-y-2">
+            <div class="grid grid-cols-12 gap-2 items-center">
+              <input value="${escapeHTML(yearVal)}" placeholder="Jahr" title="Jahr oder Zeitraum, z. B. 1950-1953 oder -44" onchange="reviewSet(${i},'year',this.value); renderReview()" class="${inp} col-span-3 sm:col-span-2 font-mono ${ev._badYear ? 'border-rose-400' : ''}" />
+              <input value="${escapeHTML(ev.title || '')}" placeholder="Titel" onchange="reviewSet(${i},'title',this.value); renderReview()" class="${inp} col-span-9 ${dual ? 'sm:col-span-3' : 'sm:col-span-4'} font-semibold" />
+              ${dual ? `<select onchange="reviewSet(${i},'track',this.value)" class="${inp} col-span-4 sm:col-span-2"><option value="top" ${ev.track !== 'bottom' ? 'selected' : ''}>${escapeHTML(t.trackTop)}</option><option value="bottom" ${ev.track === 'bottom' ? 'selected' : ''}>${escapeHTML(t.trackBottom)}</option></select>` : ''}
+              <select onchange="reviewSet(${i},'cat',this.value)" class="${inp} ${dual ? 'col-span-4 sm:col-span-2' : 'col-span-6 sm:col-span-3'}">${catOpts(ev.cat)}</select>
+              <select onchange="reviewSet(${i},'icon',this.value)" class="${inp} ${dual ? 'col-span-3 sm:col-span-2' : 'col-span-5 sm:col-span-2'} px-1">${iconOpts(ev.icon)}</select>
+              <button onclick="reviewDelete(${i})" title="Ereignis löschen" class="col-span-1 text-slate-400 hover:text-rose-600 text-sm">🗑</button>
+            </div>
+            <details>
+              <summary class="text-[11px] cursor-pointer flex flex-wrap gap-1.5 items-center"><span class="text-slate-500 font-semibold mr-1">Texte ▾</span><span id="rv-status-${i}" class="flex flex-wrap gap-1">${reviewRowStatusHTML(ev)}</span></summary>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                <textarea rows="2" placeholder="Erklärung (2–3 Sätze)" onchange="reviewSet(${i},'desc',this.value)" class="${inp} sm:col-span-2">${escapeHTML(ev.desc || '')}</textarea>
+                <input value="${escapeHTML(ev.question || '')}" placeholder="Denkfrage" onchange="reviewSet(${i},'question',this.value)" class="${inp}" />
+                <input value="${escapeHTML(ev.wiki || '')}" placeholder="Wikipedia-Artikel (für das Bild)" onchange="reviewSet(${i},'wiki',this.value)" class="${inp}" />
+              </div>
+            </details>
+          </div>`;
+      }).join('') : '<p class="text-sm text-slate-400 italic p-4 text-center">Keine Ereignisse. Mit «＋ Ereignis» hinzufügen.</p>';
+      renderReviewWarnings();
+    }
+    async function reviewCompleteWithAI() {
+      if (!isTeacher()) return toast('Nur mit Anmeldung möglich.');
+      const evs = reviewTopic.events.filter(e => !isReviewRowInvalid(e));
+      const todo = evs.filter(e => !e.desc || !e.question || !e.wiki || !e.icon);
+      if (!todo.length) return toast('Es fehlt nichts.');
+      const status = document.getElementById('review-status');
+      const btn = document.getElementById('btn-review-ai');
+      status.className = 'text-sm rounded-xl p-3 border bg-indigo-50 border-indigo-200 text-indigo-800';
+      status.textContent = `✨ Die KI ergänzt ${todo.length} Ereignis(se) … (20–60 Sekunden)`;
+      btn.disabled = true;
+      try {
+        const data = extractJson(await callAI(buildCompletePrompt(todo)));
+        const list = Array.isArray(data.events) ? data.events : [];
+        let filled = 0;
+        list.forEach(item => {
+          const ev = todo[Number(item.i)];
+          if (!ev) return;
+          if (!ev.desc && item.desc) { ev.desc = String(item.desc).slice(0, 600); filled++; }
+          if (!ev.question && item.question) { ev.question = String(item.question).slice(0, 200); filled++; }
+          if (!ev.wiki && item.wiki) { ev.wiki = String(item.wiki).slice(0, 120); filled++; }
+          if (!ev.icon && ICONS[item.icon]) { ev.icon = item.icon; filled++; }
+        });
+        reviewMeta.ai = true;
+        status.className = 'text-sm rounded-xl p-3 border bg-emerald-50 border-emerald-200 text-emerald-800';
+        status.textContent = `✓ ${filled} Felder ergänzt. Deine eigenen Texte wurden nicht verändert. Bitte die neuen Texte kurz prüfen.`;
+        renderReview();
+      } catch (e) {
+        status.className = 'text-sm rounded-xl p-3 border bg-rose-50 border-rose-200 text-rose-800';
+        status.textContent = 'Das hat nicht geklappt: ' + (e.message || e);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    function reviewCreate() {
+      const valid = reviewTopic.events.filter(e => !isReviewRowInvalid(e));
+      const dropped = reviewTopic.events.length - valid.length;
+      if (!valid.length) return toast('Es gibt keine gültigen Ereignisse.');
+      if (dropped && !confirm(`${dropped} Zeile(n) ohne gültiges Jahr oder Titel werden weggelassen. Fortfahren?`)) return;
+      if (dirty && !confirm('Ungespeicherte Änderungen am aktuellen Zeitstrahl gehen verloren. Fortfahren?')) return;
+      const topic = normalizeTopic({ ...reviewTopic, title: document.getElementById('rv-title').value.trim() || reviewTopic.title, events: valid, aiGenerated: reviewMeta.ai, reviewed: !reviewMeta.ai });
+      dirty = false;
+      closeModal('review-modal');
+      applyGeneratedTopic(topic, reviewMeta.ai);
+    }
+
+    // ---------- KI-Prompts für Text-Extraktion und Ergänzung ----------
+    function buildExtractPrompt(sourceText) {
+      const level = document.getElementById('gen-level').value;
+      const dual = document.getElementById('gen-layout').value === 'dual';
+      return `Du bist eine erfahrene Geschichtslehrperson in der Schweiz. Lies den folgenden Text und erstelle daraus einen Zeitstrahl für den Unterricht.
+
+Wichtig:
+- Übernimm NUR Ereignisse und Jahreszahlen, die im Text vorkommen. Erfinde keine Ereignisse und keine Jahreszahlen dazu.
+- Ergänze für jedes Ereignis: kurze Erklärung (2–3 Sätze, gestützt auf den Text), eine Denkfrage, den genauen Titel des passenden Artikels der deutschsprachigen Wikipedia ("wiki") und ein Symbol ("icon").
+- Zielstufe: ${level}. Deutsch mit Schweizer Rechtschreibung (ss statt ß).
+${dual ? '- Zwei Spuren: "top" für Welt/Europa, "bottom" für die Schweiz. Wenn der Text keine Schweizer Ereignisse enthält, verwende nur "top" und "layout": "single".' : '- Eine Spur: alle Ereignisse mit "track": "top".'}
+- "icon": genau eines dieser Wörter: ${Object.keys(ICONS).join(', ')}
+- "start"/"end": ganze Jahreszahlen, vor Christus negativ. "end" nur bei Zeiträumen, sonst null.
+
+Antworte NUR mit gültigem JSON in diesem Format:
+{"title": "…", "layout": "${dual ? 'dual' : 'single'}", "trackTop": "Welt / Europa", "trackBottom": "Schweiz", "categories": [{"id": "politik", "label": "Politik"}], "phases": [], "events": [{"start": 1900, "end": null, "title": "…", "track": "top", "cat": "politik", "icon": "staat", "wiki": "…", "desc": "…", "question": "…"}]}
+
+<<<TEXT
+${String(sourceText).slice(0, 40000)}
+TEXT>>>`;
+    }
+    function buildCompletePrompt(events) {
+      const level = document.getElementById('gen-level').value;
+      const list = events.map((e, i) => ({ i, jahr: fmtRange(e), titel: e.title, erklaerung: e.desc || '', denkfrage: e.question || '', wiki: e.wiki || '', icon: e.icon || '' }));
+      return `Du bist eine erfahrene Geschichtslehrperson in der Schweiz. Thema: «${reviewTopic.title}». Zielstufe: ${level}.
+Ergänze bei den folgenden Ereignissen NUR die leeren Felder. Bereits ausgefüllte Felder nicht verändern.
+- "desc": 2–3 kurze Sätze: Was geschah und warum ist es wichtig? Nur gesicherte Fakten.
+- "question": eine Denkfrage zu Ursachen oder Folgen.
+- "wiki": genauer Titel des passenden Artikels der deutschsprachigen Wikipedia.
+- "icon": genau eines dieser Wörter: ${Object.keys(ICONS).join(', ')}
+Schweizer Rechtschreibung (ss statt ß).
+
+Ereignisse:
+${JSON.stringify(list, null, 1)}
+
+Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question": "…", "wiki": "…", "icon": "…"}]}`;
+    }
+
+    // Einheitlicher KI-Aufruf (Gemini bevorzugt, Claude als Ersatz – je nach Konto)
+    async function callAI(prompt) {
+      if (!isTeacher()) throw new Error('Nur mit Anmeldung möglich.');
+      const keys = await loadAiKeys();
+      if (!keys.gemini && !keys.claude) throw new Error('Kein KI-Schlüssel hinterlegt (unter «✨ Neu» → «KI direkt» eintragen).');
+      const order = keys.preferred === 'claude' ? ['claude', 'gemini'] : ['gemini', 'claude'];
+      let lastErr = null;
+      for (const p of order) {
+        if (!keys[p]) continue;
+        try { return p === 'gemini' ? await callGemini(keys.gemini, prompt) : await callClaude(keys.claude, prompt); }
+        catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error('Keine Antwort der KI');
+    }
+
     async function generateWithAI() {
       if (!isTeacher()) return toast('Bitte zuerst anmelden.');
       if (!document.getElementById('gen-topic').value.trim()) return toast('Bitte ein Thema eintragen.');
@@ -2057,22 +2817,11 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
       status.className = 'text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-3';
       try {
         if (newKey) { status.textContent = 'Schlüssel wird gespeichert …'; await saveGeminiKey(newKey); document.getElementById('gen-key-input').value = ''; }
-        const keys = await loadAiKeys();
-        if (!keys.gemini && !keys.claude) throw new Error('Kein KI-Schlüssel hinterlegt.');
-        status.textContent = '✨ Die KI erstellt den Zeitstrahl … das dauert meist 20–60 Sekunden.';
-        const prompt = buildPrompt();
-        let text;
-        const order = keys.preferred === 'claude' ? ['claude', 'gemini'] : ['gemini', 'claude'];
-        let lastErr = null;
-        for (const p of order) {
-          if (!keys[p]) continue;
-          try { text = p === 'gemini' ? await callGemini(keys.gemini, prompt) : await callClaude(keys.claude, prompt); break; }
-          catch (e) { lastErr = e; }
-        }
-        if (!text) throw lastErr || new Error('Keine Antwort der KI');
+        status.textContent = '✨ Die KI erstellt einen Vorschlag … das dauert meist 20–60 Sekunden.';
+        const text = await callAI(buildPrompt());
         const topic = normalizeTopic({ ...extractJson(text), aiGenerated: true, reviewed: false });
         status.classList.add('hidden');
-        await applyGeneratedTopic(topic);
+        openReview(topic, { source: `KI zum Thema «${document.getElementById('gen-topic').value.trim()}»`, ai: true });
       } catch (e) {
         status.className = 'text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-xl p-3';
         status.textContent = 'Das hat nicht geklappt: ' + (e.message || e) + ' Alternativ geht es über «📋 KI-Chat».';
@@ -2082,15 +2831,30 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
       }
     }
 
-    async function markReviewed() {
-      activeTopic.reviewed = true;
-      if (activeRef.kind === 'cloud') {
-        try { await db.collection(TOPICS_COL).doc(activeRef.id).update({ reviewed: true, updatedAt: FV.serverTimestamp() }); }
-        catch (e) { return toast('Konnte nicht gespeichert werden.'); }
-      }
-      renderBanner();
-      renderTopicDropdown();
-      toast('Als geprüft markiert.');
+    function setupDragDrop() {
+      const zone = document.getElementById('drop-zone');
+      const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+      window.addEventListener('dragover', (e) => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        zone.classList.add('border-indigo-500', 'bg-indigo-50');
+      });
+      window.addEventListener('dragleave', (e) => { if (!e.relatedTarget) zone.classList.remove('border-indigo-500', 'bg-indigo-50'); });
+      window.addEventListener('drop', (e) => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        zone.classList.remove('border-indigo-500', 'bg-indigo-50');
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        // Bild in den Baukasten gezogen → als eigenes Foto verwenden
+        if (/^image\//.test(file.type) && currentMode === 'builder' && document.getElementById('new-modal').classList.contains('hidden')) {
+          handleLocalImageUpload({ target: { files: [file], value: '' } });
+          return;
+        }
+        if (document.getElementById('new-modal').classList.contains('hidden')) openModal('new-modal');
+        setNewTab('import');
+        handleImportFile(file);
+      });
     }
 
     // =========================================================================
@@ -2430,6 +3194,322 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
     }
 
     // =========================================================================
+    // 17b. EXPORT: PDF (Poster, Arbeitsblatt), Webseite (.html), Bild (.png)
+    // =========================================================================
+    function openExportModal() {
+      if (!(activeTopic.events || []).length) return toast('Der Zeitstrahl hat noch keine Ereignisse.');
+      document.getElementById('export-status').classList.add('hidden');
+      document.getElementById('btn-export-html').closest('div').classList.toggle('hidden', !!window.EMBED_TOPIC && location.protocol === 'file:');
+      openModal('export-modal');
+    }
+    function exportStatus(msg, kind) {
+      const el = document.getElementById('export-status');
+      if (!msg) { el.classList.add('hidden'); return; }
+      const styles = { info: 'bg-indigo-50 border-indigo-200 text-indigo-800', error: 'bg-rose-50 border-rose-200 text-rose-800', ok: 'bg-emerald-50 border-emerald-200 text-emerald-800' };
+      el.className = `text-sm rounded-xl p-3 border ${styles[kind || 'info']}`;
+      el.textContent = msg;
+    }
+    function fileBaseName() {
+      return (activeTopic.title || 'zeitstrahl').toLowerCase().replace(/[äöü]/g, c => ({ 'ä': 'ae', 'ö': 'oe', 'ü': 'ue' }[c])).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 60) || 'zeitstrahl';
+    }
+
+    // ---------- Gemeinsamer statischer Zeitstrahl (für Druck) ----------
+    function staticTimelineHTML(topic, events, opts = {}) {
+      const isSingle = topic.layout === 'single';
+      const L = computeLayout(events, isSingle, opts.pageWidth || 1050, { cardW: 180 });
+      const scale = Math.min(1, (opts.pageWidth || 1050) / L.totalWidth);
+      const phaseColors = ['rgba(99,102,241,0.08)', 'rgba(245,158,11,0.09)', 'rgba(239,68,68,0.08)', 'rgba(16,185,129,0.09)'];
+      const phases = (topic.phases || []).map((p, i) => {
+        const x1 = Math.max(0, L.yearToX(p.start)), x2 = Math.min(L.totalWidth, L.yearToX(p.end));
+        return x2 > x1 ? `<div style="position:absolute;left:${x1}px;width:${x2 - x1}px;top:0;bottom:0;background:${phaseColors[i % 4]}"><div style="font:700 10px sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;padding:6px 8px;white-space:nowrap;overflow:hidden">${escapeHTML(p.label)}</div></div>` : '';
+      }).join('');
+      const ticks = L.ticks.map(y => `<div style="position:absolute;left:${L.yearToX(y)}px;top:0;bottom:0;border-left:1px solid #e2e8f0"><span style="position:absolute;top:${L.axisY + 9}px;transform:translateX(-50%);font:700 10px ui-monospace,monospace;color:#475569;background:#fff;padding:0 3px;white-space:nowrap">${fmtYear(y)}</span></div>`).join('');
+      const cards = L.placement.map(({ ev, top, x, xEnd, y }) => {
+        const c = catColor(topic, ev.cat);
+        const lineTop = top ? y + L.cardH : L.axisY;
+        const lineH = top ? Math.max(6, L.axisY - (y + L.cardH)) : Math.max(6, y - L.axisY);
+        const showYear = !opts.hideYears;
+        const visual = opts.noImages || !(ev.image && ev.image.url)
+          ? `<span style="width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${opts.numbers ? `<b style="font:800 16px sans-serif;color:${c.text}">${opts.numbers[ev.id]}</b>` : (ICONS[ev.icon] || '📌')}</span>`
+          : `<img src="${escapeHTML(ev.image.url)}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0" />`;
+        return `<div style="position:absolute;left:${x}px;top:${lineTop}px;height:${lineH}px;width:2px;background:#cbd5e1"></div>
+          <div style="position:absolute;left:${x - 4}px;top:${L.axisY - 4}px;width:${Math.max(10, xEnd - x)}px;height:10px;border-radius:9px;background:${c.base}"></div>
+          <div style="position:absolute;left:${x - L.cardW / 2}px;top:${y}px;width:${L.cardW}px;height:${L.cardH}px;box-sizing:border-box;border:1.5px solid ${c.border};background:${c.soft};color:${c.text};border-radius:10px;padding:6px;display:flex;gap:7px;align-items:center;overflow:hidden">
+            ${visual}
+            <div style="min-width:0">
+              ${showYear ? `<div style="font:700 9.5px ui-monospace,monospace;opacity:.75">${fmtRange(ev)}</div>` : ''}
+              <div style="font:700 11px/1.2 sans-serif;display:-webkit-box;-webkit-line-clamp:${showYear ? 2 : 3};-webkit-box-orient:vertical;overflow:hidden">${escapeHTML(ev.title)}</div>
+            </div>
+          </div>`;
+      }).join('');
+      const legend = isSingle ? '' : `<div style="font:600 11px sans-serif;color:#475569;margin-bottom:4px">Oben: ${escapeHTML(topic.trackTop)} · Unten: ${escapeHTML(topic.trackBottom)}</div>`;
+      return `${legend}<div style="width:${L.totalWidth * scale}px;height:${L.height * scale}px;position:relative;overflow:hidden;border:1px solid #e2e8f0;border-radius:10px">
+          <div style="position:absolute;left:0;top:0;width:${L.totalWidth}px;height:${L.height}px;transform:scale(${scale});transform-origin:0 0">
+            ${opts.emptyAxis ? '' : phases}${ticks}
+            <div style="position:absolute;left:16px;right:16px;top:${L.axisY}px;height:4px;border-radius:4px;background:#1e293b"></div>
+            ${opts.emptyAxis ? '' : cards}
+          </div>
+        </div>`;
+    }
+    function creditsHTML(events) {
+      const items = events.filter(e => e.image && e.image.url && !e.image.url.startsWith('data:'))
+        .map(e => `<li><b>${escapeHTML(e.title)}:</b> ${escapeHTML(e.image.artist || 'unbekannt')}${e.image.license ? ', ' + escapeHTML(e.image.license) : ''}${e.image.source ? ` – <span style="word-break:break-all">${escapeHTML(e.image.source)}</span>` : ''}</li>`);
+      return items.length ? `<div class="credits"><h3>Bildnachweise (Wikimedia Commons)</h3><ul>${items.join('')}</ul></div>` : '';
+    }
+    function printDocument(title, bodyHTML, pageSize) {
+      const w = window.open('', '_blank');
+      if (!w) return exportStatus('Das Druckfenster wurde blockiert. Bitte Pop-ups für diese Seite erlauben.', 'error');
+      w.document.open();
+      w.document.write(`<!DOCTYPE html><html lang="de-CH"><head><meta charset="UTF-8"><title>${escapeHTML(title)}</title>
+        <style>
+          @page { size: ${pageSize}; margin: 10mm; }
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+          body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; }
+          h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 16px; margin: 18px 0 8px; } h3 { font-size: 13px; margin: 14px 0 6px; }
+          .sub { color: #64748b; font-size: 11px; margin-bottom: 10px; }
+          .page { page-break-after: always; } .page:last-child { page-break-after: auto; }
+          .grid { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: 8px; }
+          .sb { border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; display: flex; gap: 8px; break-inside: avoid; }
+          .sb img, .sb .ic { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-size: 30px; }
+          .sb .y { font: 700 10px ui-monospace, monospace; color: #4338ca; } .sb .t { font-weight: 700; font-size: 12.5px; margin: 1px 0 3px; }
+          .sb .d { font-size: 10.5px; line-height: 1.4; color: #334155; } .sb .q { font-size: 10px; color: #4338ca; margin-top: 3px; font-style: italic; }
+          table { width: 100%; border-collapse: collapse; font-size: 11.5px; } td, th { border: 1px solid #cbd5e1; padding: 6px 7px; text-align: left; vertical-align: top; }
+          th { background: #f1f5f9; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; }
+          .line { border-bottom: 1px solid #94a3b8; height: 24px; }
+          .credits { font-size: 8.5px; color: #64748b; margin-top: 14px; } .credits ul { padding-left: 14px; margin: 4px 0; } .credits h3 { font-size: 10px; }
+          .head { display:flex; justify-content:space-between; gap:12px; font-size: 11px; color:#475569; margin-bottom: 8px; }
+          .head span { border-bottom: 1px solid #94a3b8; min-width: 140px; display:inline-block; }
+          @media screen { body { padding: 16px; background: #f1f5f9; } .page { background: #fff; padding: 16px; margin: 0 auto 16px; max-width: 1600px; box-shadow: 0 1px 4px rgba(0,0,0,.08); } }
+        </style></head><body>${bodyHTML}
+        <script>
+          (function(){
+            var imgs = Array.prototype.slice.call(document.images);
+            var left = imgs.filter(function(i){ return !i.complete; }).length;
+            var done = false;
+            function go(){ if (done) return; done = true; setTimeout(function(){ window.focus(); window.print(); }, 300); }
+            if (!left) go();
+            imgs.forEach(function(i){ if (!i.complete) { i.onload = i.onerror = function(){ if (--left <= 0) go(); }; } });
+            setTimeout(go, 6000);
+          })();
+        <\/script></body></html>`);
+      w.document.close();
+      closeModal('export-modal');
+    }
+    function steckbriefeHTML(topic, events) {
+      return events.map(ev => {
+        const c = catColor(topic, ev.cat);
+        const visual = ev.image && ev.image.url ? `<img src="${escapeHTML(ev.image.url)}" />` : `<div class="ic" style="background:${c.soft}">${ICONS[ev.icon] || '📌'}</div>`;
+        return `<div class="sb" style="border-left:4px solid ${c.base}">${visual}<div><div class="y">${fmtRange(ev)} · ${escapeHTML(catLabel(topic, ev.cat))}${topic.layout === 'dual' ? ' · ' + escapeHTML(ev.track === 'bottom' ? topic.trackBottom : topic.trackTop) : ''}</div>
+          <div class="t">${escapeHTML(ev.title)}</div><div class="d">${escapeHTML(ev.desc || '')}</div>${ev.question ? `<div class="q">💡 ${escapeHTML(ev.question)}</div>` : ''}</div></div>`;
+      }).join('');
+    }
+    function printPoster(size) {
+      const t = activeTopic, events = sortedEvents(t.events);
+      const pageWidth = size === 'A3' ? 1500 : 1040;
+      const body = `
+        <div class="page">
+          <h1>${escapeHTML(t.title)}</h1>
+          <div class="sub">${events.length} Ereignisse · ${fmtYear(events[0].start)}–${fmtYear(Math.max(...events.map(e => e.end ?? e.start)))}</div>
+          ${staticTimelineHTML(t, events, { pageWidth })}
+        </div>
+        <div class="page" style="--cols:${size === 'A3' ? 3 : 2}">
+          <h2>Steckbriefe</h2>
+          <div class="grid">${steckbriefeHTML(t, events)}</div>
+          ${creditsHTML(events)}
+        </div>`;
+      printDocument(t.title + ' – Poster', body, `${size} landscape`);
+    }
+    function printWorksheet(withSolution) {
+      const t = activeTopic, events = sortedEvents(t.events);
+      const shuffled = shuffle(events);
+      const numbers = {};
+      shuffled.forEach((e, i) => { numbers[e.id] = i + 1; });
+      const questions = shuffle(events.filter(e => e.question)).slice(0, 3);
+      const rows = shuffled.map((e, i) => `<tr><td style="width:34px;text-align:center;font-weight:700">${i + 1}</td><td><b>${escapeHTML(e.title)}</b>${e.desc ? `<div style="font-size:10.5px;color:#475569;margin-top:2px">${escapeHTML(hideYears(e.desc))}</div>` : ''}</td><td style="width:120px"></td></tr>`).join('');
+      const solRows = events.map(e => `<tr><td style="width:34px;text-align:center;font-weight:700">${numbers[e.id]}</td><td><b>${escapeHTML(e.title)}</b></td><td style="width:120px;font-family:ui-monospace,monospace;font-weight:700">${fmtRange(e)}</td></tr>`).join('');
+      const body = `
+        <div class="page">
+          <div class="head"><div>Name: <span></span></div><div>Klasse: <span style="min-width:60px"></span></div><div>Datum: <span style="min-width:90px"></span></div></div>
+          <h1>${escapeHTML(t.title)}</h1>
+          <h2>1. Wann war das? Trage die Jahreszahl ein.</h2>
+          <table><tr><th>Nr.</th><th>Ereignis</th><th>Jahr</th></tr>${rows}</table>
+          <h2>2. Trage die Nummern der Ereignisse am richtigen Ort auf dem Zeitstrahl ein.</h2>
+          ${staticTimelineHTML(t, events, { pageWidth: 1040, emptyAxis: true })}
+          ${questions.length ? `<h2>3. Denkfragen</h2>${questions.map(q => `<p style="font-size:12px;margin:10px 0 2px"><b>${escapeHTML(q.title)}:</b> ${escapeHTML(q.question)}</p><div class="line"></div><div class="line"></div>`).join('')}` : ''}
+        </div>
+        ${withSolution ? `<div class="page">
+          <h1>Lösung: ${escapeHTML(t.title)}</h1>
+          <table><tr><th>Nr.</th><th>Ereignis</th><th>Jahr</th></tr>${solRows}</table>
+          <h2>Zeitstrahl</h2>
+          ${staticTimelineHTML(t, events, { pageWidth: 1040, numbers })}
+        </div>` : ''}`;
+      printDocument(t.title + ' – Arbeitsblatt', body, 'A4 landscape');
+    }
+
+    // ---------- Webseite (.html) ----------
+    async function urlToDataUrl(url) {
+      const res = await fetch(url, { mode: 'cors' });
+      if (!res.ok) throw new Error('Bild nicht erreichbar');
+      const blob = await res.blob();
+      return await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob); });
+    }
+    async function exportHtml() {
+      const btn = document.getElementById('btn-export-html');
+      btn.disabled = true;
+      exportStatus('Webseite wird erstellt … Bilder werden eingebettet.');
+      try {
+        const [html, css] = await Promise.all([
+          fetch(location.pathname.endsWith('/') ? location.pathname + 'index.html' : location.pathname).then(r => { if (!r.ok) throw new Error('Seite nicht erreichbar'); return r.text(); }),
+          fetch('vendor/app.css').then(r => { if (!r.ok) throw new Error('Stil nicht erreichbar'); return r.text(); })
+        ]);
+        const topic = topicForStorage(activeTopic);
+        delete topic.aiGenerated; delete topic.reviewed;
+        const queue = topic.events.filter(e => e.image && /^https:/.test(e.image.url));
+        let embedded = 0;
+        await Promise.all([0, 1, 2, 3].map(async () => {
+          while (queue.length) {
+            const ev = queue.shift();
+            try { ev.image.url = await urlToDataUrl(ev.image.url); embedded++; } catch (e) { /* bleibt als Link */ }
+          }
+        }));
+        let out = html
+          .replace(/<link rel="stylesheet" href="vendor\/app\.css" \/>/, () => `<style>${css}</style>`)
+          .replace(/<link rel="manifest"[^>]*>\s*/, '')
+          .replace(/<link rel="icon"[^>]*>\s*/, '')
+          .replace(/<link rel="apple-touch-icon"[^>]*>\s*/, '')
+          .replace(/<script src="vendor\/[^"]+"><\/script>\s*/g, '');
+        const mainIdx = out.indexOf('<script>\n    // =========');
+        if (mainIdx < 0) throw new Error('Aufbau der Seite nicht erkannt');
+        const data = JSON.stringify(topic).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, '');
+        out = out.slice(0, mainIdx) + `<script>window.EMBED_TOPIC = ${data};<\/script>\n  ` + out.slice(mainIdx);
+        downloadBlob(new Blob([out], { type: 'text/html;charset=utf-8' }), fileBaseName() + '.html');
+        exportStatus(`✓ Webseite heruntergeladen${queue.length === 0 && embedded ? ` (${embedded} Bilder eingebettet)` : ''}. Einfach per Doppelklick öffnen oder weitergeben.`, 'ok');
+      } catch (e) {
+        exportStatus('Die Webseite konnte nicht erstellt werden: ' + (e.message || e), 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ---------- Bild (.png) ----------
+    function loadImage(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        if (!src.startsWith('data:')) img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+    function rr(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    function wrapLines(ctx, text, maxW, maxLines) {
+      const words = String(text).split(/\s+/);
+      const lines = [];
+      let cur = '';
+      for (const w of words) {
+        const test = cur ? cur + ' ' + w : w;
+        if (ctx.measureText(test).width <= maxW) cur = test;
+        else { if (cur) lines.push(cur); cur = w; if (lines.length === maxLines) break; }
+      }
+      if (lines.length < maxLines && cur) lines.push(cur);
+      if (lines.length > maxLines) lines.length = maxLines;
+      const last = lines.length - 1;
+      if (last >= 0 && words.join(' ').length > lines.join(' ').length) {
+        while (ctx.measureText(lines[last] + '…').width > maxW && lines[last].length > 1) lines[last] = lines[last].slice(0, -1);
+        lines[last] += '…';
+      }
+      return lines;
+    }
+    async function drawPng(withImages) {
+      const t = activeTopic, events = sortedEvents(t.events);
+      const L = computeLayout(events, t.layout === 'single', Math.max(1600, events.length * 130), {});
+      const headH = 76, footH = 34, W = L.totalWidth, H = L.height + headH + footH, S = 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = W * S; canvas.height = H * S;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(S, S);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#0f172a'; ctx.font = '700 26px -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.fillText(t.title, 24, 40);
+      ctx.fillStyle = '#64748b'; ctx.font = '500 13px -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.fillText(t.layout === 'dual' ? `Oben: ${t.trackTop}  ·  Unten: ${t.trackBottom}` : `${events.length} Ereignisse`, 24, 62);
+      ctx.save();
+      ctx.translate(0, headH);
+      const phaseColors = ['rgba(99,102,241,0.08)', 'rgba(245,158,11,0.09)', 'rgba(239,68,68,0.08)', 'rgba(16,185,129,0.09)'];
+      (t.phases || []).forEach((p, i) => {
+        const x1 = Math.max(0, L.yearToX(p.start)), x2 = Math.min(W, L.yearToX(p.end));
+        if (x2 <= x1) return;
+        ctx.fillStyle = phaseColors[i % 4]; ctx.fillRect(x1, 0, x2 - x1, L.height);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '700 10px sans-serif'; ctx.fillText(p.label.toUpperCase(), x1 + 8, 16);
+      });
+      ctx.font = '700 11px ui-monospace, Menlo, monospace'; ctx.textAlign = 'center';
+      L.ticks.forEach(y => {
+        const x = L.yearToX(y);
+        ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, 0, 1, L.height);
+        ctx.fillStyle = '#475569'; ctx.fillText(fmtYear(y), x, L.axisY + 22);
+      });
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#1e293b'; rr(ctx, 16, L.axisY, W - 32, 4, 2); ctx.fill();
+      const imgs = {};
+      if (withImages) {
+        await Promise.all(L.placement.filter(p => p.ev.image && p.ev.image.url).map(async p => { imgs[p.ev.id] = await loadImage(p.ev.image.url); }));
+      }
+      L.placement.forEach(({ ev, top, x, xEnd, y }) => {
+        const c = catColor(t, ev.cat);
+        ctx.fillStyle = c.base; rr(ctx, x - 4, L.axisY - 3, Math.max(10, xEnd - x), 10, 5); ctx.fill();
+        ctx.fillStyle = '#cbd5e1';
+        if (top) ctx.fillRect(x - 1, y + L.cardH, 2, L.axisY - y - L.cardH); else ctx.fillRect(x - 1, L.axisY, 2, y - L.axisY);
+        const cx = x - L.cardW / 2;
+        rr(ctx, cx, y, L.cardW, L.cardH, 10); ctx.fillStyle = c.soft; ctx.fill();
+        ctx.lineWidth = 1.5; ctx.strokeStyle = c.border; ctx.stroke();
+        const img = imgs[ev.id];
+        ctx.save(); rr(ctx, cx + 6, y + 7, 40, 40, 8); ctx.clip();
+        if (img) {
+          const s = Math.max(40 / img.width, 40 / img.height);
+          ctx.drawImage(img, cx + 6 + (40 - img.width * s) / 2, y + 7 + (40 - img.height * s) / 2, img.width * s, img.height * s);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(cx + 6, y + 7, 40, 40);
+          ctx.font = '22px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#000'; ctx.fillText(ICONS[ev.icon] || '📌', cx + 26, y + 28);
+          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        }
+        ctx.restore();
+        ctx.fillStyle = c.text; ctx.globalAlpha = 0.75; ctx.font = '700 10px ui-monospace, Menlo, monospace';
+        ctx.fillText(fmtRange(ev), cx + 54, y + 17); ctx.globalAlpha = 1;
+        ctx.font = '700 12px -apple-system, Segoe UI, Roboto, sans-serif';
+        wrapLines(ctx, ev.title, L.cardW - 62, 2).forEach((ln, i) => ctx.fillText(ln, cx + 54, y + 32 + i * 14));
+      });
+      ctx.restore();
+      ctx.fillStyle = '#94a3b8'; ctx.font = '500 10px sans-serif';
+      const hasImgs = withImages && Object.values(imgs).some(Boolean);
+      ctx.fillText(hasImgs ? 'Bilder: Wikimedia Commons – Urheber und Lizenzen siehe Poster-PDF bzw. Steckbriefe.' : ' ', 24, H - 12);
+      return canvas;
+    }
+    async function exportPng() {
+      const btn = document.getElementById('btn-export-png');
+      btn.disabled = true;
+      exportStatus('Bild wird erstellt …');
+      const save = (canvas) => new Promise((resolve, reject) => {
+        try { canvas.toBlob(b => b ? resolve(b) : reject(new Error('leer')), 'image/png'); } catch (e) { reject(e); }
+      });
+      try {
+        let blob;
+        try { blob = await save(await drawPng(true)); }
+        catch (e) { blob = await save(await drawPng(false)); }   // Bild nicht freigegeben → ohne Fotos
+        downloadBlob(blob, fileBaseName() + '.png');
+        exportStatus('✓ Bild heruntergeladen.', 'ok');
+      } catch (e) {
+        exportStatus('Das Bild konnte nicht erstellt werden.', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // =========================================================================
     // 17. DATEI EXPORT / IMPORT
     // =========================================================================
     function downloadJsonFile() {
@@ -2451,14 +3531,7 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const topic = normalizeTopic(extractJson(e.target.result));
-          closeModal('new-modal');
-          setActiveTopic(topic, { kind: 'draft', id: '' });
-          dirty = true;
-          renderTopicDropdown();
-          updateBuilderHint();
-          setMode('explore');
-          toast('Datei geladen. Speichern nicht vergessen.');
+          openReview(normalizeTopic(extractJson(e.target.result)), { source: `Datei «${file.name}»`, ai: false });
         } catch (err) {
           toast('Die Datei ist kein gültiger Zeitstrahl.');
         }
@@ -2477,7 +3550,7 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
       if (dirty && !activeTask) { e.preventDefault(); e.returnValue = ''; }
     });
 
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && !window.EMBED_TOPIC && location.protocol === 'https:') {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
   </script>

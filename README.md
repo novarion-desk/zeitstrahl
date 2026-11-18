@@ -14,6 +14,9 @@ Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. 
 | Bilder aus Wikipedia/Wikimedia Commons mit Urheber & Lizenz | ✓ | ✓ |
 | Thema für die Klasse freigeben (QR-Code, Link) | nur Standard-Themen | ✓ |
 | Abgabe-Aufträge (Code) und Abgaben ansehen | Abgeben ✓ | Aufträge erstellen ✓ |
+| Import (Drag & Drop, Einfügen, Word/Excel/PDF/CSV) mit Kontrollübersicht | ✓ | ✓ + KI für Fliesstext und Ergänzungen |
+| Export: Poster-PDF, Arbeitsblatt-PDF, Webseite (.html), Bild (.png) | ✓ | ✓ |
+| Farbpaletten, Beamer-Modus | ✓ | ✓ |
 
 ## Aufrufe
 
