@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.1 – 18.11.2026
+- Ein Feld für KI-Schlüssel (Konto → 🔑 KI-Schlüssel): Gemini, Claude, ChatGPT oder Mistral, Anbieter wird automatisch erkannt, Test beim Speichern, bevorzugte KI wählbar.
+- Design-Panel (🎨): Schrift, Schriftgrösse, Kartenstil (Karte, grosses Bild, minimal, nur Symbole), Hintergrund (hell, Papier, dunkel), Abstand, Farben; wird mit dem Thema gespeichert.
+- Textlänge und Stufe pro Thema; gelten für alles, was die KI schreibt.
+- KI-Assistent (✨ KI anpassen): freie Eingabe und Schnellknöpfe, Vorschau (neu, geändert, gelöscht) vor dem Übernehmen.
+- Rückgängig (↶) für alle Änderungen; 💾-Knopf bei ungespeicherten Änderungen.
+- ✏️ Bearbeiten öffnet die Kontrollübersicht für den aktuellen Zeitstrahl.
+- Steckbrief: Bearbeiten, Bild ändern, Löschen; mit Login KI-Knöpfe (neu schreiben, kürzer, länger, neue Denkfrage).
+
 ## v1 – 18.11.2026
 - Import per Drag & Drop oder Einfügen: Text, Excel/Numbers-Tabellen, .docx, .xlsx, .csv, .pdf, .json – mit Anleitung, Vorlage und Excel-Vorlage.
 - Fliesstext (z. B. aus dem Lehrmittel) liest die KI aus (mit Login).

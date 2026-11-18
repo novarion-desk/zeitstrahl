@@ -10,7 +10,11 @@ Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. 
 | 6 Standard-Themen (Alte Eidgenossenschaft, Industrialisierung, 1. Weltkrieg, 2. Weltkrieg, Kalter Krieg, Frauenstimmrecht – je mit Schweizer Spur) | ✓ | ✓ |
 | Eigene Zeitstrahlen bauen | ✓ (auf dem Gerät / als Datei) | ✓ (Cloud, auf allen Geräten) |
 | KI-Chat: Prompt kopieren → Antwort einfügen | ✓ | ✓ |
-| KI direkt (Gemini, Schlüssel aus dem Konto wie im Sek Planer) | – | ✓ |
+| KI direkt (Gemini, Claude, ChatGPT oder Mistral; ein Schlüsselfeld, Anbieter wird erkannt; Schlüssel wie im Sek Planer) | – | ✓ |
+| KI-Assistent: Änderungen in eigenen Worten oder per Schnellknopf (+5 Ereignisse, Texte −50 %, mehr Schweiz …), mit Vorschau und Rückgängig | – | ✓ |
+| KI pro Ereignis im Steckbrief (neu schreiben, kürzer, länger, neue Denkfrage) | – | ✓ |
+| Bearbeiten: einzelne Ereignisse anpassen, löschen, Bild ändern; Rückgängig | ✓ | ✓ |
+| Design-Panel: Schrift, Grösse, Kartenstil, Hintergrund, Abstand, Farben | ✓ | ✓ |
 | Bilder aus Wikipedia/Wikimedia Commons mit Urheber & Lizenz | ✓ | ✓ |
 | Thema für die Klasse freigeben (QR-Code, Link) | nur Standard-Themen | ✓ |
 | Abgabe-Aufträge (Code) und Abgaben ansehen | Abgeben ✓ | Aufträge erstellen ✓ |

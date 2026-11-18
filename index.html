@@ -42,6 +42,16 @@
     body.beamer-mode #detail-image-box { width: 26rem; max-width: 100%; }
     body.beamer-mode #btn-exit-present { background: #4f46e5; }
     body.beamer-mode main { max-width: none; }
+    /* Design-Hintergründe des Zeitstrahls */
+    .theme-papier #timeline-viewport { background: #f6efdf; border-color: #e5d9bd; }
+    .theme-papier .tick-label { background: #f6efdfee; color: #7c6a46; }
+    .theme-papier .axis-line { background: #5b4a2e; }
+    .theme-papier .tl-line { background: #cdbb94; }
+    .theme-dunkel #timeline-viewport { background: #0f172a; border-color: #1e293b; }
+    .theme-dunkel .tick-label { background: #0f172aee; color: #cbd5e1; }
+    .theme-dunkel .axis-line { background: #e2e8f0; }
+    .theme-dunkel .tl-line { background: #475569; }
+    .theme-dunkel .phase-label { color: #94a3b8; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -93,6 +103,11 @@
       <div id="explore-toolbar" class="card p-4 flex flex-wrap items-center justify-between gap-3">
         <div id="filter-bar" class="flex flex-wrap items-center gap-1.5"></div>
         <div class="flex flex-wrap items-center gap-2">
+          <button onclick="toggleDesignPanel()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">🎨 Design</button>
+          <button onclick="openAssistant()" class="text-xs bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 px-3 py-1.5 rounded-xl font-semibold">✨ KI anpassen</button>
+          <button onclick="openEditOverview()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">✏️ Bearbeiten</button>
+          <button onclick="undoLast()" class="btn-undo hidden text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">↶</button>
+          <button onclick="saveCurrentTopic()" id="btn-quick-save" class="hidden text-xs bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded-xl font-semibold">💾 Speichern</button>
           <button onclick="loadImagesForTopic(true)" id="btn-auto-images" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-semibold">🖼️ Bilder laden</button>
           <button onclick="togglePresentationMode()" class="text-xs bg-slate-800 text-white hover:bg-slate-900 px-3 py-1.5 rounded-xl font-semibold">🖥️ Beamer</button>
           <button onclick="openExportModal()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">⬇️ Export</button>
@@ -136,6 +151,21 @@
               <h2 id="detail-title" class="text-xl sm:text-2xl font-bold text-slate-900">Ereignis auswählen</h2>
               <p id="detail-desc" class="text-sm sm:text-base text-slate-700 leading-relaxed">Klicke auf dem Zeitstrahl auf ein Ereignis oder nutze die Pfeiltasten.</p>
               <a id="detail-wiki" href="#" target="_blank" rel="noopener" class="hidden inline-block text-xs text-indigo-600 hover:underline">📖 Mehr dazu auf Wikipedia</a>
+              <div id="detail-actions" class="hidden pt-2 space-y-1.5">
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                  <button onclick="openEditOverview(selectedEventId)" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-semibold">✏️ Bearbeiten</button>
+                  <button onclick="changeEventImage()" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-semibold">🖼 Bild ändern</button>
+                  <button onclick="deleteEventFromDetail()" class="px-2.5 py-1 rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 font-semibold">🗑 Löschen</button>
+                </div>
+                <div id="detail-ai-row" class="hidden flex flex-wrap items-center gap-1.5 text-xs">
+                  <button onclick="eventAI('rewrite')" class="detail-ai-btn px-2.5 py-1 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 font-semibold">✨ Neu schreiben</button>
+                  <button onclick="eventAI('shorter')" class="detail-ai-btn px-2.5 py-1 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 font-semibold">➖ Kürzer</button>
+                  <button onclick="eventAI('longer')" class="detail-ai-btn px-2.5 py-1 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 font-semibold">➕ Länger</button>
+                  <button onclick="eventAI('question')" class="detail-ai-btn px-2.5 py-1 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 font-semibold">💡 Neue Frage</button>
+                  <button onclick="undoLast()" class="btn-undo hidden px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-semibold">↶</button>
+                </div>
+                <div id="detail-ai-status" class="text-xs"></div>
+              </div>
             </div>
             <div id="detail-question-box" class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-4 lg:w-72 shrink-0">
               <div class="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-1">💡 Denkfrage</div>
@@ -366,7 +396,15 @@
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Thema *</label>
           <input type="text" id="gen-topic" maxlength="120" placeholder="z. B. Kalter Krieg, Römer in der Schweiz, Geschichte des Frauenstimmrechts" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Textlänge</label>
+            <select id="gen-length" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+              <option value="kurz">Kurz (1 Satz)</option>
+              <option value="mittel" selected>Mittel (2–3 Sätze)</option>
+              <option value="ausfuehrlich">Ausführlich (4–6)</option>
+            </select>
+          </div>
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Stufe</label>
             <select id="gen-level" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
@@ -402,10 +440,8 @@
       <!-- Tab: KI direkt -->
       <div id="newpane-ai" class="newpane space-y-3">
         <div id="gen-login-hint" class="hidden text-sm bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3">Die direkte KI-Erstellung gibt es nur für Lehrpersonen mit Anmeldung. Ohne Anmeldung geht es über «📋 KI-Chat».</div>
-        <div id="gen-key-box" class="hidden space-y-2 text-sm bg-slate-50 border border-slate-200 rounded-xl p-3">
-          <p>In deinem Konto ist noch kein Gemini-Schlüssel hinterlegt. Füge ihn hier ein. Er wird in deinem Konto gespeichert und auch vom Sek Planer genutzt.</p>
-          <input type="password" id="gen-key-input" placeholder="Gemini-API-Schlüssel" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-        </div>
+        <div id="gen-key-box" class="hidden text-sm bg-slate-50 border border-slate-200 rounded-xl p-3">Noch kein KI-Schlüssel hinterlegt. <button onclick="openAiSettings()" class="text-indigo-700 font-semibold underline">🔑 Schlüssel eintragen</button> (Gemini, Claude, ChatGPT oder Mistral)</div>
+        <div class="text-right -mt-1"><button onclick="openAiSettings()" id="gen-key-link" class="hidden text-xs text-slate-500 hover:underline">🔑 KI-Schlüssel verwalten</button></div>
         <div id="gen-status" class="hidden text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-3"></div>
         <div class="flex justify-end">
           <button onclick="generateWithAI()" id="btn-generate" class="btn-primary px-5 py-2.5 text-sm">✨ Vorschlag erstellen</button>
@@ -621,7 +657,8 @@ Kategorien: Politik, Konflikte, Alltag
 
         <div class="flex justify-between items-center border-t border-slate-100 pt-4">
           <span id="account-email" class="text-xs text-slate-500"></span>
-          <button onclick="logoutTeacher()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Abmelden</button>
+          <span class="flex gap-2"><button onclick="openAiSettings()" class="text-xs px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold">🔑 KI-Schlüssel</button>
+          <button onclick="logoutTeacher()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Abmelden</button></span>
         </div>
       </div>
     </div>
@@ -654,6 +691,118 @@ Kategorien: Politik, Konflikte, Alltag
   </div>
 
   <!-- MODAL: BILD SUCHEN -->
+  <!-- DESIGN-PANEL (nicht blockierend) -->
+  <div id="design-panel" class="hidden fixed right-3 top-24 bottom-3 w-[19rem] max-w-[92vw] z-40 bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+      <h3 class="font-bold text-slate-900">🎨 Design</h3>
+      <button onclick="toggleDesignPanel(false)" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+    <div id="design-body" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+    <div class="px-4 py-2 border-t border-slate-200 text-[11px] text-slate-500">Änderungen sind sofort sichtbar und werden mit dem Thema gespeichert.</div>
+  </div>
+
+  <!-- KI-ASSISTENT (nicht blockierend) -->
+  <div id="assistant-panel" class="hidden fixed right-3 top-24 bottom-3 w-[21rem] max-w-[94vw] z-40 bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+      <div>
+        <h3 class="font-bold text-slate-900">✨ KI-Assistent</h3>
+        <div id="assist-topic" class="text-[11px] text-slate-500"></div>
+      </div>
+      <button onclick="closeAssistant()" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div id="assist-login" class="hidden text-sm bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3">Die KI-Anpassung gibt es nur für Lehrpersonen mit Anmeldung. Ohne Anmeldung kannst du mit «✏️ Bearbeiten» alles von Hand ändern.</div>
+      <div id="assist-main" class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Was soll geändert werden?</label>
+          <textarea id="assist-input" rows="3" maxlength="600" placeholder="z. B. «Füge 4 Ereignisse zur Rolle der Frauen hinzu» oder «Mach den Hintergrund dunkel und die Schrift grösser»" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter')assistantFree()"></textarea>
+          <button onclick="assistantFree()" class="assist-btn btn-primary w-full mt-1.5 px-4 py-2 text-sm">✨ Vorschlag erstellen</button>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Schnellknöpfe</div>
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <button data-quick="more5" onclick="assistantQuick('more5')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">➕ 5 Ereignisse mehr</button>
+            <button data-quick="less3" onclick="assistantQuick('less3')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">➖ 3 unwichtigste weg</button>
+            <button data-quick="moreCH" onclick="assistantQuick('moreCH')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">🇨🇭 Mehr Schweiz</button>
+            <button data-quick="check" onclick="assistantQuick('check')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">🔎 Fakten prüfen</button>
+            <button data-quick="shorter" onclick="assistantQuick('shorter')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">✂️ Texte −50%</button>
+            <button data-quick="longer" onclick="assistantQuick('longer')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">📝 Texte +50%</button>
+            <button data-quick="simpler" onclick="assistantQuick('simpler')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">🧒 Einfachere Sprache</button>
+            <button data-quick="questions" onclick="assistantQuick('questions')" class="assist-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">💡 Neue Denkfragen</button>
+            <button data-quick="wiki" onclick="assistantQuick('wiki')" class="assist-btn col-span-2 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-indigo-50 text-left">🖼️ Fehlende Bild-Artikel und Symbole ergänzen</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Stufe</label>
+            <select id="assist-level" onchange="setTopicSetting('level', this.value)" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs bg-white">
+              <option value="A">Sek Niveau A</option><option value="B">Sek Niveau B</option><option value="C">Sek Niveau C</option><option value="P">Primar 5./6.</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Textlänge</label>
+            <select id="assist-length" onchange="setTopicSetting('textLength', this.value)" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs bg-white">
+              <option value="kurz">Kurz (1 Satz)</option><option value="mittel">Mittel (2–3 Sätze)</option><option value="ausfuehrlich">Ausführlich (4–6)</option>
+            </select>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 -mt-2">Stufe und Textlänge gelten für alles, was die KI neu schreibt.</p>
+        <div id="assist-status" class="hidden"></div>
+        <div class="flex gap-2">
+          <button onclick="undoLast()" class="btn-undo hidden flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-sm font-semibold">↶ Rückgängig</button>
+          <button onclick="openEditOverview()" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-sm font-semibold">✏️ Alle bearbeiten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VORSCHAU DER KI-ÄNDERUNGEN -->
+  <div id="change-modal" class="hidden fixed inset-0 bg-slate-900/50 z-[58] flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-xl max-h-[92vh] flex flex-col">
+      <div class="flex justify-between items-start gap-3 px-5 pt-5 pb-3 border-b border-slate-200">
+        <div>
+          <h3 id="change-title" class="font-bold text-lg text-slate-900">Vorschau</h3>
+          <p id="change-summary" class="text-sm text-slate-600 mt-0.5"></p>
+        </div>
+        <button onclick="rejectChange()" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <div id="change-list" class="flex-1 overflow-y-auto px-5 py-3 space-y-1.5"></div>
+      <div class="flex flex-wrap justify-end gap-2 px-5 py-4 border-t border-slate-200">
+        <button onclick="rejectChange()" class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-semibold">Verwerfen</button>
+        <button onclick="editChange()" class="px-4 py-2 rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-700 text-sm font-semibold">✏️ In Übersicht bearbeiten</button>
+        <button onclick="acceptChange()" class="btn-primary px-5 py-2 text-sm">✓ Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KI-SCHLÜSSEL -->
+  <div id="ai-modal" class="hidden fixed inset-0 bg-slate-900/50 z-[61] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-slate-900">🔑 KI-Schlüssel</h3>
+        <button onclick="closeModal('ai-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+      <p class="text-sm text-slate-600">Füge einen API-Schlüssel von Gemini, Claude, ChatGPT oder Mistral ein. Der Anbieter wird automatisch erkannt. Die Schlüssel liegen in deinem Konto; Gemini, Claude und ChatGPT nutzt auch der Sek Planer.</p>
+      <div class="space-y-2">
+        <input type="password" id="ai-key-input" autocomplete="off" placeholder="API-Schlüssel einfügen" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono" oninput="const p=detectProvider(this.value); document.getElementById('ai-key-detected').textContent = this.value.trim() ? (p ? 'Erkannt: ' + AI_PROVIDERS[p].label : 'Anbieter nicht erkannt – bitte auswählen') : ''" />
+        <div class="flex items-center gap-2">
+          <select id="ai-key-provider" class="rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
+            <option value="">Automatisch erkennen</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="claude">Anthropic Claude</option>
+            <option value="openai">OpenAI ChatGPT</option>
+            <option value="mistral">Mistral</option>
+          </select>
+          <span id="ai-key-detected" class="text-xs text-slate-500 flex-1"></span>
+          <button onclick="saveAiKeyFromForm()" class="btn-primary px-4 py-2 text-sm">Prüfen &amp; speichern</button>
+        </div>
+      </div>
+      <div id="ai-key-status" class="hidden"></div>
+      <div id="ai-provider-list" class="space-y-2"></div>
+      <p class="text-[11px] text-slate-500">Die KI wird direkt aus dem Browser aufgerufen. Bei Gemini, Claude und ChatGPT funktioniert das; bei Mistral ist es noch nicht geprüft – der Test beim Speichern zeigt es sofort. Die bevorzugte KI wird zuerst gefragt, bei einem Fehler die nächste.</p>
+    </div>
+  </div>
+
   <div id="image-modal" class="hidden fixed inset-0 bg-slate-900/50 z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-xl max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center">
@@ -976,6 +1125,29 @@ Kategorien: Politik, Konflikte, Alltag
       }
       return null;
     }
+    // ---------- Design pro Thema ----------
+    const DESIGN_DEFAULT = { font: 'modern', size: 'M', bg: 'hell', card: 'karte', density: 'normal', images: true, phases: true, years: true };
+    const DESIGN_OPTIONS = {
+      font: { modern: 'Modern', buch: 'Buch', rund: 'Freundlich', druck: 'Gut lesbar' },
+      size: { S: 'S', M: 'M', L: 'L', XL: 'XL' },
+      bg: { hell: 'Hell', papier: 'Papier', dunkel: 'Dunkel' },
+      card: { karte: 'Karte', bild: 'Grosses Bild', minimal: 'Minimal', symbol: 'Nur Symbole' },
+      density: { kompakt: 'Kompakt', normal: 'Normal', luftig: 'Luftig' }
+    };
+    const FONT_STACKS = {
+      modern: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif',
+      buch: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif',
+      rund: 'ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif',
+      druck: 'Verdana, Tahoma, "Segoe UI", sans-serif'
+    };
+    function normalizeDesign(d) {
+      const out = { ...DESIGN_DEFAULT };
+      if (d && typeof d === 'object') {
+        Object.keys(DESIGN_OPTIONS).forEach(k => { if (DESIGN_OPTIONS[k][d[k]]) out[k] = d[k]; });
+        ['images', 'phases', 'years'].forEach(k => { if (typeof d[k] === 'boolean') out[k] = d[k]; });
+      }
+      return out;
+    }
     function normalizeTopic(raw) {
       if (!raw || typeof raw !== 'object') throw new Error('Kein gültiger Datensatz');
       const t = {};
@@ -1027,6 +1199,9 @@ Kategorien: Politik, Konflikte, Alltag
       t.events = events;
       t.aiGenerated = !!raw.aiGenerated;
       t.reviewed = t.aiGenerated ? raw.reviewed === true : true;
+      t.design = normalizeDesign(raw.design);
+      const st = raw.settings || {};
+      t.settings = { textLength: ['kurz', 'mittel', 'ausfuehrlich'].includes(st.textLength) ? st.textLength : 'mittel', level: ['A', 'B', 'C', 'P'].includes(st.level) ? st.level : 'A' };
       return t;
     }
 
@@ -1190,9 +1365,14 @@ Kategorien: Politik, Konflikte, Alltag
       activeTopic = topic;
       activeRef = ref;
       dirty = false;
+      undoStack = [];
       currentFilter = 'all';
       selectedEventId = null;
       cancelEditEvent();
+      renderUndoButtons();
+      renderSaveButton();
+      if (!document.getElementById('design-panel').classList.contains('hidden')) renderDesignPanel();
+      if (!document.getElementById('assistant-panel').classList.contains('hidden')) renderAssistant();
       document.getElementById('builder-topic-title').value = activeTopic.title;
       document.getElementById('builder-layout').value = activeTopic.layout;
       document.getElementById('builder-track-top').value = activeTopic.trackTop;
@@ -1223,6 +1403,7 @@ Kategorien: Politik, Konflikte, Alltag
       dirty = true;
       renderTopicDropdown();
       updateBuilderHint();
+      renderSaveButton();
     }
 
     function renderBanner() {
@@ -1328,7 +1509,7 @@ Kategorien: Politik, Konflikte, Alltag
 
     // Gemeinsame Berechnung für Bildschirm, Druck und Bild-Export
     function computeLayout(events, isSingle, baseWidth, opts = {}) {
-      const cardW = opts.cardW || 200, cardH = opts.cardH || 54, laneH = opts.laneH || 66, gap = 8;
+      const cardW = opts.cardW || 200, cardH = opts.cardH || 54, laneH = opts.laneH || 66, gap = opts.gap ?? 8;
       const maxTop = isSingle ? 6 : 4, maxBottom = 4;
       const years = events.flatMap(e => [Number(e.start), Number(e.end ?? e.start)]);
       const rawMin = Math.min(...years), rawMax = Math.max(...years);
@@ -1372,9 +1553,28 @@ Kategorien: Politik, Konflikte, Alltag
       return { totalWidth, yearToX, placement, axisY, height, ticks, cardW, cardH, minYear, maxYear };
     }
 
+    function cardMetrics(design, big) {
+      const f = ({ S: 0.85, M: 1, L: 1.2, XL: 1.4 }[design.size] || 1) * (big ? 1.3 : 1);
+      const base = { karte: [200, 54], bild: [168, 140], minimal: [150, 46], symbol: [66, 76] }[design.card] || [200, 54];
+      const extra = { kompakt: 4, normal: 12, luftig: 26 }[design.density] ?? 12;
+      return {
+        cardW: Math.round(base[0] * f), cardH: Math.round(base[1] * f), laneH: Math.round(base[1] * f) + extra,
+        gap: design.density === 'luftig' ? 26 : design.density === 'kompakt' ? 4 : 8, font: 12 * f, f
+      };
+    }
+    function applyDesignToView() {
+      const d = normalizeDesign(activeTopic.design);
+      const view = document.getElementById('view-explore');
+      view.classList.remove('theme-hell', 'theme-papier', 'theme-dunkel');
+      view.classList.add('theme-' + d.bg);
+      ['timeline-canvas', 'detail-card'].forEach(id => { const el = document.getElementById(id); if (el) el.style.fontFamily = d.font === 'modern' ? '' : FONT_STACKS[d.font]; });
+    }
+
     function renderTimeline() {
       const canvas = document.getElementById('timeline-canvas');
       const isSingle = activeTopic.layout === 'single';
+      const design = normalizeDesign(activeTopic.design);
+      applyDesignToView();
       const legendBox = document.getElementById('track-legend-box');
       legendBox.innerHTML = isSingle
         ? `<strong>${escapeHTML(activeTopic.title)}</strong>`
@@ -1389,24 +1589,25 @@ Kategorien: Politik, Konflikte, Alltag
         return;
       }
       const big = presentationMode;
+      const M = cardMetrics(design, big);
       const vpWidth = document.getElementById('timeline-viewport').clientWidth || 1000;
-      const L = computeLayout(events, isSingle, Math.max(1050, vpWidth, events.length * (big ? 150 : 115)) * zoomLevel,
-        big ? { cardW: 270, cardH: 66, laneH: 80, tickPx: 70 } : {});
+      const L = computeLayout(events, isSingle, Math.max(1050, vpWidth, events.length * (M.cardW * 0.6)) * zoomLevel,
+        { cardW: M.cardW, cardH: M.cardH, laneH: M.laneH, gap: M.gap, tickPx: big ? 70 : 60 });
       canvas.style.width = L.totalWidth + 'px';
       canvas.style.height = L.height + 'px';
       canvas.style.minHeight = L.height + 'px';
+      canvas.style.fontSize = M.font + 'px';
 
       const phaseColors = ['rgba(99,102,241,0.07)', 'rgba(245,158,11,0.08)', 'rgba(239,68,68,0.07)', 'rgba(16,185,129,0.08)'];
-      const phasesHTML = (activeTopic.phases || []).map((p, i) => {
+      const phasesHTML = design.phases ? (activeTopic.phases || []).map((p, i) => {
         const x1 = Math.max(0, L.yearToX(p.start)), x2 = Math.min(L.totalWidth, L.yearToX(p.end));
         if (x2 <= x1) return '';
         return `<div style="left:${x1}px; width:${x2 - x1}px; background-color:${phaseColors[i % 4]}" class="absolute top-0 bottom-0 border-r border-slate-300/30 pointer-events-none">
             <span class="phase-label block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 pt-2 truncate">${escapeHTML(p.label)}</span></div>`;
-      }).join('');
+      }).join('') : '';
       const ticksHTML = L.ticks.map(y => `<div style="left:${L.yearToX(y)}px" class="absolute top-0 bottom-0 border-l border-slate-300/40 pointer-events-none">
-            <span style="top:${L.axisY + 9}px" class="tick-label absolute -translate-x-1/2 text-slate-500 font-mono ${big ? 'text-sm' : 'text-[10px]'} font-bold whitespace-nowrap bg-slate-50/90 px-1 rounded">${fmtYear(y)}</span></div>`).join('');
+            <span style="top:${L.axisY + 9}px; font-size:${Math.max(10, M.font * 0.85)}px" class="tick-label absolute -translate-x-1/2 text-slate-500 font-mono font-bold whitespace-nowrap bg-slate-50/90 px-1 rounded">${fmtYear(y)}</span></div>`).join('');
 
-      const vis = big ? 'w-12 h-12 text-2xl' : 'w-10 h-10 text-xl';
       const cardsHTML = L.placement.map(({ ev, top, x, xEnd, y }) => {
         const barWidth = Math.max(10, xEnd - x);
         const lineTop = top ? y + L.cardH : L.axisY;
@@ -1415,18 +1616,42 @@ Kategorien: Politik, Konflikte, Alltag
         const isSelected = ev.id === selectedEventId;
         const ringClass = isSelected ? 'ring-2 ring-indigo-600 z-20 shadow-lg' : 'hover:shadow-md hover:z-20 z-10';
         const icon = ICONS[ev.icon] || '📌';
-        const visual = ev.image && ev.image.url
-          ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="${vis} rounded-lg object-cover shrink-0 border border-black/10 bg-white" onerror="this.outerHTML='<span class=&quot;${vis} rounded-lg bg-white/80 flex items-center justify-center shrink-0&quot;>${icon}</span>'" />`
-          : `<span class="${vis} rounded-lg bg-white/80 border border-black/5 flex items-center justify-center shrink-0">${icon}</span>`;
+        const hasImg = design.images && ev.image && ev.image.url;
+        const yearHTML = design.years ? `<div style="font-size:0.85em" class="font-mono font-bold opacity-75">${fmtRange(ev)}</div>` : '';
+        const titleHTML = `<div style="font-size:1em" class="font-bold leading-tight line-clamp-2 ${design.years ? 'mt-0.5' : ''}">${escapeHTML(ev.title)}</div>`;
+        const vs = Math.round(40 * M.f);
+        const fallback = (cls, style) => `onerror="this.outerHTML='<span class=&quot;${cls}&quot; style=&quot;${style}&quot;>${icon}</span>'"`;
+        let inner, padCls = 'p-1.5', layoutCls = 'flex items-center gap-2';
+        if (design.card === 'bild') {
+          const ih = Math.round(L.cardH * 0.58);
+          const st = `height:${ih}px;font-size:${Math.round(ih * 0.5)}px`;
+          inner = (hasImg
+            ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="w-full rounded-lg object-cover bg-white" style="height:${ih}px" ${fallback('w-full rounded-lg bg-white/80 flex items-center justify-center', st)} />`
+            : `<span class="w-full rounded-lg bg-white/80 flex items-center justify-center" style="${st}">${icon}</span>`) +
+            `<div class="min-w-0 w-full pt-1">${yearHTML}${titleHTML}</div>`;
+          layoutCls = 'flex flex-col items-stretch';
+        } else if (design.card === 'minimal') {
+          inner = `<div class="min-w-0 flex-1 px-1">${yearHTML}${titleHTML}</div>`;
+        } else if (design.card === 'symbol') {
+          const s = Math.round(L.cardW * 0.62);
+          inner = (hasImg
+            ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="rounded-full object-cover bg-white" style="width:${s}px;height:${s}px" ${fallback('rounded-full bg-white/80 flex items-center justify-center', `width:${s}px;height:${s}px;font-size:${Math.round(s * 0.55)}px`)} />`
+            : `<span class="rounded-full bg-white/80 flex items-center justify-center" style="width:${s}px;height:${s}px;font-size:${Math.round(s * 0.55)}px">${icon}</span>`) +
+            (design.years ? `<div style="font-size:0.8em" class="font-mono font-bold opacity-80 mt-0.5">${fmtRange(ev)}</div>` : '');
+          layoutCls = 'flex flex-col items-center justify-center';
+          padCls = 'p-1';
+        } else {
+          const st = `width:${vs}px;height:${vs}px;font-size:${Math.round(vs * 0.5)}px`;
+          inner = (hasImg
+            ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="rounded-lg object-cover shrink-0 border border-black/10 bg-white" style="width:${vs}px;height:${vs}px" ${fallback('rounded-lg bg-white/80 flex items-center justify-center shrink-0', st)} />`
+            : `<span class="rounded-lg bg-white/80 border border-black/5 flex items-center justify-center shrink-0" style="${st}">${icon}</span>`) +
+            `<div class="min-w-0 flex-1">${yearHTML}${titleHTML}</div>`;
+        }
         return `
           <div style="left:${x}px; top:${lineTop}px; height:${lineHeight}px" class="tl-line absolute w-0.5 bg-slate-300 pointer-events-none"></div>
           <div style="left:${x}px; top:${L.axisY - 4}px; width:${barWidth}px; background:${c.base}" class="absolute h-2.5 -translate-x-1 rounded-full shadow-sm"></div>
-          <button id="ev-btn-${ev.id}" onclick="showDetail('${ev.id}', false)" style="left:${x}px; top:${y}px; width:${L.cardW}px; height:${L.cardH}px; background:${c.soft}; border-color:${c.border}; color:${c.text}" class="absolute -translate-x-1/2 text-left p-1.5 rounded-xl border ${ringClass} transition cursor-pointer flex items-center gap-2">
-            ${visual}
-            <div class="min-w-0 flex-1">
-              <div class="${big ? 'text-xs' : 'text-[10px]'} font-mono font-bold opacity-75">${fmtRange(ev)}</div>
-              <div class="${big ? 'text-sm' : 'text-xs'} font-bold leading-tight line-clamp-2 mt-0.5">${escapeHTML(ev.title)}</div>
-            </div>
+          <button id="ev-btn-${ev.id}" onclick="showDetail('${ev.id}', false)" title="${escapeHTML(fmtRange(ev) + ': ' + ev.title)}" style="left:${x}px; top:${y}px; width:${L.cardW}px; height:${L.cardH}px; background:${c.soft}; border-color:${c.border}; color:${c.text}" class="absolute -translate-x-1/2 text-left ${padCls} ${design.card === 'symbol' ? 'rounded-2xl' : 'rounded-xl'} border ${ringClass} transition cursor-pointer overflow-hidden ${layoutCls}">
+            ${inner}
           </button>`;
       }).join('');
       canvas.innerHTML = `${phasesHTML}${ticksHTML}<div style="top:${L.axisY}px" class="axis-line absolute left-6 right-6 h-1 bg-slate-800 rounded-full"></div>${cardsHTML}`;
@@ -1455,6 +1680,7 @@ Kategorien: Politik, Konflikte, Alltag
       return img.source ? `<a href="${escapeHTML(img.source)}" target="_blank" rel="noopener" class="hover:underline">${label} (Wikimedia Commons)</a>` : label;
     }
 
+    let detailShownId = null;
     function showDetail(id, scrollIntoView) {
       const ev = (activeTopic.events || []).find(e => e.id === id);
       if (!ev) return;
@@ -1480,6 +1706,9 @@ Kategorien: Politik, Konflikte, Alltag
       const wikiA = document.getElementById('detail-wiki');
       if (ev.wiki) { wikiA.href = 'https://de.wikipedia.org/wiki/' + encodeURIComponent(ev.wiki.replace(/ /g, '_')); wikiA.classList.remove('hidden'); }
       else wikiA.classList.add('hidden');
+      document.getElementById('detail-actions').classList.toggle('hidden', !!window.EMBED_TOPIC || activeRef.kind === 'submission');
+      document.getElementById('detail-ai-row').classList.toggle('hidden', !isTeacher());
+      if (detailShownId !== id) { document.getElementById('detail-ai-status').textContent = ''; detailShownId = id; }
 
       const imgBox = document.getElementById('detail-image-box');
       const iconBox = document.getElementById('detail-icon-box');
@@ -1627,6 +1856,7 @@ Kategorien: Politik, Konflikte, Alltag
 
     // ---------- Bildauswahl im Baukasten ----------
     function openImagePicker() {
+      imagePickTarget = null;
       const q = document.getElementById('b-wiki').value.trim() || document.getElementById('b-title').value.trim();
       document.getElementById('image-query').value = q;
       document.getElementById('image-grid').innerHTML = '';
@@ -1671,8 +1901,19 @@ Kategorien: Politik, Konflikte, Alltag
       const img = lastImageResults[i];
       if (!img) return;
       // für die Anzeige grösseres Vorschaubild verwenden
-      setBuilderImage({ ...img, url: img.url.replace(/\/(\d+)px-/, '/640px-') });
+      const big = { ...img, url: img.url.replace(/\/(\d+)px-/, '/640px-') };
       closeModal('image-modal');
+      if (imagePickTarget) {
+        const t = clone(activeTopic);
+        const ev = t.events.find(e => e.id === imagePickTarget);
+        imagePickTarget = null;
+        if (!ev) return;
+        ev.image = normalizeImage(big);
+        delete ev._noImage;
+        commitTopicChange(t, `Bild geändert: ${ev.title}`);
+        return;
+      }
+      setBuilderImage(big);
     }
     function setBuilderImage(img) {
       builderImage = img ? normalizeImage(img) : null;
@@ -2065,7 +2306,7 @@ Kategorien: Politik, Konflikte, Alltag
       (t.events || []).forEach(e => { delete e._noImage; });
       return t;
     }
-    async function saveCurrentTopic() {
+    async function saveCurrentTopic(silent) {
       updateBuilderMetaSilent();
       if (window.EMBED_TOPIC) { downloadJsonFile(); dirty = false; renderTopicDropdown(); updateBuilderHint(); toast('Als Datei gesichert.'); return; }
       if (!activeTopic.events.length) return toast('Der Zeitstrahl hat noch keine Ereignisse.');
@@ -2088,7 +2329,8 @@ Kategorien: Politik, Konflikte, Alltag
           renderTopicDropdown();
           renderBanner();
           updateBuilderHint();
-          toast('Thema in deinen Themen gespeichert.');
+          renderSaveButton();
+          if (!silent) toast('Thema in deinen Themen gespeichert.');
         } catch (e) {
           toast('Speichern fehlgeschlagen. Bitte nochmals versuchen.');
         }
@@ -2100,6 +2342,7 @@ Kategorien: Politik, Konflikte, Alltag
         dirty = false;
         renderTopicDropdown();
         updateBuilderHint();
+        renderSaveButton();
         toast('Auf diesem Gerät gespeichert. Tipp: zusätzlich als Datei sichern.');
       }
     }
@@ -2131,7 +2374,9 @@ Kategorien: Politik, Konflikte, Alltag
       keyBox.classList.add('hidden');
       if (isTeacher()) {
         const keys = await loadAiKeys();
-        keyBox.classList.toggle('hidden', !!(keys.gemini || keys.claude));
+        const hasKey = !!(keys.gemini || keys.claude || keys.openai || keys.mistral);
+        keyBox.classList.toggle('hidden', hasKey);
+        document.getElementById('gen-key-link').classList.toggle('hidden', !hasKey);
       }
     }
 
@@ -2153,7 +2398,7 @@ ${extra ? 'Zusatzwünsche: ' + extra : ''}
 Regeln:
 - Nur gesicherte historische Fakten. Nimm nur Jahreszahlen auf, bei denen du dir sicher bist. Lieber weniger Ereignisse als unsichere.
 - Schreibe auf Deutsch mit Schweizer Rechtschreibung (ss statt ß), passend zur Zielstufe.
-- "desc": 2–3 kurze Sätze: Was geschah und warum ist es wichtig?
+- "desc": ${TEXT_LENGTHS[document.getElementById('gen-length').value] || TEXT_LENGTHS.mittel}. Was geschah und warum ist es wichtig?
 - "question": eine Denkfrage, die zum Nachdenken über Ursachen oder Folgen anregt (keine reine Wissensfrage).
 - "wiki": der GENAUE Titel des passenden Artikels in der deutschsprachigen Wikipedia (z. B. "Rütlirapport"). Er wird für das Bild verwendet. Wenn du unsicher bist, nimm den allgemeineren Artikel.
 - "icon": genau eines dieser Wörter: ${iconList}
@@ -2173,6 +2418,11 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
     {"start": 1940, "end": null, "title": "Kurzer Titel", "track": "${dual ? 'bottom' : 'top'}", "cat": "politik", "icon": "militaer", "wiki": "Rütlirapport", "desc": "…", "question": "…"}
   ]
 }`;
+    }
+    function genSettings() {
+      const lv = document.getElementById('gen-level').value;
+      const level = Object.keys(LEVELS).find(k => LEVELS[k] === lv) || 'A';
+      return { textLength: document.getElementById('gen-length').value, level };
     }
     function copyPrompt() {
       if (!document.getElementById('gen-topic').value.trim()) return toast('Bitte zuerst ein Thema eintragen.');
@@ -2214,28 +2464,6 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
     }
 
     // ---------- KI-Schlüssel (gleiches Konto-Dokument wie im Sek Planer) ----------
-    let aiKeysCache = null;
-    async function loadAiKeys() {
-      if (!isTeacher()) return {};
-      if (aiKeysCache && aiKeysCache.uid === currentUser.uid) return aiKeysCache;
-      let keys = { uid: currentUser.uid, gemini: '', claude: '', preferred: 'gemini' };
-      try {
-        const snap = await db.collection('sekSync').doc('apikeys_' + currentUser.uid).get();
-        if (snap.exists) {
-          const d = snap.data() || {};
-          keys.gemini = typeof d.geminiKey === 'string' ? d.geminiKey : '';
-          keys.claude = typeof d.claudeKey === 'string' ? d.claudeKey : '';
-          keys.preferred = d.preferredAi === 'claude' ? 'claude' : 'gemini';
-        }
-      } catch (e) {}
-      aiKeysCache = keys;
-      return keys;
-    }
-    async function saveGeminiKey(key) {
-      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, geminiKey: key }, { merge: true });
-      aiKeysCache = null;
-    }
-
     function fetchWithTimeout(url, opts, ms) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), ms);
@@ -2737,6 +2965,376 @@ Kategorien: Politik, Konflikte, Alltag
       }
     }
 
+    // =========================================================================
+    // 13c. ÄNDERUNGEN, RÜCKGÄNGIG, DESIGN-PANEL, KI-ASSISTENT, KI PRO EREIGNIS
+    // =========================================================================
+    let undoStack = [];
+    const TEXT_LENGTHS = { kurz: 'kurz: 1 Satz', mittel: 'mittel: 2–3 Sätze', ausfuehrlich: 'ausführlich: 4–6 Sätze' };
+    const LEVELS = {
+      A: 'Sekundarstufe I, Niveau A (anspruchsvoll)', B: 'Sekundarstufe I, Niveau B (einfachere Sprache)',
+      C: 'Sekundarstufe I, Niveau C (sehr einfache Sprache, kurze Sätze)', P: 'Primarschule 5./6. Klasse (einfache Sprache)'
+    };
+    function topicSettings(t) {
+      const s = (t || activeTopic).settings || {};
+      return { textLength: TEXT_LENGTHS[s.textLength] ? s.textLength : 'mittel', level: LEVELS[s.level] ? s.level : 'A' };
+    }
+
+    function refreshAfterTopicChange() {
+      populateCatSelect();
+      renderFilterBar();
+      renderTimeline();
+      renderBuilderList();
+      renderUndoButtons();
+      if (selectedEventId && activeTopic.events.find(e => e.id === selectedEventId)) showDetail(selectedEventId, false);
+      else { const s = sortedEvents(); if (s.length) showDetail(s[0].id, false); else clearDetail(); }
+      if (currentMode === 'guess') initGuessChallenge();
+      if (currentMode === 'sort') initSortGame();
+    }
+    // Jede Änderung: vorher sichern (Rückgängig), danach speichern bzw. als ungespeichert markieren
+    async function commitTopicChange(newTopic, label) {
+      undoStack.push({ topic: clone(activeTopic), ref: { ...activeRef }, label });
+      if (undoStack.length > 25) undoStack.shift();
+      activeTopic = newTopic;
+      await afterChangeSave();
+      refreshAfterTopicChange();
+      loadImagesForTopic(false);
+    }
+    async function afterChangeSave() {
+      document.getElementById('builder-topic-title').value = activeTopic.title;
+      if (activeRef.kind === 'cloud' && isTeacher() && !window.EMBED_TOPIC) {
+        dirty = true;
+        await saveCurrentTopic(true);
+      } else if (activeRef.kind === 'local') {
+        localTopics[activeRef.id] = topicForStorage(activeTopic);
+        if (persistLocalTopics()) { dirty = false; renderTopicDropdown(); updateBuilderHint(); }
+      } else {
+        markDirty();
+      }
+      renderSaveButton();
+    }
+    async function undoLast() {
+      const last = undoStack.pop();
+      if (!last) return toast('Nichts zum Rückgängigmachen.');
+      activeTopic = last.topic;
+      if (last.ref && last.ref.kind === activeRef.kind) activeRef = last.ref;
+      await afterChangeSave();
+      refreshAfterTopicChange();
+      toast(`↶ Rückgängig: ${last.label}`);
+    }
+    function renderUndoButtons() {
+      document.querySelectorAll('.btn-undo').forEach(b => {
+        b.classList.toggle('hidden', !undoStack.length);
+        b.title = undoStack.length ? 'Rückgängig: ' + undoStack[undoStack.length - 1].label : '';
+      });
+    }
+    function renderSaveButton() {
+      const b = document.getElementById('btn-quick-save');
+      if (b) b.classList.toggle('hidden', !dirty);
+    }
+
+    // ---------- Bearbeiten (Kontrollübersicht für den aktuellen Zeitstrahl) ----------
+    function openEditOverview(focusId) {
+      openReview(activeTopic, { source: 'aktueller Zeitstrahl', ai: !!activeTopic.aiGenerated && !activeTopic.reviewed, mode: 'edit' });
+      if (focusId) {
+        const idx = reviewTopic.events.findIndex(e => e.id === focusId);
+        setTimeout(() => {
+          const rows = document.querySelectorAll('#review-list > div');
+          const row = rows[idx];
+          if (row) { row.scrollIntoView({ block: 'center' }); const det = row.querySelector('details'); if (det) det.open = true; row.classList.add('ring-2', 'ring-indigo-400'); }
+        }, 50);
+      }
+    }
+    async function deleteEventFromDetail() {
+      const ev = activeTopic.events.find(e => e.id === selectedEventId);
+      if (!ev || !confirm(`«${ev.title}» löschen?`)) return;
+      const t = clone(activeTopic);
+      t.events = t.events.filter(e => e.id !== ev.id);
+      selectedEventId = null;
+      await commitTopicChange(t, `«${ev.title}» gelöscht`);
+    }
+
+    // ---------- Design-Panel ----------
+    function toggleDesignPanel(force) {
+      const p = document.getElementById('design-panel');
+      const show = force !== undefined ? force : p.classList.contains('hidden');
+      p.classList.toggle('hidden', !show);
+      if (show) { closeAssistant(); renderDesignPanel(); }
+    }
+    function renderDesignPanel() {
+      const d = normalizeDesign(activeTopic.design);
+      const group = (key, title) => `<div><div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">${title}</div><div class="flex flex-wrap gap-1">` +
+        Object.entries(DESIGN_OPTIONS[key]).map(([v, label]) => `<button onclick="setDesign('${key}','${v}')" class="px-2.5 py-1 rounded-lg border text-xs ${d[key] === v ? 'pill-active' : 'border-slate-200 bg-white hover:bg-slate-50'}" ${key === 'font' ? `style="font-family:${FONT_STACKS[v].replace(/"/g, '&quot;')}"` : ''}>${label}</button>`).join('') + '</div></div>';
+      const toggle = (key, label) => `<label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" ${d[key] ? 'checked' : ''} onchange="setDesign('${key}', this.checked)" class="accent-indigo-600" /> ${label}</label>`;
+      document.getElementById('design-body').innerHTML = `
+        <div><div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Farben</div>
+          <div class="flex flex-wrap gap-1">${Object.entries(PALETTES).map(([k, p]) => `<button onclick="setPalette('${k}')" title="${p.label}" class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs ${(activeTopic.palette || 'standard') === k ? 'pill-active' : 'border-slate-200 bg-white'}">${p.colors.map(c => `<span class="w-3 h-3 rounded-full" style="background:${c}"></span>`).join('')}</button>`).join('')}</div>
+          <div class="flex flex-wrap gap-2 mt-2">${activeTopic.categories.map((c, i) => `<label class="flex items-center gap-1 text-xs text-slate-600"><input type="color" value="${catColor(activeTopic, c.id).base}" onchange="setCategoryColor(${i}, this.value); renderDesignPanel()" class="w-6 h-6 rounded border border-slate-300 p-0 cursor-pointer" />${escapeHTML(c.label)}</label>`).join('')}</div>
+        </div>
+        ${group('font', 'Schrift')}
+        ${group('size', 'Schriftgrösse')}
+        ${group('card', 'Kartenstil')}
+        ${group('bg', 'Hintergrund')}
+        ${group('density', 'Abstand')}
+        <div class="space-y-1">${toggle('images', 'Bilder zeigen')}${toggle('years', 'Jahreszahlen auf den Karten')}${toggle('phases', 'Phasen im Hintergrund')}</div>
+        <button onclick="setDesignAll(DESIGN_DEFAULT); setPalette('standard')" class="text-xs text-slate-500 hover:underline">Auf Standard zurücksetzen</button>`;
+    }
+    function setDesign(key, value) {
+      activeTopic.design = normalizeDesign({ ...normalizeDesign(activeTopic.design), [key]: value });
+      designChanged();
+    }
+    function setDesignAll(d) {
+      activeTopic.design = normalizeDesign(d);
+      designChanged();
+    }
+    let designSaveTimer = null;
+    function designChanged() {
+      renderTimeline();
+      if (selectedEventId) showDetail(selectedEventId, false);
+      renderDesignPanel();
+      // Speichern leicht verzögert, damit mehrere Klicks nicht je einzeln gespeichert werden
+      clearTimeout(designSaveTimer);
+      designSaveTimer = setTimeout(() => afterChangeSave(), 800);
+    }
+
+    // ---------- KI-Assistent ----------
+    function openAssistant() {
+      toggleDesignPanel(false);
+      document.getElementById('assistant-panel').classList.remove('hidden');
+      renderAssistant();
+    }
+    function closeAssistant() { document.getElementById('assistant-panel').classList.add('hidden'); }
+    function renderAssistant() {
+      const teacher = isTeacher();
+      document.getElementById('assist-login').classList.toggle('hidden', teacher);
+      document.getElementById('assist-main').classList.toggle('hidden', !teacher);
+      const s = topicSettings();
+      document.getElementById('assist-level').value = s.level;
+      document.getElementById('assist-length').value = s.textLength;
+      document.getElementById('assist-topic').textContent = `${activeTopic.title} · ${activeTopic.events.length} Ereignisse`;
+      renderUndoButtons();
+    }
+    function setTopicSetting(key, value) {
+      activeTopic.settings = { ...topicSettings(), [key]: value };
+      afterChangeSave();
+    }
+    const QUICK_ACTIONS = {
+      more5: 'Füge 5 weitere wichtige Ereignisse hinzu, die zum Thema passen und noch fehlen. Bestehende Ereignisse unverändert lassen.',
+      less3: 'Entferne die 3 am wenigsten wichtigen Ereignisse. Alle anderen unverändert lassen.',
+      moreCH: 'Ergänze 3 bis 4 Ereignisse aus der Schweiz (bzw. mit klarem Bezug zur Schweiz) auf der passenden Spur. Bestehende Ereignisse unverändert lassen.',
+      shorter: 'Kürze alle Erklärungen ("desc") auf etwa die Hälfte ihrer Länge. Inhalt korrekt halten, Titel und Jahreszahlen nicht ändern.',
+      longer: 'Erweitere alle Erklärungen ("desc") auf etwa die doppelte Länge mit zusätzlichen, gesicherten Informationen (Ursachen, Folgen, Beteiligte). Titel und Jahreszahlen nicht ändern.',
+      simpler: 'Schreibe alle Erklärungen und Denkfragen in deutlich einfacherer Sprache (kurze Sätze, keine Fremdwörter oder diese kurz erklären). Inhalt korrekt halten.',
+      questions: 'Schreibe für alle Ereignisse neue, abwechslungsreiche Denkfragen (Ursachen, Folgen, Vergleiche, Perspektivenwechsel, Bezug zu heute).',
+      check: 'Prüfe alle Jahreszahlen und Fakten sorgfältig. Korrigiere nur, was sicher falsch ist, und nenne jede Korrektur im "summary". Ändere sonst nichts.',
+      wiki: 'Ergänze bei allen Ereignissen ohne "wiki" den genauen Titel des passenden Artikels der deutschsprachigen Wikipedia und bei fehlendem "icon" ein passendes Symbol. Sonst nichts ändern.'
+    };
+    function assistantQuick(key) { runAssistant(QUICK_ACTIONS[key], document.querySelector(`[data-quick="${key}"]`)?.textContent.trim()); }
+    function assistantFree() {
+      const txt = document.getElementById('assist-input').value.trim();
+      if (!txt) return toast('Bitte beschreibe, was geändert werden soll.');
+      runAssistant(txt, txt);
+    }
+    function assistStatus(msg, kind) {
+      const el = document.getElementById('assist-status');
+      if (!msg) { el.classList.add('hidden'); return; }
+      const styles = { info: 'bg-indigo-50 border-indigo-200 text-indigo-800', error: 'bg-rose-50 border-rose-200 text-rose-800', ok: 'bg-emerald-50 border-emerald-200 text-emerald-800' };
+      el.className = `text-xs rounded-xl p-3 border ${styles[kind || 'info']}`;
+      el.textContent = msg;
+    }
+    function compactTopicForAI(t) {
+      return {
+        title: t.title, layout: t.layout, trackTop: t.trackTop, trackBottom: t.trackBottom,
+        categories: t.categories.map(c => ({ id: c.id, label: c.label })), phases: t.phases,
+        design: normalizeDesign(t.design), palette: t.palette || 'standard',
+        events: sortedEvents(t.events).map(e => ({ id: e.id, start: e.start, end: e.end, title: e.title, track: e.track, cat: e.cat, icon: e.icon, wiki: e.wiki, desc: e.desc, question: e.question }))
+      };
+    }
+    function buildAssistantPrompt(instruction) {
+      const s = topicSettings();
+      return `Du bearbeitest einen bestehenden Zeitstrahl für den Geschichtsunterricht in der Schweiz.
+
+Einstellungen: Zielstufe ${LEVELS[s.level]}; Textlänge der Erklärungen ${TEXT_LENGTHS[s.textLength]} (gilt für neue oder neu geschriebene Texte, ausser der Auftrag sagt etwas anderes).
+
+AUFTRAG DER LEHRPERSON:
+${instruction}
+
+Regeln:
+- Nur gesicherte historische Fakten und Jahreszahlen. Lieber weniger als unsicher.
+- Bestehende Ereignisse behalten ihre "id". Was der Auftrag nicht betrifft, gibst du unverändert zurück.
+- Neue Ereignisse bekommen KEINE "id". Gelöschte Ereignisse lässt du einfach weg.
+- Neue Ereignisse brauchen: start, end (oder null), title, track ("top"/"bottom"), cat (eine bestehende Kategorie-id), icon, wiki (genauer Titel der deutschsprachigen Wikipedia), desc, question.
+- "icon": eines von: ${Object.keys(ICONS).join(', ')}
+- Design nur ändern, wenn der Auftrag es verlangt. Erlaubte Werte: font ${Object.keys(DESIGN_OPTIONS.font).join('/')}, size ${Object.keys(DESIGN_OPTIONS.size).join('/')}, bg ${Object.keys(DESIGN_OPTIONS.bg).join('/')}, card ${Object.keys(DESIGN_OPTIONS.card).join('/')}, density ${Object.keys(DESIGN_OPTIONS.density).join('/')}, images/years/phases true/false; palette ${Object.keys(PALETTES).join('/')}.
+- Deutsch mit Schweizer Rechtschreibung (ss statt ß).
+
+AKTUELLER ZEITSTRAHL (JSON):
+${JSON.stringify(compactTopicForAI(activeTopic))}
+
+Antworte NUR mit gültigem JSON in diesem Format:
+{"summary": "1–2 Sätze, was du geändert hast", "title": "…", "categories": [ … ], "phases": [ … ], "design": { … }, "palette": "…", "events": [ … alle Ereignisse nach der Änderung … ]}`;
+    }
+
+    // Antwort der KI mit dem aktuellen Zeitstrahl zusammenführen (Bilder bleiben erhalten)
+    function mergeAiResult(oldT, data) {
+      const merged = normalizeTopic({
+        ...oldT,
+        title: data.title || oldT.title,
+        categories: Array.isArray(data.categories) && data.categories.length ? data.categories : oldT.categories,
+        phases: Array.isArray(data.phases) ? data.phases : oldT.phases,
+        palette: PALETTES[data.palette] ? data.palette : oldT.palette,
+        events: (Array.isArray(data.events) ? data.events : oldT.events).map(e => ({ ...e, id: e.id && oldT.events.find(o => o.id === e.id) ? e.id : '' })),
+        aiGenerated: true, reviewed: false
+      });
+      // Farben der Kategorien behalten
+      merged.categories.forEach(c => { const o = oldT.categories.find(x => x.id === c.id); if (o && o.color && !c.color) c.color = o.color; });
+      merged.design = data.design ? normalizeDesign({ ...normalizeDesign(oldT.design), ...data.design }) : oldT.design;
+      merged.settings = oldT.settings;
+      merged.events.forEach(e => {
+        const o = oldT.events.find(x => x.id === e.id);
+        if (o && o.image && (!e.wiki || e.wiki === o.wiki)) e.image = o.image;
+      });
+      return merged;
+    }
+    function diffTopics(oldT, newT) {
+      const fields = ['start', 'end', 'title', 'track', 'cat', 'icon', 'wiki', 'desc', 'question'];
+      const oldMap = new Map(oldT.events.map(e => [e.id, e]));
+      const added = [], changed = [];
+      newT.events.forEach(e => {
+        const o = oldMap.get(e.id);
+        if (!o) { added.push(e); return; }
+        const f = fields.filter(k => String(o[k] ?? '') !== String(e[k] ?? ''));
+        if (f.length) changed.push({ old: o, new: e, fields: f });
+        oldMap.delete(e.id);
+      });
+      const designChanged = JSON.stringify(normalizeDesign(oldT.design)) !== JSON.stringify(normalizeDesign(newT.design)) || (oldT.palette || 'standard') !== (newT.palette || 'standard');
+      return { added, changed, removed: [...oldMap.values()], designChanged, titleChanged: oldT.title !== newT.title };
+    }
+
+    let pendingChange = null;
+    async function runAssistant(instruction, label) {
+      if (!isTeacher()) return toast('Die KI-Anpassung gibt es nur mit Anmeldung.');
+      if (!activeTopic.events.length) return toast('Der Zeitstrahl hat noch keine Ereignisse.');
+      document.querySelectorAll('.assist-btn').forEach(b => { b.disabled = true; });
+      assistStatus('✨ Die KI arbeitet … (meist 15–60 Sekunden)');
+      try {
+        const answer = await callAI(buildAssistantPrompt(instruction));
+        const data = extractJson(answer);
+        const newT = mergeAiResult(activeTopic, data);
+        const diff = diffTopics(activeTopic, newT);
+        if (!diff.added.length && !diff.changed.length && !diff.removed.length && !diff.designChanged && !diff.titleChanged) {
+          assistStatus('Die KI hat nichts geändert. Versuche es mit einer genaueren Beschreibung.', 'error');
+          return;
+        }
+        pendingChange = { topic: newT, label: label || instruction.slice(0, 60), summary: String(data.summary || '').slice(0, 400), diff };
+        assistStatus('');
+        document.getElementById('assist-input').value = '';
+        showChangePreview();
+      } catch (e) {
+        assistStatus('Das hat nicht geklappt: ' + (e.message || e), 'error');
+      } finally {
+        document.querySelectorAll('.assist-btn').forEach(b => { b.disabled = false; });
+      }
+    }
+    function showChangePreview() {
+      const { diff, summary, label } = pendingChange;
+      const short = (s, n = 140) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; };
+      const fieldNames = { start: 'Jahr', end: 'Endjahr', title: 'Titel', track: 'Spur', cat: 'Kategorie', icon: 'Symbol', wiki: 'Bild-Artikel', desc: 'Erklärung', question: 'Denkfrage' };
+      let html = '';
+      if (diff.added.length) html += `<h4 class="text-xs font-bold uppercase tracking-wider text-emerald-700 mt-2">Neu (${diff.added.length})</h4>` + diff.added.map(e => `
+        <div class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-sm"><b class="font-mono">${fmtRange(e)}</b> ${ICONS[e.icon] || ''} <b>${escapeHTML(e.title)}</b><div class="text-xs text-slate-600 mt-0.5">${escapeHTML(short(e.desc))}</div></div>`).join('');
+      if (diff.changed.length) html += `<h4 class="text-xs font-bold uppercase tracking-wider text-amber-700 mt-3">Geändert (${diff.changed.length})</h4>` + diff.changed.map(c => `
+        <div class="p-2.5 rounded-xl border border-amber-200 bg-amber-50 text-sm"><b class="font-mono">${fmtRange(c.new)}</b> <b>${escapeHTML(c.new.title)}</b> <span class="text-[11px] text-amber-800">· ${c.fields.map(f => fieldNames[f]).join(', ')}</span>
+          ${c.fields.includes('desc') ? `<div class="text-xs mt-1"><span class="line-through text-slate-400">${escapeHTML(short(c.old.desc, 100))}</span><br><span class="text-slate-800">${escapeHTML(short(c.new.desc, 220))}</span></div>` : ''}
+          ${c.fields.includes('question') ? `<div class="text-xs mt-1 text-indigo-800">💡 ${escapeHTML(short(c.new.question, 160))}</div>` : ''}
+          ${c.fields.includes('start') || c.fields.includes('end') ? `<div class="text-xs mt-1">Jahr: <span class="line-through text-slate-400">${fmtRange(c.old)}</span> → <b>${fmtRange(c.new)}</b></div>` : ''}
+          ${c.fields.includes('title') ? `<div class="text-xs mt-1">Titel vorher: <span class="line-through text-slate-400">${escapeHTML(c.old.title)}</span></div>` : ''}</div>`).join('');
+      if (diff.removed.length) html += `<h4 class="text-xs font-bold uppercase tracking-wider text-rose-700 mt-3">Gelöscht (${diff.removed.length})</h4>` + diff.removed.map(e => `
+        <div class="p-2.5 rounded-xl border border-rose-200 bg-rose-50 text-sm line-through text-rose-900"><b class="font-mono">${fmtRange(e)}</b> ${escapeHTML(e.title)}</div>`).join('');
+      if (diff.designChanged) html += `<div class="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-sm mt-3">🎨 Das Design wird angepasst.</div>`;
+      if (diff.titleChanged) html += `<div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm mt-2">Neuer Titel: <b>${escapeHTML(pendingChange.topic.title)}</b></div>`;
+      document.getElementById('change-title').textContent = `Vorschau: ${label}`;
+      document.getElementById('change-summary').textContent = summary || '';
+      document.getElementById('change-list').innerHTML = html;
+      openModal('change-modal');
+    }
+    async function acceptChange() {
+      if (!pendingChange) return;
+      const { topic, label } = pendingChange;
+      pendingChange = null;
+      closeModal('change-modal');
+      await commitTopicChange(topic, label);
+      renderAssistant();
+      renderBanner();
+      assistStatus('✓ Übernommen. Mit «↶ Rückgängig» kommst du zur vorherigen Version zurück.', 'ok');
+    }
+    function editChange() {
+      if (!pendingChange) return;
+      const { topic } = pendingChange;
+      pendingChange = null;
+      closeModal('change-modal');
+      openReview(topic, { source: 'Vorschlag der KI', ai: true, mode: 'edit' });
+    }
+    function rejectChange() {
+      pendingChange = null;
+      closeModal('change-modal');
+      assistStatus('Verworfen – nichts wurde geändert.');
+    }
+
+    // ---------- KI pro Ereignis (Steckbrief) ----------
+    const EVENT_ACTIONS = {
+      rewrite: { label: 'Text neu geschrieben', task: 'Schreibe die Erklärung ("desc") neu: klar, korrekt und anschaulich.' },
+      shorter: { label: 'Text gekürzt', task: 'Kürze die Erklärung ("desc") auf etwa die Hälfte.' },
+      longer: { label: 'Text erweitert', task: 'Erweitere die Erklärung ("desc") auf etwa die doppelte Länge mit gesicherten Informationen zu Ursachen und Folgen.' },
+      question: { label: 'Neue Denkfrage', task: 'Schreibe eine neue, anregende Denkfrage ("question") zu Ursachen, Folgen oder einem Vergleich.' }
+    };
+    async function eventAI(action) {
+      if (!isTeacher()) return toast('Nur mit Anmeldung möglich.');
+      const ev = activeTopic.events.find(e => e.id === selectedEventId);
+      if (!ev) return;
+      const cfg = EVENT_ACTIONS[action];
+      const s = topicSettings();
+      const box = document.getElementById('detail-ai-status');
+      box.className = 'text-xs text-indigo-700';
+      box.textContent = '✨ Die KI arbeitet …';
+      document.querySelectorAll('.detail-ai-btn').forEach(b => { b.disabled = true; });
+      try {
+        const prompt = `Thema des Zeitstrahls: «${activeTopic.title}». Zielstufe: ${LEVELS[s.level]}. Übliche Textlänge: ${TEXT_LENGTHS[s.textLength]}.
+Ereignis: ${fmtRange(ev)} – ${ev.title}
+Bisherige Erklärung: ${ev.desc || '(keine)'}
+Bisherige Denkfrage: ${ev.question || '(keine)'}
+
+Auftrag: ${cfg.task}
+Nur gesicherte Fakten, Deutsch mit Schweizer Rechtschreibung (ss statt ß).
+Antworte NUR mit JSON: {"desc": "…", "question": "…"} (unveränderte Felder einfach unverändert zurückgeben).`;
+        const data = extractJson(await callAI(prompt));
+        const t = clone(activeTopic);
+        const target = t.events.find(e => e.id === ev.id);
+        if (action === 'question') { if (data.question) target.question = String(data.question).slice(0, 200); }
+        else if (data.desc) target.desc = String(data.desc).slice(0, 600);
+        t.aiGenerated = true; t.reviewed = activeTopic.reviewed && false;
+        await commitTopicChange(t, `${cfg.label}: ${ev.title}`);
+        box.className = 'text-xs text-emerald-700';
+        box.textContent = `✓ ${cfg.label}. Mit «↶» rückgängig machen.`;
+      } catch (e) {
+        box.className = 'text-xs text-rose-700';
+        box.textContent = 'Das hat nicht geklappt: ' + (e.message || e);
+      } finally {
+        document.querySelectorAll('.detail-ai-btn').forEach(b => { b.disabled = false; });
+      }
+    }
+    // Bild eines Ereignisses direkt im Steckbrief ändern
+    let imagePickTarget = null;
+    function changeEventImage() {
+      const ev = activeTopic.events.find(e => e.id === selectedEventId);
+      if (!ev) return;
+      imagePickTarget = ev.id;
+      document.getElementById('image-query').value = ev.wiki || ev.title;
+      document.getElementById('image-grid').innerHTML = '';
+      document.getElementById('image-status').textContent = '';
+      openModal('image-modal');
+      runImageSearch();
+    }
+
     // ---------- Kontrollübersicht ----------
     let reviewTopic = null;
     let reviewMeta = { ai: false, source: '' };
@@ -2744,8 +3342,9 @@ Kategorien: Politik, Konflikte, Alltag
     function openReview(topic, meta) {
       reviewTopic = clone(topic);
       reviewTopic.events = sortedEvents(reviewTopic.events);
-      reviewMeta = { ai: !!meta.ai, source: meta.source || '' };
+      reviewMeta = { ai: !!meta.ai, source: meta.source || '', mode: meta.mode === 'edit' ? 'edit' : 'new' };
       closeModal('new-modal');
+      document.getElementById('btn-review-create').textContent = reviewMeta.mode === 'edit' ? '✓ Änderungen übernehmen' : '✓ Zeitstrahl erstellen';
       document.getElementById('rv-title').value = reviewTopic.title;
       document.getElementById('rv-layout').value = reviewTopic.layout;
       document.getElementById('rv-track-top').value = reviewTopic.trackTop;
@@ -2801,9 +3400,9 @@ Kategorien: Politik, Konflikte, Alltag
         (missing ? `<span class="text-slate-500">${missing} Ereignis(se) ohne Erklärung, Denkfrage oder Bild-Artikel.</span>` : '<span class="text-emerald-700">Alle Ereignisse vollständig.</span>');
       const ok = evs.length - bad;
       const btn = document.getElementById('btn-review-create');
-      btn.textContent = `✓ Zeitstrahl erstellen (${ok})`;
+      btn.textContent = reviewMeta.mode === 'edit' ? `✓ Änderungen übernehmen (${ok})` : `✓ Zeitstrahl erstellen (${ok})`;
       btn.disabled = ok === 0;
-      document.getElementById('review-info').textContent = `Quelle: ${reviewMeta.source}${reviewMeta.ai ? ' · von der KI erstellt – bitte Jahreszahlen prüfen' : ''} · ${evs.length} Ereignisse. Hier kannst du alles anpassen oder löschen, bevor der Zeitstrahl erstellt wird.`;
+      document.getElementById('review-info').textContent = `Quelle: ${reviewMeta.source}${reviewMeta.ai ? ' · von der KI erstellt – bitte Jahreszahlen prüfen' : ''} · ${evs.length} Ereignisse. ${reviewMeta.mode === 'edit' ? 'Hier kannst du alles anpassen oder löschen. «↶ Rückgängig» bleibt möglich.' : 'Hier kannst du alles anpassen oder löschen, bevor der Zeitstrahl erstellt wird.'}`;
     }
     function renderReview() {
       const t = reviewTopic;
@@ -2875,6 +3474,14 @@ Kategorien: Politik, Konflikte, Alltag
       const dropped = reviewTopic.events.length - valid.length;
       if (!valid.length) return toast('Es gibt keine gültigen Ereignisse.');
       if (dropped && !confirm(`${dropped} Zeile(n) ohne gültiges Jahr oder Titel werden weggelassen. Fortfahren?`)) return;
+      if (reviewMeta.mode === 'edit') {
+        const edited = normalizeTopic({ ...reviewTopic, title: document.getElementById('rv-title').value.trim() || reviewTopic.title, events: valid, design: activeTopic.design, settings: activeTopic.settings, palette: reviewTopic.palette || activeTopic.palette, aiGenerated: activeTopic.aiGenerated || reviewMeta.ai, reviewed: true });
+        // Bilder der bestehenden Ereignisse behalten
+        edited.events.forEach(e => { const o = activeTopic.events.find(x => x.id === e.id); if (o && o.image && !e.image && e.wiki === o.wiki) e.image = o.image; });
+        closeModal('review-modal');
+        commitTopicChange(edited, 'In der Übersicht bearbeitet').then(() => { renderBanner(); toast('Änderungen übernommen.'); });
+        return;
+      }
       if (dirty && !confirm('Ungespeicherte Änderungen am aktuellen Zeitstrahl gehen verloren. Fortfahren?')) return;
       const topic = normalizeTopic({ ...reviewTopic, title: document.getElementById('rv-title').value.trim() || reviewTopic.title, events: valid, aiGenerated: reviewMeta.ai, reviewed: !reviewMeta.ai });
       dirty = false;
@@ -2908,7 +3515,7 @@ TEXT>>>`;
       const list = events.map((e, i) => ({ i, jahr: fmtRange(e), titel: e.title, erklaerung: e.desc || '', denkfrage: e.question || '', wiki: e.wiki || '', icon: e.icon || '' }));
       return `Du bist eine erfahrene Geschichtslehrperson in der Schweiz. Thema: «${reviewTopic.title}». Zielstufe: ${level}.
 Ergänze bei den folgenden Ereignissen NUR die leeren Felder. Bereits ausgefüllte Felder nicht verändern.
-- "desc": 2–3 kurze Sätze: Was geschah und warum ist es wichtig? Nur gesicherte Fakten.
+- "desc": ${TEXT_LENGTHS[document.getElementById('gen-length').value] || TEXT_LENGTHS.mittel}. Was geschah und warum ist es wichtig? Nur gesicherte Fakten.
 - "question": eine Denkfrage zu Ursachen oder Folgen.
 - "wiki": genauer Titel des passenden Artikels der deutschsprachigen Wikipedia.
 - "icon": genau eines dieser Wörter: ${Object.keys(ICONS).join(', ')}
@@ -2921,18 +3528,166 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
     }
 
     // Einheitlicher KI-Aufruf (Gemini bevorzugt, Claude als Ersatz – je nach Konto)
+    // ---------- KI-Schlüssel (gleiches Konto-Dokument wie im Sek Planer) ----------
+    const AI_PROVIDERS = {
+      gemini: { label: 'Google Gemini', field: 'geminiKey', hint: 'beginnt mit «AIza»' },
+      claude: { label: 'Anthropic Claude', field: 'claudeKey', hint: 'beginnt mit «sk-ant-»' },
+      openai: { label: 'OpenAI ChatGPT', field: 'openaiKey', hint: 'beginnt mit «sk-»' },
+      mistral: { label: 'Mistral', field: 'mistralKey', hint: '32 Zeichen, ohne festen Anfang' }
+    };
+    let aiKeysCache = null;
+    async function loadAiKeys() {
+      if (!isTeacher()) return {};
+      if (aiKeysCache && aiKeysCache.uid === currentUser.uid) return aiKeysCache;
+      const keys = { uid: currentUser.uid, gemini: '', claude: '', openai: '', mistral: '', preferred: 'gemini' };
+      try {
+        const snap = await db.collection('sekSync').doc('apikeys_' + currentUser.uid).get();
+        if (snap.exists) {
+          const d = snap.data() || {};
+          Object.entries(AI_PROVIDERS).forEach(([p, cfg]) => { keys[p] = typeof d[cfg.field] === 'string' ? d[cfg.field].trim() : ''; });
+          const pref = d.preferredAiZeitstrahl || d.preferredAi;
+          if (AI_PROVIDERS[pref]) keys.preferred = pref;
+        }
+      } catch (e) {}
+      aiKeysCache = keys;
+      return keys;
+    }
+    async function saveAiKey(provider, key) {
+      const cfg = AI_PROVIDERS[provider];
+      if (!cfg) throw new Error('Unbekannter Anbieter');
+      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, [cfg.field]: key }, { merge: true });
+      aiKeysCache = null;
+    }
+    async function saveGeminiKey(key) { return saveAiKey('gemini', key); }
+    async function setPreferredAi(provider) {
+      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, preferredAiZeitstrahl: provider }, { merge: true });
+      aiKeysCache = null;
+      renderAiSettings();
+    }
+    function detectProvider(key) {
+      const k = String(key || '').trim();
+      if (/^AIza[0-9A-Za-z_\-]{20,}$/.test(k)) return 'gemini';
+      if (/^sk-ant-/.test(k)) return 'claude';
+      if (/^sk-/.test(k)) return 'openai';
+      if (/^[A-Za-z0-9]{32}$/.test(k)) return 'mistral';
+      return '';
+    }
+
+    async function callOpenAiCompatible(url, key, models, prompt) {
+      let lastErr = null;
+      for (const model of models) {
+        try {
+          const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } })
+          }, 150000);
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const msg = data?.error?.message || data?.message || `HTTP ${res.status}`;
+            const e = new Error(msg); e.status = res.status;
+            if (res.status === 401 || res.status === 403) { e.fatal = true; throw e; }
+            throw e;
+          }
+          const text = data?.choices?.[0]?.message?.content || '';
+          if (!String(text).trim()) throw new Error('Leere Antwort');
+          return text;
+        } catch (e) {
+          lastErr = e;
+          if (e.fatal) throw new Error('Der Schlüssel ist ungültig oder gesperrt.');
+        }
+      }
+      throw lastErr || new Error('Keine Antwort');
+    }
+    const callOpenAI = (key, prompt) => callOpenAiCompatible('https://api.openai.com/v1/chat/completions', key, ['chat-latest', 'gpt-6.1-terra', 'gpt-5.6-terra'], prompt);
+    const callMistral = (key, prompt) => callOpenAiCompatible('https://api.mistral.ai/v1/chat/completions', key, ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest'], prompt);
+
+    async function callProvider(p, key, prompt) {
+      if (p === 'gemini') return callGemini(key, prompt);
+      if (p === 'claude') return callClaude(key, prompt);
+      if (p === 'openai') return callOpenAI(key, prompt);
+      if (p === 'mistral') return callMistral(key, prompt);
+      throw new Error('Unbekannter Anbieter');
+    }
+
+    // Einheitlicher KI-Aufruf: bevorzugter Anbieter zuerst, dann alle anderen mit Schlüssel
     async function callAI(prompt) {
       if (!isTeacher()) throw new Error('Nur mit Anmeldung möglich.');
       const keys = await loadAiKeys();
-      if (!keys.gemini && !keys.claude) throw new Error('Kein KI-Schlüssel hinterlegt (unter «✨ Neu» → «KI direkt» eintragen).');
-      const order = keys.preferred === 'claude' ? ['claude', 'gemini'] : ['gemini', 'claude'];
-      let lastErr = null;
+      const order = [keys.preferred, ...Object.keys(AI_PROVIDERS).filter(p => p !== keys.preferred)].filter(p => keys[p]);
+      if (!order.length) throw new Error('Kein KI-Schlüssel hinterlegt – unter «👤 Konto» → «🔑 KI-Schlüssel» eintragen.');
+      const errors = [];
       for (const p of order) {
-        if (!keys[p]) continue;
-        try { return p === 'gemini' ? await callGemini(keys.gemini, prompt) : await callClaude(keys.claude, prompt); }
-        catch (e) { lastErr = e; }
+        try { return await callProvider(p, keys[p], prompt); }
+        catch (e) { errors.push(`${AI_PROVIDERS[p].label}: ${e.message || e}`); }
       }
-      throw lastErr || new Error('Keine Antwort der KI');
+      throw new Error(errors.join(' · '));
+    }
+
+    // ---------- Dialog «KI-Schlüssel» ----------
+    async function openAiSettings() {
+      if (!isTeacher()) return toast('Bitte zuerst anmelden.');
+      document.getElementById('ai-key-input').value = '';
+      document.getElementById('ai-key-provider').value = '';
+      document.getElementById('ai-key-status').classList.add('hidden');
+      openModal('ai-modal');
+      await renderAiSettings();
+    }
+    async function renderAiSettings() {
+      const keys = await loadAiKeys();
+      document.getElementById('ai-provider-list').innerHTML = Object.entries(AI_PROVIDERS).map(([p, cfg]) => {
+        const k = keys[p];
+        return `<div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border ${k ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 bg-slate-50'} text-sm">
+            <div class="min-w-0">
+              <div class="font-semibold text-slate-900">${cfg.label}</div>
+              <div class="text-xs ${k ? 'text-emerald-700' : 'text-slate-400'}">${k ? '✓ hinterlegt (…' + escapeHTML(k.slice(-4)) + ')' : 'kein Schlüssel'}</div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 text-xs">
+              ${k ? `<label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="ai-pref" ${keys.preferred === p ? 'checked' : ''} onchange="setPreferredAi('${p}')" class="accent-indigo-600" /> bevorzugt</label>
+                <button onclick="testAiProvider('${p}')" class="px-2 py-1 rounded-lg border border-slate-300 bg-white">Testen</button>
+                <button onclick="removeAiKey('${p}')" class="px-2 py-1 text-rose-600 hover:underline">Entfernen</button>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+    function aiKeyStatus(msg, kind) {
+      const el = document.getElementById('ai-key-status');
+      const styles = { info: 'bg-indigo-50 border-indigo-200 text-indigo-800', error: 'bg-rose-50 border-rose-200 text-rose-800', ok: 'bg-emerald-50 border-emerald-200 text-emerald-800' };
+      el.className = `text-sm rounded-xl p-3 border ${styles[kind || 'info']}`;
+      el.textContent = msg;
+    }
+    async function saveAiKeyFromForm() {
+      const key = document.getElementById('ai-key-input').value.trim();
+      let provider = document.getElementById('ai-key-provider').value || detectProvider(key);
+      if (!key) return aiKeyStatus('Bitte einen Schlüssel einfügen.', 'error');
+      if (!provider) return aiKeyStatus('Der Anbieter konnte nicht erkannt werden. Bitte oben auswählen.', 'error');
+      aiKeyStatus(`Schlüssel für ${AI_PROVIDERS[provider].label} wird geprüft …`);
+      try {
+        await callProvider(provider, key, 'Antworte nur mit diesem JSON: {"ok": true}');
+      } catch (e) {
+        return aiKeyStatus(`Der Test mit ${AI_PROVIDERS[provider].label} hat nicht geklappt: ${e.message || e}. Der Schlüssel wurde nicht gespeichert.`, 'error');
+      }
+      await saveAiKey(provider, key);
+      document.getElementById('ai-key-input').value = '';
+      aiKeyStatus(`✓ ${AI_PROVIDERS[provider].label} funktioniert und ist gespeichert.${provider !== 'mistral' ? ' Der Schlüssel gilt auch im Sek Planer.' : ''}`, 'ok');
+      renderAiSettings();
+      refreshGenerateState();
+    }
+    async function testAiProvider(p) {
+      const keys = await loadAiKeys();
+      aiKeyStatus(`${AI_PROVIDERS[p].label} wird getestet …`);
+      try {
+        const t0 = Date.now();
+        await callProvider(p, keys[p], 'Antworte nur mit diesem JSON: {"ok": true}');
+        aiKeyStatus(`✓ ${AI_PROVIDERS[p].label} antwortet (${Math.round((Date.now() - t0) / 1000)} s).`, 'ok');
+      } catch (e) {
+        aiKeyStatus(`${AI_PROVIDERS[p].label}: ${e.message || e}`, 'error');
+      }
+    }
+    async function removeAiKey(p) {
+      if (!confirm(`Schlüssel für ${AI_PROVIDERS[p].label} entfernen?${p !== 'mistral' ? ' Er wird auch im Sek Planer entfernt.' : ''}`)) return;
+      await saveAiKey(p, '');
+      renderAiSettings();
     }
 
     async function generateWithAI() {
@@ -2940,15 +3695,13 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       if (!document.getElementById('gen-topic').value.trim()) return toast('Bitte ein Thema eintragen.');
       const status = document.getElementById('gen-status');
       const btn = document.getElementById('btn-generate');
-      const newKey = document.getElementById('gen-key-input').value.trim();
       btn.disabled = true;
       status.classList.remove('hidden');
       status.className = 'text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-3';
       try {
-        if (newKey) { status.textContent = 'Schlüssel wird gespeichert …'; await saveGeminiKey(newKey); document.getElementById('gen-key-input').value = ''; }
         status.textContent = '✨ Die KI erstellt einen Vorschlag … das dauert meist 20–60 Sekunden.';
         const text = await callAI(buildPrompt());
-        const topic = normalizeTopic({ ...extractJson(text), aiGenerated: true, reviewed: false });
+        const topic = normalizeTopic({ ...extractJson(text), aiGenerated: true, reviewed: false, settings: genSettings() });
         status.classList.add('hidden');
         openReview(topic, { source: `KI zum Thema «${document.getElementById('gen-topic').value.trim()}»`, ai: true });
       } catch (e) {
