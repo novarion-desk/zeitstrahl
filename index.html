@@ -3608,7 +3608,9 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
             if (res.status === 401 || res.status === 403) { e.fatal = true; throw e; }
             throw e;
           }
-          const text = data?.choices?.[0]?.message?.content || '';
+          // Mistral liefert den Inhalt teils als Liste von Teilen (z. B. «thinking» + «text»)
+          const raw = data?.choices?.[0]?.message?.content;
+          const text = Array.isArray(raw) ? raw.filter(p => p && p.type === 'text').map(p => p.text || '').join('') : (typeof raw === 'string' ? raw : '');
           if (!String(text).trim()) throw new Error('Leere Antwort');
           return text;
         } catch (e) {
