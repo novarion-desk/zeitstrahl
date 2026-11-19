@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.1 – 19.11.2026
+- KI-Schlüssel: Reihenfolge mit ↑↓ statt «bevorzugt»; Schlüssel und Reihenfolge gelten gemeinsam mit dem Sek Planer.
+
 ## v1.1 – 18.11.2026
 - Ein Feld für KI-Schlüssel (Konto → 🔑 KI-Schlüssel): Gemini, Claude, ChatGPT oder Mistral, Anbieter wird automatisch erkannt, Test beim Speichern, bevorzugte KI wählbar.
 - Design-Panel (🎨): Schrift, Schriftgrösse, Kartenstil (Karte, grosses Bild, minimal, nur Symbole), Hintergrund (hell, Papier, dunkel), Abstand, Farben; wird mit dem Thema gespeichert.

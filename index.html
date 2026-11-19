@@ -782,7 +782,7 @@ Kategorien: Politik, Konflikte, Alltag
         <h3 class="font-bold text-lg text-slate-900">🔑 KI-Schlüssel</h3>
         <button onclick="closeModal('ai-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
       </div>
-      <p class="text-sm text-slate-600">Füge einen API-Schlüssel von Gemini, Claude, ChatGPT oder Mistral ein. Der Anbieter wird automatisch erkannt. Die Schlüssel liegen in deinem Konto; Gemini, Claude und ChatGPT nutzt auch der Sek Planer.</p>
+      <p class="text-sm text-slate-600">Füge einen API-Schlüssel von Gemini, Claude, ChatGPT oder Mistral ein. Der Anbieter wird automatisch erkannt. Die Schlüssel liegen in deinem Konto und gelten auch im Sek Planer.</p>
       <div class="space-y-2">
         <input type="password" id="ai-key-input" autocomplete="off" placeholder="API-Schlüssel einfügen" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono" oninput="const p=detectProvider(this.value); document.getElementById('ai-key-detected').textContent = this.value.trim() ? (p ? 'Erkannt: ' + AI_PROVIDERS[p].label : 'Anbieter wird beim Prüfen gesucht') : ''" />
         <div class="flex items-center gap-2">
@@ -799,7 +799,7 @@ Kategorien: Politik, Konflikte, Alltag
       </div>
       <div id="ai-key-status" class="hidden"></div>
       <div id="ai-provider-list" class="space-y-2"></div>
-      <p class="text-[11px] text-slate-500">Die KI wird direkt aus dem Browser aufgerufen. Bei Gemini, Claude und ChatGPT funktioniert das; bei Mistral ist es noch nicht geprüft – der Test beim Speichern zeigt es sofort. Die bevorzugte KI wird zuerst gefragt, bei einem Fehler die nächste.</p>
+      <p class="text-[11px] text-slate-500">Die KI wird direkt aus dem Browser aufgerufen. Bei Gemini, Claude und ChatGPT funktioniert das; bei Mistral ist es noch nicht geprüft – der Test beim Speichern zeigt es sofort. Reihenfolge mit ↑↓: Die oberste KI wird zuerst gefragt, bei einem Fehler die nächste. Die Reihenfolge gilt auch im Sek Planer.</p>
     </div>
   </div>
 
@@ -3536,32 +3536,51 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       mistral: { label: 'Mistral', field: 'mistralKey', hint: '32 Zeichen, ohne festen Anfang' }
     };
     let aiKeysCache = null;
+    const AI_ORDER_DEFAULT = ['gemini', 'claude', 'openai', 'mistral'];
+    function normalizeAiOrder(o) {
+      const list = (Array.isArray(o) ? o : []).filter(p => AI_PROVIDERS[p]);
+      return [...new Set([...list, ...AI_ORDER_DEFAULT])];
+    }
+    // Schlüssel und Reihenfolge teilt der Zeitstrahl mit dem Sek Planer (Dokument sekSync/apikeys_<uid>)
     async function loadAiKeys() {
       if (!isTeacher()) return {};
       if (aiKeysCache && aiKeysCache.uid === currentUser.uid) return aiKeysCache;
-      const keys = { uid: currentUser.uid, gemini: '', claude: '', openai: '', mistral: '', preferred: 'gemini' };
+      const keys = { uid: currentUser.uid, gemini: '', claude: '', openai: '', mistral: '', order: [...AI_ORDER_DEFAULT], preferred: 'gemini' };
       try {
         const snap = await db.collection('sekSync').doc('apikeys_' + currentUser.uid).get();
         if (snap.exists) {
           const d = snap.data() || {};
           Object.entries(AI_PROVIDERS).forEach(([p, cfg]) => { keys[p] = typeof d[cfg.field] === 'string' ? d[cfg.field].trim() : ''; });
-          const pref = d.preferredAiZeitstrahl || d.preferredAi;
-          if (AI_PROVIDERS[pref]) keys.preferred = pref;
+          keys.order = Array.isArray(d.aiOrder) ? normalizeAiOrder(d.aiOrder) : normalizeAiOrder([AI_PROVIDERS[d.preferredAi] ? d.preferredAi : 'gemini']);
         }
       } catch (e) {}
+      keys.preferred = keys.order.find(p => keys[p]) || 'gemini';
       aiKeysCache = keys;
       return keys;
+    }
+    async function writeAiDoc(fields) {
+      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, ...fields }, { merge: true });
+      aiKeysCache = null;
     }
     async function saveAiKey(provider, key) {
       const cfg = AI_PROVIDERS[provider];
       if (!cfg) throw new Error('Unbekannter Anbieter');
-      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, [cfg.field]: key }, { merge: true });
-      aiKeysCache = null;
+      const keys = await loadAiKeys();
+      const next = { ...keys, [provider]: key };
+      let order = keys.order;
+      // neuer Anbieter kommt ans Ende der aktiven Liste
+      if (key && !keys[provider]) order = normalizeAiOrder([...keys.order.filter(p => keys[p] && p !== provider), provider, ...keys.order]);
+      await writeAiDoc({ [cfg.field]: key, aiOrder: order, preferredAi: order.find(p => next[p]) || 'gemini' });
     }
     async function saveGeminiKey(key) { return saveAiKey('gemini', key); }
-    async function setPreferredAi(provider) {
-      await db.collection('sekSync').doc('apikeys_' + currentUser.uid).set({ ownerUid: currentUser.uid, preferredAiZeitstrahl: provider }, { merge: true });
-      aiKeysCache = null;
+    async function moveAiProvider(p, dir) {
+      const keys = await loadAiKeys();
+      const active = keys.order.filter(x => keys[x]);
+      const i = active.indexOf(p), j = i + dir;
+      if (i < 0 || j < 0 || j >= active.length) return;
+      [active[i], active[j]] = [active[j], active[i]];
+      const order = normalizeAiOrder([...active, ...keys.order]);
+      await writeAiDoc({ aiOrder: order, preferredAi: active[0] });
       renderAiSettings();
     }
     function detectProvider(key) {
@@ -3614,7 +3633,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
     async function callAI(prompt) {
       if (!isTeacher()) throw new Error('Nur mit Anmeldung möglich.');
       const keys = await loadAiKeys();
-      const order = [keys.preferred, ...Object.keys(AI_PROVIDERS).filter(p => p !== keys.preferred)].filter(p => keys[p]);
+      const order = keys.order.filter(p => keys[p]);
       if (!order.length) throw new Error('Kein KI-Schlüssel hinterlegt – unter «👤 Konto» → «🔑 KI-Schlüssel» eintragen.');
       const errors = [];
       for (const p of order) {
@@ -3635,20 +3654,21 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
     }
     async function renderAiSettings() {
       const keys = await loadAiKeys();
-      document.getElementById('ai-provider-list').innerHTML = Object.entries(AI_PROVIDERS).map(([p, cfg]) => {
-        const k = keys[p];
-        return `<div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border ${k ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 bg-slate-50'} text-sm">
-            <div class="min-w-0">
-              <div class="font-semibold text-slate-900">${cfg.label}</div>
-              <div class="text-xs ${k ? 'text-emerald-700' : 'text-slate-400'}">${k ? '✓ hinterlegt (…' + escapeHTML(k.slice(-4)) + ')' : 'kein Schlüssel'}</div>
+      const active = keys.order.filter(p => keys[p]);
+      const inactive = keys.order.filter(p => !keys[p]);
+      document.getElementById('ai-provider-list').innerHTML = active.map((p, i) => `
+          <div class="flex items-center gap-2 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 text-sm">
+            <span class="w-5 text-center font-bold text-indigo-700">${i + 1}.</span>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-slate-900">${AI_PROVIDERS[p].label}</div>
+              <div class="text-xs text-emerald-700">✓ hinterlegt (…${escapeHTML(keys[p].slice(-4))})</div>
             </div>
-            <div class="flex items-center gap-2 shrink-0 text-xs">
-              ${k ? `<label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="ai-pref" ${keys.preferred === p ? 'checked' : ''} onchange="setPreferredAi('${p}')" class="accent-indigo-600" /> bevorzugt</label>
-                <button onclick="testAiProvider('${p}')" class="px-2 py-1 rounded-lg border border-slate-300 bg-white">Testen</button>
-                <button onclick="removeAiKey('${p}')" class="px-2 py-1 text-rose-600 hover:underline">Entfernen</button>` : ''}
-            </div>
-          </div>`;
-      }).join('');
+            <button onclick="moveAiProvider('${p}', -1)" ${i === 0 ? 'disabled' : ''} title="Nach oben" class="w-7 h-7 rounded-lg bg-white border border-slate-200 disabled:opacity-30 font-bold">↑</button>
+            <button onclick="moveAiProvider('${p}', 1)" ${i === active.length - 1 ? 'disabled' : ''} title="Nach unten" class="w-7 h-7 rounded-lg bg-white border border-slate-200 disabled:opacity-30 font-bold">↓</button>
+            <button onclick="testAiProvider('${p}')" class="px-2 py-1 rounded-lg border border-slate-300 bg-white text-xs">Testen</button>
+            <button onclick="removeAiKey('${p}')" class="px-2 py-1 text-rose-600 hover:underline text-xs">Entfernen</button>
+          </div>`).join('') +
+        (inactive.length ? `<div class="text-xs text-slate-400 px-1">Ohne Schlüssel: ${inactive.map(p => AI_PROVIDERS[p].label).join(', ')}</div>` : '');
     }
     function aiKeyStatus(msg, kind) {
       const el = document.getElementById('ai-key-status');
@@ -3680,7 +3700,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       }
       await saveAiKey(provider, key);
       document.getElementById('ai-key-input').value = '';
-      aiKeyStatus(`✓ ${AI_PROVIDERS[provider].label} funktioniert und ist gespeichert.${provider !== 'mistral' ? ' Der Schlüssel gilt auch im Sek Planer.' : ''}`, 'ok');
+      aiKeyStatus(`✓ ${AI_PROVIDERS[provider].label} funktioniert und ist gespeichert. Der Schlüssel gilt auch im Sek Planer.`, 'ok');
       renderAiSettings();
       refreshGenerateState();
     }
@@ -3696,7 +3716,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       }
     }
     async function removeAiKey(p) {
-      if (!confirm(`Schlüssel für ${AI_PROVIDERS[p].label} entfernen?${p !== 'mistral' ? ' Er wird auch im Sek Planer entfernt.' : ''}`)) return;
+      if (!confirm(`Schlüssel für ${AI_PROVIDERS[p].label} entfernen? Er wird auch im Sek Planer entfernt.`)) return;
       await saveAiKey(p, '');
       renderAiSettings();
     }
