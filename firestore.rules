@@ -78,7 +78,7 @@ service cloud.firestore {
         function validAnswer() {
           let d = request.resource.data;
           let s = session();
-          return d.keys().hasOnly(['name', 'answer', 'comment', 'updatedAt', 'mark', 'feedback', 'revised'])
+          return d.keys().hasOnly(['name', 'answer', 'comment', 'updatedAt', 'mark', 'feedback', 'revised', 'returned'])
             && d.name is string && d.name.size() > 0 && d.name.size() <= 40
             && d.answer is string && d.answer.size() <= 1000
             && d.comment is string && d.comment.size() <= 300
@@ -90,9 +90,20 @@ service cloud.firestore {
           let n = request.resource.data;
           let o = resource.data;
           return n.get('feedback', '') == o.get('feedback', '')
+            && n.get('returned', false) == o.get('returned', false)
             && ((o.mark == 'none' && n.mark == 'none' && n.get('revised', false) == o.get('revised', false))
               || (o.mark in ['warn', 'bad'] && session().get('allowRevise', false) == true
                   && n.mark == 'none' && n.get('revised', false) == true));
+        }
+
+        // Zurückgegeben: dieser Schüler darf überarbeiten, auch wenn die Eingabe gesperrt ist
+        function returnedEditOk() {
+          let n = request.resource.data;
+          let o = resource.data;
+          return session().active == true
+            && o.get('returned', false) == true
+            && n.get('feedback', '') == o.get('feedback', '')
+            && n.mark == 'none' && n.get('revised', false) == true && n.get('returned', false) == false;
         }
 
         // Einzelne Antwort nur mit dem geheimen Schlüssel abrufbar; die Liste aller Antworten nur für die Lehrperson
@@ -103,15 +114,20 @@ service cloud.firestore {
           && inputOpen() && validAnswer()
           && request.resource.data.mark == 'none'
           && !('feedback' in request.resource.data)
-          && !('revised' in request.resource.data);
+          && !('revised' in request.resource.data)
+          && !('returned' in request.resource.data);
+        // Lehrperson: gelöschte Antwort wiederherstellen («Rückgängig»)
+        allow create: if isTeacherOfSession() && rid.matches('^[A-Za-z0-9]{20,40}$');
 
         allow update: if (inputOpen() && validAnswer() && studentEditOk())
+          || (validAnswer() && returnedEditOk())
           || (isTeacherOfSession()
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mark', 'feedback', 'revised'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mark', 'feedback', 'revised', 'returned'])
             && request.resource.data.mark in ['none', 'good', 'warn', 'bad']
             && request.resource.data.get('feedback', '') is string
             && request.resource.data.get('feedback', '').size() <= 120
-            && request.resource.data.get('revised', false) is bool);
+            && request.resource.data.get('revised', false) is bool
+            && request.resource.data.get('returned', false) is bool);
 
         allow delete: if isTeacherOfSession();
       }
