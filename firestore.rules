@@ -78,12 +78,21 @@ service cloud.firestore {
         function validAnswer() {
           let d = request.resource.data;
           let s = session();
-          return d.keys().hasOnly(['name', 'answer', 'comment', 'updatedAt', 'mark'])
+          return d.keys().hasOnly(['name', 'answer', 'comment', 'updatedAt', 'mark', 'feedback', 'revised'])
             && d.name is string && d.name.size() > 0 && d.name.size() <= 40
             && d.answer is string && d.answer.size() <= 1000
             && d.comment is string && d.comment.size() <= 300
             && d.updatedAt == request.time
             && (s.roster == null || d.name in s.roster);
+        }
+        // Nachbessern: nur nach ⚠️/❌ und nur, wenn die Lehrperson es erlaubt; die Bewertung wird dabei zurückgesetzt
+        function studentEditOk() {
+          let n = request.resource.data;
+          let o = resource.data;
+          return n.get('feedback', '') == o.get('feedback', '')
+            && ((o.mark == 'none' && n.mark == 'none' && n.get('revised', false) == o.get('revised', false))
+              || (o.mark in ['warn', 'bad'] && session().get('allowRevise', false) == true
+                  && n.mark == 'none' && n.get('revised', false) == true));
         }
 
         // Einzelne Antwort nur mit dem geheimen Schlüssel abrufbar; die Liste aller Antworten nur für die Lehrperson
@@ -92,13 +101,17 @@ service cloud.firestore {
 
         allow create: if rid.matches('^[A-Za-z0-9]{20,40}$')
           && inputOpen() && validAnswer()
-          && request.resource.data.mark == 'none';
+          && request.resource.data.mark == 'none'
+          && !('feedback' in request.resource.data)
+          && !('revised' in request.resource.data);
 
-        allow update: if (inputOpen() && validAnswer()
-            && request.resource.data.mark == resource.data.mark)
+        allow update: if (inputOpen() && validAnswer() && studentEditOk())
           || (isTeacherOfSession()
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mark'])
-            && request.resource.data.mark in ['none', 'good', 'warn']);
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mark', 'feedback', 'revised'])
+            && request.resource.data.mark in ['none', 'good', 'warn', 'bad']
+            && request.resource.data.get('feedback', '') is string
+            && request.resource.data.get('feedback', '').size() <= 120
+            && request.resource.data.get('revised', false) is bool);
 
         allow delete: if isTeacherOfSession();
       }
