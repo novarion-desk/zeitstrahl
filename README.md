@@ -1,4 +1,4 @@
-# Zeitstrahl CH – Geschichte & RZG interaktiv
+# Zeitstrahl – Geschichte & RZG interaktiv
 
 Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. Welt / Schweiz),
 «Datum schätzen», «Sortier-Sprint» und «Selbst bauen».
@@ -19,14 +19,16 @@ Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. 
 | Thema für die Klasse freigeben (QR-Code, Link) | nur Standard-Themen | ✓ |
 | Abgabe-Aufträge (Code) und Abgaben ansehen | Abgeben ✓ | Aufträge erstellen ✓ |
 | Import (Drag & Drop, Einfügen, Word/Excel/PDF/CSV) mit Kontrollübersicht | ✓ | ✓ + KI für Fliesstext und Ergänzungen |
-| Export: Poster-PDF, Arbeitsblatt-PDF, Webseite (.html), Bild (.png) | ✓ | ✓ |
+| Export: Heft-PDF, Poster-PDF, Arbeitsblatt-PDF, Webseite (.html), Bild (.png) | ✓ | ✓ |
+| Datum (Tag/Monat) ein-/ausblendbar, «Ausführlich»-Text im Steckbrief | ✓ | ✓ |
 | Farbpaletten, Beamer-Modus | ✓ | ✓ |
 
 ## Aufrufe
 
 - `./` – App
 - `./?topic=ww2` – Standard-Thema direkt öffnen
-- `./?t=<ID>` – freigegebenes Thema einer Lehrperson (nur lesen)
+- `./?t=<ID>` – freigegebenes Thema einer Lehrperson
+- `&ansicht=1` – an `?topic=` oder `?t=` anhängen: reine Schüleransicht (nichts veränderbar). Teilen-Links enthalten das automatisch.
 - `./?abgabe=1234` – Auftrag öffnen und Zeitstrahl abgeben
 
 ## Daten

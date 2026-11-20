@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Zeitstrahl CH – Geschichte & RZG interaktiv</title>
+  <title>Zeitstrahl – Geschichte & RZG interaktiv</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#4f46e5" />
   <link rel="stylesheet" href="vendor/app.css" />
   <style>
+    body.view-only #tab-builder, body.view-only #btn-new, body.view-only #btn-account, body.view-only #btn-share,
+    body.view-only #topic-select, body.view-only #detail-actions, body.view-only .only-edit, body.view-only .btn-undo { display: none !important; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #0f172a; }
     .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .btn-primary { background-color: #4f46e5; color: #ffffff; font-weight: 600; border-radius: 0.75rem; transition: all 0.15s; }
@@ -62,7 +64,7 @@
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">⏳</div>
         <div>
-          <h1 class="font-bold text-slate-900 leading-tight text-base sm:text-lg">Zeitstrahl CH</h1>
+          <h1 class="font-bold text-slate-900 leading-tight text-base sm:text-lg">Zeitstrahl</h1>
           <p class="text-xs text-slate-500 hidden sm:block">Überblick gewinnen, einordnen & eigene Zeitachsen bauen</p>
         </div>
       </div>
@@ -103,12 +105,14 @@
       <div id="explore-toolbar" class="card p-4 flex flex-wrap items-center justify-between gap-3">
         <div id="filter-bar" class="flex flex-wrap items-center gap-1.5"></div>
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="toggleDesignPanel()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">🎨 Design</button>
-          <button onclick="openAssistant()" class="text-xs bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 px-3 py-1.5 rounded-xl font-semibold">✨ KI anpassen</button>
-          <button onclick="openEditOverview()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">✏️ Bearbeiten</button>
+          <button onclick="toggleDesignPanel()" class="only-edit text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">🎨 Design</button>
+          <button onclick="openAssistant()" class="only-edit text-xs bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 px-3 py-1.5 rounded-xl font-semibold">✨ KI anpassen</button>
+          <button onclick="openEditOverview()" class="only-edit text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">✏️ Bearbeiten</button>
           <button onclick="undoLast()" class="btn-undo hidden text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">↶</button>
-          <button onclick="saveCurrentTopic()" id="btn-quick-save" class="hidden text-xs bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded-xl font-semibold">💾 Speichern</button>
-          <button onclick="loadImagesForTopic(true)" id="btn-auto-images" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-semibold">🖼️ Bilder laden</button>
+          <button onclick="saveCurrentTopic()" id="btn-quick-save" class="only-edit hidden text-xs bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded-xl font-semibold">💾 Speichern</button>
+          <button onclick="loadImagesForTopic(true)" id="btn-auto-images" class="only-edit text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-semibold">🖼️ Bilder laden</button>
+          <button onclick="toggleDates()" id="btn-dates" title="Datum (Tag und Monat) auf Karten und im Steckbrief ein- oder ausblenden" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">📅 Datum</button>
+          <button onclick="printHeft()" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-semibold">📄 Heft-PDF</button>
           <button onclick="togglePresentationMode()" class="text-xs bg-slate-800 text-white hover:bg-slate-900 px-3 py-1.5 rounded-xl font-semibold">🖥️ Beamer</button>
           <button onclick="openExportModal()" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-semibold">⬇️ Export</button>
           <div class="flex items-center gap-1.5 pl-1">
@@ -150,6 +154,10 @@
               </div>
               <h2 id="detail-title" class="text-xl sm:text-2xl font-bold text-slate-900">Ereignis auswählen</h2>
               <p id="detail-desc" class="text-sm sm:text-base text-slate-700 leading-relaxed">Klicke auf dem Zeitstrahl auf ein Ereignis oder nutze die Pfeiltasten.</p>
+              <details id="detail-long-box" class="hidden rounded-xl border border-slate-200 bg-white px-4 py-3">
+                <summary class="cursor-pointer text-sm font-semibold text-indigo-700">📚 Ausführlich lesen</summary>
+                <p id="detail-long" class="mt-2 text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line"></p>
+              </details>
               <a id="detail-wiki" href="#" target="_blank" rel="noopener" class="hidden inline-block text-xs text-indigo-600 hover:underline">📖 Mehr dazu auf Wikipedia</a>
               <div id="detail-actions" class="hidden pt-2 space-y-1.5">
                 <div class="flex flex-wrap gap-1.5 text-xs">
@@ -265,8 +273,8 @@
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Darstellung</label>
             <select id="builder-layout" onchange="updateBuilderMeta()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
-              <option value="single">1 Spur</option>
-              <option value="dual">2 Spuren (z. B. Welt / Schweiz)</option>
+              <option value="single">1 Streifen (alles in einer Zeile)</option>
+              <option value="dual">2 Streifen übereinander (z. B. Welt oben, Schweiz unten)</option>
             </select>
           </div>
         </div>
@@ -298,6 +306,17 @@
           </div>
         </div>
         <p class="text-[11px] text-slate-400 -mt-2">Jahre vor Christus mit Minus eingeben, z. B. −44.</p>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tag (optional)</label>
+            <input type="number" id="b-day" min="1" max="31" placeholder="z. B. 30" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Monat (optional)</label>
+            <select id="b-month" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white"><option value="">–</option></select>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400 -mt-2">Nur eintragen, wenn das genaue Datum sicher bekannt ist.</p>
 
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Titel des Ereignisses *</label>
@@ -306,10 +325,10 @@
 
         <div class="grid grid-cols-3 gap-2.5">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Spur</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Streifen</label>
             <select id="b-track" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
-              <option value="top">Oben</option>
-              <option value="bottom">Unten</option>
+              <option value="top">Oben (1. Streifen)</option>
+              <option value="bottom">Unten (2. Streifen)</option>
             </select>
           </div>
           <div>
@@ -343,6 +362,10 @@
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kurze Erklärung (2–3 Sätze)</label>
           <textarea id="b-desc" rows="3" maxlength="600" placeholder="Was ist passiert und warum ist es wichtig?" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Ausführlich (optional, 7–10 Sätze)</label>
+          <textarea id="b-long" rows="7" maxlength="2500" placeholder="Ausführlicher Text für den Steckbrief und das Heft-PDF." class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"></textarea>
         </div>
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Denkfrage (optional)</label>
@@ -427,7 +450,7 @@
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Spuren</label>
             <select id="gen-layout" class="w-full rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
               <option value="dual">2: Welt + Schweiz</option>
-              <option value="single">1 Spur</option>
+              <option value="single">1 Streifen (alles in einer Zeile)</option>
             </select>
           </div>
         </div>
@@ -531,8 +554,8 @@ Kategorien: Politik, Konflikte, Alltag
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
         <input id="rv-title" maxlength="80" placeholder="Titel des Zeitstrahls" onchange="reviewTopic.title=this.value.trim()||'Mein Zeitstrahl'" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
         <select id="rv-layout" onchange="reviewSetLayout(this.value)" class="rounded-xl border border-slate-300 px-2 py-2 text-sm bg-white">
-          <option value="single">1 Spur</option>
-          <option value="dual">2 Spuren</option>
+          <option value="single">1 Streifen (alles in einer Zeile)</option>
+          <option value="dual">2 Streifen übereinander</option>
         </select>
         <div id="rv-tracks" class="grid grid-cols-2 gap-2">
           <input id="rv-track-top" maxlength="40" placeholder="Oben" onchange="reviewTopic.trackTop=this.value.trim()||'Welt'; renderReview()" class="rounded-xl border border-slate-300 px-2 py-2 text-xs" />
@@ -566,6 +589,11 @@ Kategorien: Politik, Konflikte, Alltag
         <button onclick="closeModal('export-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
       </div>
       <div class="space-y-2.5">
+        <div class="p-3 rounded-xl border border-indigo-200 bg-indigo-50/60 space-y-2">
+          <div class="font-semibold text-sm text-slate-900">📄 Für das Heft (PDF)</div>
+          <p class="text-xs text-slate-500">A4 hoch: pro Ereignis Datum, Titel und der ausführliche Text (wo vorhanden, sonst der Kurztext). Zum Ausdrucken und Einkleben.</p>
+          <button onclick="printHeft()" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Heft-PDF erstellen</button>
+        </div>
         <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
           <div class="font-semibold text-sm text-slate-900">🖨️ Poster (PDF)</div>
           <p class="text-xs text-slate-500">Zeitstrahl mit Bildern, danach alle Steckbriefe und die Bildnachweise.</p>
@@ -906,6 +934,26 @@ Kategorien: Politik, Konflikte, Alltag
     function fmtRange(ev) {
       return ev.end != null && ev.end !== ev.start ? `${fmtYear(ev.start)}–${fmtYear(ev.end)}` : fmtYear(ev.start);
     }
+    const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let showDates = (() => { try { return localStorage.getItem('zeitstrahl_show_dates') !== '0'; } catch (e) { return true; } })();
+    function validDM(m, d) {
+      m = Number(m); d = Number(d);
+      if (!Number.isInteger(m) || !Number.isInteger(d) || m < 1 || m > 12 || d < 1 || d > MONTH_DAYS[m - 1]) return null;
+      return { m, d };
+    }
+    function hasDate(ev) { return !!validDM(ev.m, ev.d); }
+    // Karte und Poster: kurz (30.1.1933), nur wenn «Datum» eingeschaltet ist
+    function fmtCard(ev) {
+      if (showDates && hasDate(ev) && !(ev.end != null && ev.end !== ev.start)) return `${ev.d}.${ev.m}.${fmtYear(ev.start)}`;
+      return fmtRange(ev);
+    }
+    // Steckbrief und Heft: ausgeschrieben (30. Januar 1933)
+    function fmtDetail(ev) {
+      const range = ev.end != null && ev.end !== ev.start;
+      if (showDates && hasDate(ev)) return `${ev.d}. ${MONTHS[ev.m - 1]} ${fmtYear(ev.start)}` + (range ? ` – ${fmtYear(ev.end)}` : '');
+      return range ? `${fmtYear(ev.start)} – ${fmtYear(ev.end)}` : fmtYear(ev.start);
+    }
     function randomId(len = 20) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       return Array.from(crypto.getRandomValues(new Uint8Array(len)), b => chars[b % chars.length]).join('');
@@ -959,23 +1007,23 @@ Kategorien: Politik, Konflikte, Alltag
           { start: 1943, end: 1945, label: "Kriegsende" }
         ],
         events: [
-          { id: "w2_1", start: 1933, title: "Hitler wird Reichskanzler", track: "top", cat: "politik", icon: "herrschaft", wiki: "Machtergreifung", desc: "Am 30. Januar 1933 wird Hitler Reichskanzler. Nach dem Reichstagsbrand und mit dem Ermächtigungsgesetz schaltet er die Demokratie aus. Politische Gegner werden in erste Konzentrationslager gesperrt.", question: "Wie gelang es den Nationalsozialisten, die Demokratie scheinbar legal abzuschaffen?" },
-          { id: "w2_2", start: 1935, title: "Wehrpflicht & Nürnberger Gesetze", track: "top", cat: "gesellschaft", icon: "verfolgung", wiki: "Nürnberger Gesetze", desc: "Deutschland führt entgegen dem Versailler Vertrag die Wehrpflicht wieder ein. Die Nürnberger Gesetze nehmen Jüdinnen und Juden die Bürgerrechte und verbieten Ehen mit Nichtjuden.", question: "Welche Folgen hatten die Nürnberger Gesetze für den Alltag jüdischer Familien?" },
-          { id: "w2_3", start: 1936, title: "Rheinland & Olympische Spiele", track: "top", cat: "politik", icon: "sport", wiki: "Olympische Sommerspiele 1936", desc: "Deutsche Truppen marschieren ins entmilitarisierte Rheinland ein. Bei den Olympischen Spielen in Berlin präsentiert sich das NS-Regime der Welt als friedlich.", question: "Warum nutzte Hitler die Olympischen Spiele 1936 als Propaganda-Bühne?" },
-          { id: "w2_4", start: 1938, title: "Anschluss Österreichs, Münchner Abkommen & Pogromnacht", track: "top", cat: "politik", icon: "vertrag", wiki: "Münchner Abkommen", desc: "Hitler gliedert Österreich und das Sudetenland an. In der Pogromnacht vom 9. November zerstören Nationalsozialisten Synagogen und verschleppen rund 30 000 jüdische Männer in Konzentrationslager.", question: "Warum gaben Grossbritannien und Frankreich Hitler in München nach (Appeasement-Politik)?" },
-          { id: "w2_5", start: 1939, title: "Hitler-Stalin-Pakt & Überfall auf Polen", track: "top", cat: "krieg", icon: "krieg", wiki: "Überfall auf Polen", desc: "Deutschland und die Sowjetunion schliessen einen Nichtangriffspakt. In einem geheimen Zusatzprotokoll teilen sie Osteuropa unter sich auf. Am 1. September überfällt Deutschland Polen; Grossbritannien und Frankreich erklären Deutschland den Krieg.", question: "Warum schlossen die verfeindeten Diktatoren Hitler und Stalin kurz vor Kriegsbeginn einen Pakt?" },
-          { id: "w2_6", start: 1940, title: "Westfeldzug & Luftschlacht um England", track: "top", cat: "krieg", icon: "krieg", wiki: "Westfeldzug", desc: "Deutsche Panzer stossen überraschend durch die Ardennen vor und besiegen Frankreich in rund sechs Wochen. Die Luftschlacht um England scheitert jedoch.", question: "Warum gelang der schnelle Sieg über Frankreich?" },
-          { id: "w2_7", start: 1941, title: "Angriff auf die Sowjetunion & Pearl Harbor", track: "top", cat: "krieg", icon: "krieg", wiki: "Angriff auf Pearl Harbor", desc: "Im Juni bricht Hitler den Pakt und greift die Sowjetunion an. Im Dezember greift Japan den US-Stützpunkt Pearl Harbor an – die USA treten in den Krieg ein.", question: "Warum wurde der Krieg durch die Ereignisse von 1941 zu einem echten Weltkrieg?" },
-          { id: "w2_8", start: 1942, title: "Wannseekonferenz & Holocaust", track: "top", cat: "gesellschaft", icon: "verfolgung", wiki: "Wannseekonferenz", desc: "Schon ab 1941 ermorden deutsche Einheiten in Osteuropa Hunderttausende Jüdinnen und Juden. An der Wannseekonferenz im Januar 1942 organisieren NS-Funktionäre die Ermordung aller europäischen Juden. Im Holocaust werden rund sechs Millionen Jüdinnen und Juden ermordet, viele davon in Vernichtungslagern wie Auschwitz-Birkenau.", question: "Was unterscheidet ein Vernichtungslager von einem Konzentrationslager?" },
-          { id: "w2_9", start: 1942, end: 1943, title: "Schlacht von Stalingrad", track: "top", cat: "krieg", icon: "krieg", wiki: "Schlacht von Stalingrad", desc: "Im Februar 1943 kapituliert die eingekesselte deutsche 6. Armee in Stalingrad. Von nun an ist die Wehrmacht im Osten auf dem Rückzug.", question: "Warum gilt Stalingrad als Wendepunkt des Krieges in Europa?" },
-          { id: "w2_10", start: 1944, title: "D-Day & Attentat vom 20. Juli", track: "top", cat: "krieg", icon: "militaer", wiki: "Operation Overlord", desc: "Am 6. Juni 1944 landen die Westalliierten in der Normandie. Am 20. Juli scheitert ein Bombenattentat von Offizieren um Claus von Stauffenberg auf Hitler.", question: "Welche militärische Folge hatte die zweite Front in Frankreich?" },
-          { id: "w2_11", start: 1945, title: "Kriegsende in Europa und Asien", track: "top", cat: "politik", icon: "ende", wiki: "Bedingungslose Kapitulation der Wehrmacht", desc: "Im Januar befreit die Rote Armee das Lager Auschwitz. Nach Hitlers Suizid kapituliert Deutschland am 8. Mai 1945. Nach den US-Atombomben auf Hiroshima und Nagasaki kapituliert Japan am 2. September.", question: "Welche Folgen hatte das Kriegsende 1945 für die politische Ordnung Europas?" },
-          { id: "ch2_1", start: 1938, title: "J-Stempel in jüdischen Pässen", track: "bottom", cat: "gesellschaft", icon: "verfolgung", wiki: "Judenstempel", desc: "Auf Drängen der Schweizer Behörden kennzeichnet Deutschland die Pässe deutscher Jüdinnen und Juden mit einem «J». So kann die Schweiz jüdische Flüchtlinge an der Grenze leichter erkennen und abweisen.", question: "Warum wird der J-Stempel heute als dunkles Kapitel der Schweizer Geschichte gesehen?" },
-          { id: "ch2_2", start: 1939, title: "Landi 39 – «Geistige Landesverteidigung»", track: "bottom", cat: "politik", icon: "kultur", wiki: "Landesausstellung 1939", desc: "Die Landesausstellung in Zürich zeigt die Schweiz als vielfältiges, freies Land. Sie soll den Zusammenhalt gegen die Diktaturen in den Nachbarländern stärken.", question: "Warum war es 1939 wichtig, den Zusammenhalt der Schweiz zu betonen?" },
-          { id: "ch2_3", start: 1939, title: "Generalmobilmachung & General Guisan", track: "bottom", cat: "krieg", icon: "militaer", wiki: "Henri Guisan", desc: "Ende August 1939 wählt die Bundesversammlung Henri Guisan zum General. Kurz darauf rückt die Armee zum Aktivdienst ein und bewacht die Grenzen.", question: "Welche Probleme entstanden für Familien und Betriebe, wenn so viele Männer im Aktivdienst waren?" },
-          { id: "ch2_4", start: 1940, title: "Rütlirapport & Réduit", track: "bottom", cat: "krieg", icon: "berge", wiki: "Rütlirapport", desc: "Im Juli 1940 versammelt General Guisan die höheren Offiziere auf dem Rütli. Die Armee soll sich im Fall eines Angriffs in die Alpenfestung (Réduit) zurückziehen und dort Widerstand leisten.", question: "Welche Vor- und Nachteile hatte die Réduit-Strategie für die Bevölkerung im Mittelland?" },
-          { id: "ch2_5", start: 1940, end: 1945, title: "Anbauschlacht (Plan Wahlen)", track: "bottom", cat: "gesellschaft", icon: "landwirtschaft", wiki: "Anbauschlacht", desc: "Damit die Schweiz sich selbst ernähren kann, werden überall Kartoffeln und Getreide angepflanzt, sogar in Stadtparks. Viele Lebensmittel sind rationiert.", question: "Warum war die Lebensmittelversorgung für die Schweiz im Krieg so schwierig?" },
-          { id: "ch2_6", start: 1942, title: "Grenzschliessung für Flüchtlinge", track: "bottom", cat: "gesellschaft", icon: "flucht", wiki: "Flüchtlingspolitik der Schweiz zur Zeit des Nationalsozialismus", desc: "Im August 1942 schliesst die Schweiz die Grenze für viele Flüchtlinge: Wer nur «aus Rassegründen» verfolgt wird, gilt nicht als politischer Flüchtling. Tausende jüdische Flüchtlinge werden abgewiesen.", question: "Welche Verantwortung hatte die Schweiz gegenüber Menschen, die vor der Verfolgung flohen?" }
+          { id: "w2_1", start: 1933, m: 1, d: 30, title: "Hitler wird Reichskanzler", track: "top", cat: "politik", icon: "herrschaft", wiki: "Machtergreifung", desc: "Am 30. Januar 1933 wird Hitler Reichskanzler. Nach dem Reichstagsbrand und mit dem Ermächtigungsgesetz schaltet er die Demokratie aus. Politische Gegner werden in erste Konzentrationslager gesperrt.", long: "Am 30. Januar 1933 ernennt Reichspräsident Hindenburg Adolf Hitler zum Reichskanzler. Hitler führt zunächst eine Koalitionsregierung, in der die Nationalsozialisten nur wenige Minister stellen. Nach dem Reichstagsbrand vom 27. Februar setzt eine Notverordnung wichtige Grundrechte ausser Kraft, etwa die Pressefreiheit und das Briefgeheimnis. Tausende politische Gegner, vor allem Kommunisten und Sozialdemokraten, werden verhaftet. Im März 1933 entsteht bei Dachau eines der ersten Konzentrationslager. Am 23. März beschliesst der Reichstag das Ermächtigungsgesetz: Es erlaubt der Regierung, Gesetze ohne das Parlament zu erlassen. Danach werden die Gewerkschaften zerschlagen, alle Parteien ausser der NSDAP verboten und Länder, Vereine und Medien gleichgeschaltet. Nach Hindenburgs Tod im August 1934 vereint Hitler das Amt des Kanzlers und des Präsidenten und nennt sich «Führer». Aus der Demokratie ist innert eineinhalb Jahren eine Diktatur geworden.",  question: "Wie gelang es den Nationalsozialisten, die Demokratie scheinbar legal abzuschaffen?" },
+          { id: "w2_2", start: 1935, title: "Wehrpflicht & Nürnberger Gesetze", track: "top", cat: "gesellschaft", icon: "verfolgung", wiki: "Nürnberger Gesetze", desc: "Deutschland führt entgegen dem Versailler Vertrag die Wehrpflicht wieder ein. Die Nürnberger Gesetze nehmen Jüdinnen und Juden die Bürgerrechte und verbieten Ehen mit Nichtjuden.", long: "Im März 1935 führt Deutschland die allgemeine Wehrpflicht wieder ein. Der Versailler Vertrag hatte dem Land nach dem Ersten Weltkrieg nur ein kleines Berufsheer erlaubt. Hitler bricht diesen Vertrag offen, und die Siegermächte protestieren nur schwach. Die Wehrmacht wird nun systematisch aufgebaut und vergrössert. Im September 1935 verkündet der Reichstag am Parteitag in Nürnberg die «Nürnberger Gesetze». Das Reichsbürgergesetz macht Jüdinnen und Juden zu Bürgern zweiter Klasse ohne volle politische Rechte. Ein weiteres Gesetz verbietet Ehen und Beziehungen zwischen Jüdinnen und Juden und «Deutschblütigen». Wer als jüdisch gilt, wird nach der Religion der Grosseltern bestimmt, ganz unabhängig davon, wie die Person selbst lebt. Mit diesen Gesetzen erhält die Ausgrenzung eine rechtliche Grundlage, auf der später Berufsverbote, Enteignungen und die Verfolgung aufbauen.",  question: "Welche Folgen hatten die Nürnberger Gesetze für den Alltag jüdischer Familien?" },
+          { id: "w2_3", start: 1936, title: "Rheinland & Olympische Spiele", track: "top", cat: "politik", icon: "sport", wiki: "Olympische Sommerspiele 1936", desc: "Deutsche Truppen marschieren ins entmilitarisierte Rheinland ein. Bei den Olympischen Spielen in Berlin präsentiert sich das NS-Regime der Welt als friedlich.", long: "Am 7. März 1936 marschieren deutsche Truppen in das Rheinland ein, das nach dem Ersten Weltkrieg entmilitarisiert worden war. Damit verletzt Hitler den Versailler Vertrag und den Vertrag von Locarno. Frankreich und Grossbritannien protestieren, greifen aber nicht militärisch ein. Hitler erlebt, dass er mit solchen Schritten durchkommt, und wird mutiger. Im August 1936 finden in Berlin die Olympischen Sommerspiele statt. Das Regime präsentiert sich der Welt als friedlich und gastfreundlich und entfernt vorübergehend judenfeindliche Schilder und Plakate. Gleichzeitig dienen die perfekt inszenierten Spiele der Propaganda: Sie sollen Stärke und Ordnung des NS-Staates zeigen. Der schwarze US-Läufer Jesse Owens gewinnt vier Goldmedaillen und widerlegt damit die Rassenlehre der Nationalsozialisten vor aller Augen. Im Hintergrund wird die Aufrüstung weiter vorangetrieben.",  question: "Warum nutzte Hitler die Olympischen Spiele 1936 als Propaganda-Bühne?" },
+          { id: "w2_4", start: 1938, title: "Anschluss Österreichs, Münchner Abkommen & Pogromnacht", track: "top", cat: "politik", icon: "vertrag", wiki: "Münchner Abkommen", desc: "Hitler gliedert Österreich und das Sudetenland an. In der Pogromnacht vom 9. November zerstören Nationalsozialisten Synagogen und verschleppen rund 30 000 jüdische Männer in Konzentrationslager.", long: "Im März 1938 marschiert die deutsche Wehrmacht in Österreich ein. Das Land wird mit dem «Anschluss» Teil des Deutschen Reichs, und viele Menschen jubeln Hitler zu. Jüdinnen und Juden werden dort sofort verfolgt und gedemütigt. Danach fordert Hitler das Sudetenland, ein Gebiet der Tschechoslowakei mit vielen deutschsprachigen Einwohnern. Im September 1938 verhandeln Hitler, Mussolini, der britische Premier Chamberlain und der französische Regierungschef Daladier in München, ohne die Tschechoslowakei einzuladen. Die Westmächte stimmen der Abtretung zu, weil sie einen Krieg unbedingt verhindern wollen. Diese Politik nennt man Appeasement. In der Nacht vom 9. auf den 10. November 1938 zerstören Nationalsozialisten im ganzen Reich Synagogen und jüdische Geschäfte, viele Menschen werden ermordet und rund 30 000 jüdische Männer in Konzentrationslager gebracht. Die Pogromnacht zeigt, dass die Verfolgung nun auch offene Gewalt bedeutet.",  question: "Warum gaben Grossbritannien und Frankreich Hitler in München nach (Appeasement-Politik)?" },
+          { id: "w2_5", start: 1939, title: "Hitler-Stalin-Pakt & Überfall auf Polen", track: "top", cat: "krieg", icon: "krieg", wiki: "Überfall auf Polen", desc: "Deutschland und die Sowjetunion schliessen einen Nichtangriffspakt. In einem geheimen Zusatzprotokoll teilen sie Osteuropa unter sich auf. Am 1. September überfällt Deutschland Polen; Grossbritannien und Frankreich erklären Deutschland den Krieg.", long: "Am 23. August 1939 schliessen Deutschland und die Sowjetunion überraschend einen Nichtangriffspakt. Die beiden Diktatoren waren bis dahin Todfeinde. In einem geheimen Zusatzprotokoll teilen sie Polen, das Baltikum und weitere Gebiete in Einflussbereiche auf. Damit hat Hitler freie Bahn für den Angriff im Westen, weil er nicht mit einem Krieg gegen die Sowjetunion rechnen muss. Am 1. September 1939 überfällt die Wehrmacht Polen. Mit Panzern und Flugzeugen setzt sie auf den schnellen «Blitzkrieg». Grossbritannien und Frankreich erklären Deutschland am 3. September den Krieg, helfen Polen aber militärisch kaum. Am 17. September greift auch die Sowjetunion von Osten her an. Polen wird innert weniger Wochen besiegt und aufgeteilt, und die Besatzer gehen mit grosser Brutalität gegen die Bevölkerung vor. Mit dem Überfall beginnt der Zweite Weltkrieg in Europa.",  question: "Warum schlossen die verfeindeten Diktatoren Hitler und Stalin kurz vor Kriegsbeginn einen Pakt?" },
+          { id: "w2_6", start: 1940, title: "Westfeldzug & Luftschlacht um England", track: "top", cat: "krieg", icon: "krieg", wiki: "Westfeldzug", desc: "Deutsche Panzer stossen überraschend durch die Ardennen vor und besiegen Frankreich in rund sechs Wochen. Die Luftschlacht um England scheitert jedoch.", long: "Am 10. Mai 1940 beginnt Deutschland den Angriff im Westen und überfällt die Niederlande, Belgien und Luxemburg. Die Hauptmacht der Panzer stösst durch die Ardennen vor, die Frankreich für kaum passierbar hielt. Die alliierten Truppen werden eingekesselt, und die britische Armee rettet sich bei Dünkirchen über das Meer nach England. Am 14. Juni wird Paris besetzt, und am 22. Juni unterschreibt Frankreich einen Waffenstillstand. Der Sieg gelingt in nur rund sechs Wochen. Danach will Hitler auch Grossbritannien zum Aufgeben zwingen. In der Luftschlacht um England im Sommer und Herbst 1940 greift die deutsche Luftwaffe Flugplätze und später auch Städte an. Die britische Luftwaffe hält mit Hilfe des Radars stand, und die geplante Landung in England wird abgesagt. Das ist die erste grosse Niederlage der Wehrmacht.",  question: "Warum gelang der schnelle Sieg über Frankreich?" },
+          { id: "w2_7", start: 1941, title: "Angriff auf die Sowjetunion & Pearl Harbor", track: "top", cat: "krieg", icon: "krieg", wiki: "Angriff auf Pearl Harbor", desc: "Im Juni bricht Hitler den Pakt und greift die Sowjetunion an. Im Dezember greift Japan den US-Stützpunkt Pearl Harbor an – die USA treten in den Krieg ein.", long: "Am 22. Juni 1941 greift Deutschland ohne Vorwarnung die Sowjetunion an und bricht damit den Pakt von 1939. Das Ziel ist ein «Vernichtungskrieg»: Das Land soll erobert, ausgebeutet und seine Bevölkerung dezimiert werden. Zunächst rückt die Wehrmacht weit vor, doch vor Moskau bleibt sie im Winter stecken. Millionen sowjetische Soldaten geraten in Gefangenschaft, und viele sterben dort an Hunger und Kälte. Am 7. Dezember 1941 greift Japan die amerikanische Flotte in Pearl Harbor auf Hawaii an. Die USA erklären Japan den Krieg, und wenige Tage später erklären Deutschland und Italien den USA den Krieg. Damit stehen die USA, die Sowjetunion und Grossbritannien gemeinsam gegen die Achsenmächte. Der Krieg ist nun ein echter Weltkrieg, der in Europa, Asien, Afrika und auf den Ozeanen geführt wird.",  question: "Warum wurde der Krieg durch die Ereignisse von 1941 zu einem echten Weltkrieg?" },
+          { id: "w2_8", start: 1942, m: 1, d: 20, title: "Wannseekonferenz & Holocaust", track: "top", cat: "gesellschaft", icon: "verfolgung", wiki: "Wannseekonferenz", desc: "Schon ab 1941 ermorden deutsche Einheiten in Osteuropa Hunderttausende Jüdinnen und Juden. An der Wannseekonferenz im Januar 1942 organisieren NS-Funktionäre die Ermordung aller europäischen Juden. Im Holocaust werden rund sechs Millionen Jüdinnen und Juden ermordet, viele davon in Vernichtungslagern wie Auschwitz-Birkenau.", long: "Schon im Sommer 1941 beginnen deutsche Einheiten in den besetzten Gebieten der Sowjetunion, Jüdinnen und Juden systematisch zu erschiessen. Bis Ende 1941 sind es bereits Hunderttausende. Am 20. Januar 1942 treffen sich hohe Funktionäre von Partei, SS und Ministerien in einer Villa am Berliner Wannsee. Reinhard Heydrich leitet das Treffen, und das Protokoll führt Adolf Eichmann. Die Teilnehmer besprechen, wie die Ermordung aller Jüdinnen und Juden Europas organisiert werden soll. Dafür werden Vernichtungslager wie Treblinka, Sobibor und Auschwitz-Birkenau genutzt, in denen Menschen in Gaskammern getötet werden. Die Menschen werden aus ganz Europa in Güterzügen dorthin gebracht. Insgesamt werden rund sechs Millionen Jüdinnen und Juden ermordet. Dieses Verbrechen nennt man Holocaust oder Shoah. Verfolgt und ermordet wurden auch Sinti und Roma, Menschen mit Behinderung und politische Gegner.",  question: "Was unterscheidet ein Vernichtungslager von einem Konzentrationslager?" },
+          { id: "w2_9", start: 1942, end: 1943, title: "Schlacht von Stalingrad", track: "top", cat: "krieg", icon: "krieg", wiki: "Schlacht von Stalingrad", desc: "Im Februar 1943 kapituliert die eingekesselte deutsche 6. Armee in Stalingrad. Von nun an ist die Wehrmacht im Osten auf dem Rückzug.", long: "Im Sommer 1942 greift die deutsche Armee die Stadt Stalingrad an der Wolga an. Die Stadt trägt den Namen Stalins und ist deshalb auch ein Symbol. Wochenlang wird um jedes Haus gekämpft, und die Stadt liegt bald in Trümmern. Im November 1942 starten sowjetische Truppen eine grosse Gegenoffensive und schliessen die deutsche 6. Armee mit mehr als 200 000 Soldaten ein. Hitler verbietet den Ausbruch, und die Versorgung aus der Luft reicht bei Weitem nicht aus. Die Soldaten leiden unter Hunger, Kälte und Krankheiten. Ende Januar und Anfang Februar 1943 kapituliert die 6. Armee. Rund 90 000 Soldaten geraten in sowjetische Gefangenschaft, und nur ein kleiner Teil kehrt je zurück. Die Niederlage zerstört den Mythos der unbesiegbaren Wehrmacht. Von nun an muss sie sich im Osten Schritt für Schritt zurückziehen.",  question: "Warum gilt Stalingrad als Wendepunkt des Krieges in Europa?" },
+          { id: "w2_10", start: 1944, title: "D-Day & Attentat vom 20. Juli", track: "top", cat: "krieg", icon: "militaer", wiki: "Operation Overlord", desc: "Am 6. Juni 1944 landen die Westalliierten in der Normandie. Am 20. Juli scheitert ein Bombenattentat von Offizieren um Claus von Stauffenberg auf Hitler.", long: "Am 6. Juni 1944 landen amerikanische, britische und kanadische Truppen an der Küste der Normandie in Frankreich. Der Tag heisst D-Day, und es ist die grösste Landung vom Meer aus in der Geschichte. Tausende Schiffe und Flugzeuge sind beteiligt, und allein am ersten Tag gehen rund 150 000 Soldaten an Land. Die Kämpfe sind hart, aber die Alliierten behaupten sich und stossen weiter vor. Im August wird Paris befreit. Damit kämpft Deutschland an zwei Fronten gleichzeitig: im Westen gegen die Westalliierten und im Osten gegen die Rote Armee. Am 20. Juli 1944 versucht eine Gruppe von Offizieren um Claus Schenk Graf von Stauffenberg, Hitler mit einer Bombe in seinem Hauptquartier zu töten. Hitler überlebt leicht verletzt. Die Verschwörer werden verhaftet und hingerichtet, später folgen viele weitere Verhaftungen.",  question: "Welche militärische Folge hatte die zweite Front in Frankreich?" },
+          { id: "w2_11", start: 1945, title: "Kriegsende in Europa und Asien", track: "top", cat: "politik", icon: "ende", wiki: "Bedingungslose Kapitulation der Wehrmacht", desc: "Im Januar befreit die Rote Armee das Lager Auschwitz. Nach Hitlers Suizid kapituliert Deutschland am 8. Mai 1945. Nach den US-Atombomben auf Hiroshima und Nagasaki kapituliert Japan am 2. September.", long: "Im Januar 1945 erreicht die Rote Armee das Vernichtungslager Auschwitz und befreit die wenigen überlebenden Häftlinge. Immer mehr Städte in Deutschland liegen nach Luftangriffen in Trümmern, und die Alliierten dringen von beiden Seiten ins Reich vor. Am 30. April 1945 nimmt sich Hitler im Bunker in Berlin das Leben. Am 8. Mai tritt die bedingungslose Kapitulation der Wehrmacht in Kraft, und der Krieg in Europa ist zu Ende. Im Pazifik kämpfen die USA noch gegen Japan. Im August 1945 werfen sie Atombomben auf Hiroshima und Nagasaki, und bis Ende 1945 sterben rund 200 000 Menschen. Am 2. September kapituliert Japan, und damit endet der Zweite Weltkrieg auch in Asien. Im Krieg sind mehr als 60 Millionen Menschen ums Leben gekommen. Deutschland wird in Besatzungszonen aufgeteilt, und die führenden Nationalsozialisten werden in Nürnberg vor Gericht gestellt.",  question: "Welche Folgen hatte das Kriegsende 1945 für die politische Ordnung Europas?" },
+          { id: "ch2_1", start: 1938, m: 10, d: 4, title: "J-Stempel in jüdischen Pässen", track: "bottom", cat: "gesellschaft", icon: "verfolgung", wiki: "Judenstempel", desc: "Auf Drängen der Schweizer Behörden kennzeichnet Deutschland die Pässe deutscher Jüdinnen und Juden mit einem «J». So kann die Schweiz jüdische Flüchtlinge an der Grenze leichter erkennen und abweisen.", long: "Nach dem «Anschluss» Österreichs im März 1938 fliehen viele Jüdinnen und Juden in Richtung Schweiz. Die Schweizer Behörden wollen diesen Zustrom bremsen. Sie verhandeln deshalb mit Deutschland über eine Lösung. Am 4. Oktober 1938 einigen sich beide Länder: Deutschland stempelt in die Pässe von Jüdinnen und Juden ein grosses rotes «J». Die Schweiz kann sie so an der Grenze sofort erkennen und zurückweisen. Auf Schweizer Seite spielt Heinrich Rothmund, der Chef der Fremdenpolizei, eine wichtige Rolle. Die Schweiz wollte vermeiden, dass für alle Deutschen eine Visumpflicht gelten musste. Für die Betroffenen bedeutete der Stempel, dass die Flucht noch schwerer wurde. Später gab es dafür viel Kritik. 1995 entschuldigte sich der Bundesrat öffentlich für die damalige Flüchtlingspolitik.",  question: "Warum wird der J-Stempel heute als dunkles Kapitel der Schweizer Geschichte gesehen?" },
+          { id: "ch2_2", start: 1939, m: 5, d: 6, title: "Landi 39 – «Geistige Landesverteidigung»", track: "bottom", cat: "politik", icon: "kultur", wiki: "Landesausstellung 1939", desc: "Die Landesausstellung in Zürich zeigt die Schweiz als vielfältiges, freies Land. Sie soll den Zusammenhalt gegen die Diktaturen in den Nachbarländern stärken.", long: "Am 6. Mai 1939 öffnet in Zürich die Landesausstellung, kurz «Landi 39» genannt. Sie erstreckt sich über beide Seeufer, und die Besucher können mit einer Schwebebahn über den See fahren. Gezeigt werden die Schweizer Landwirtschaft, Industrie, Kultur und Landschaft. Die Kantone sind mit ihren Fahnen vertreten, und es gibt ein «Dörfli» mit Handwerk und Trachten. Die Ausstellung soll zeigen, wie vielfältig und doch geeint die Schweiz ist. Ausserhalb der Grenzen herrschen Diktaturen, und der Krieg droht. Man spricht deshalb von der «geistigen Landesverteidigung»: Die Schweiz soll sich nicht nur mit der Armee, sondern auch mit ihren Werten und ihrem Zusammenhalt verteidigen. Rund zehn Millionen Mal werden Eintritte gezählt. Obwohl Anfang September die Armee mobilisiert wird, bleibt die Landi bis Ende Oktober offen.",  question: "Warum war es 1939 wichtig, den Zusammenhalt der Schweiz zu betonen?" },
+          { id: "ch2_3", start: 1939, title: "Generalmobilmachung & General Guisan", track: "bottom", cat: "krieg", icon: "militaer", wiki: "Henri Guisan", desc: "Ende August 1939 wählt die Bundesversammlung Henri Guisan zum General. Kurz darauf rückt die Armee zum Aktivdienst ein und bewacht die Grenzen.", long: "Ende August 1939 ist klar, dass ein Krieg in Europa kurz bevorsteht. Am 30. August wählt die Bundesversammlung den Waadtländer Henri Guisan zum General der Schweizer Armee. Sie gibt dem Bundesrat zudem ausserordentliche Vollmachten, damit er in der Krise rasch entscheiden kann. Als Deutschland am 1. September Polen angreift, bietet die Schweiz ihre Armee auf. Ab dem 2. September rücken Hunderttausende Männer in den Aktivdienst ein und besetzen die Grenzen. Viele Bauern, Handwerker und Angestellte fehlen plötzlich in ihren Betrieben und Familien. Die Frauen übernehmen zu Hause und im Beruf viele Aufgaben allein. Erst im Lauf des Krieges wird eine Lohn- und Verdienstersatzordnung eingeführt, die den Verdienstausfall der Soldaten teilweise ausgleicht. Guisan wird für viele Schweizerinnen und Schweizer zur Symbolfigur des Widerstandswillens.",  question: "Welche Probleme entstanden für Familien und Betriebe, wenn so viele Männer im Aktivdienst waren?" },
+          { id: "ch2_4", start: 1940, m: 7, d: 25, title: "Rütlirapport & Réduit", track: "bottom", cat: "krieg", icon: "berge", wiki: "Rütlirapport", desc: "Im Juli 1940 versammelt General Guisan die höheren Offiziere auf dem Rütli. Die Armee soll sich im Fall eines Angriffs in die Alpenfestung (Réduit) zurückziehen und dort Widerstand leisten.", long: "Im Juni 1940 besiegt Deutschland Frankreich, und die Schweiz ist danach fast vollständig von den Achsenmächten Deutschland und Italien umgeben. Viele Menschen haben Angst, und manche wollen sich anpassen. In dieser Lage ruft General Guisan am 25. Juli 1940 rund 650 höhere Offiziere auf die Rütliwiese, den Gründungsort der Eidgenossenschaft. Er erklärt ihnen die neue Strategie: Die Armee soll sich bei einem Angriff in die Alpen zurückziehen. Dieses Gebiet mit den Festungen am Gotthard, bei Sargans und bei St-Maurice nennt man das «Réduit». Dort soll sie lange Widerstand leisten und die wichtigen Alpenübergänge verteidigen. Für die Menschen im Mittelland bedeutet das, dass sie im Ernstfall nicht geschützt gewesen wären. Der Rütlirapport soll vor allem den Widerstandswillen stärken. Auch heute wird diskutiert, wie wirksam diese Strategie wirklich gewesen wäre.",  question: "Welche Vor- und Nachteile hatte die Réduit-Strategie für die Bevölkerung im Mittelland?" },
+          { id: "ch2_5", start: 1940, end: 1945, title: "Anbauschlacht (Plan Wahlen)", track: "bottom", cat: "gesellschaft", icon: "landwirtschaft", wiki: "Anbauschlacht", desc: "Damit die Schweiz sich selbst ernähren kann, werden überall Kartoffeln und Getreide angepflanzt, sogar in Stadtparks. Viele Lebensmittel sind rationiert.", long: "Im Krieg kann die Schweiz nicht mehr genug Lebensmittel einführen, denn ihre Nachbarländer sind im Krieg und besetzt. Der Bund rationiert deshalb schon ab Herbst 1939 wichtige Lebensmittel und später auch Brot, Fleisch und andere Grundnahrungsmittel. Mit Marken kann jede Person nur noch eine bestimmte Menge kaufen. Gleichzeitig soll die Schweiz mehr selber anbauen. Der Agronom Friedrich Traugott Wahlen entwirft dafür einen Plan, der als «Plan Wahlen» oder «Anbauschlacht» bekannt wird. Die Ackerfläche wird fast verdoppelt. Es werden mehr Kartoffeln, Getreide und Gemüse angebaut, auch auf Sportplätzen, in Parks und auf Rasenflächen von Städten. Schulkinder, Frauen, Soldaten und Internierte helfen bei der Arbeit. Die Schweiz muss in dieser Zeit sehr sparsam leben, hungert aber nicht wie viele andere Länder in Europa.",  question: "Warum war die Lebensmittelversorgung für die Schweiz im Krieg so schwierig?" },
+          { id: "ch2_6", start: 1942, title: "Grenzschliessung für Flüchtlinge", track: "bottom", cat: "gesellschaft", icon: "flucht", wiki: "Flüchtlingspolitik der Schweiz zur Zeit des Nationalsozialismus", desc: "Im August 1942 schliesst die Schweiz die Grenze für viele Flüchtlinge: Wer nur «aus Rassegründen» verfolgt wird, gilt nicht als politischer Flüchtling. Tausende jüdische Flüchtlinge werden abgewiesen.", long: "Seit 1933 suchen Menschen in der Schweiz Schutz vor der Verfolgung durch die Nationalsozialisten. Im August 1942 beschliesst die Schweiz, ihre Grenzen für Flüchtlinge praktisch zu schliessen. Wer nur wegen seiner «Rasse» verfolgt wird, gilt nach der damaligen Regel nicht als politischer Flüchtling. Das betraf vor allem Jüdinnen und Juden. Die Behörden fürchteten, dass das Land überfüllt wird und die Versorgung mit Lebensmitteln nicht reicht. Viele Menschen wurden an der Grenze zurückgewiesen, und für einen Teil von ihnen bedeutete das den Tod. Gegen diese Politik gab es schon damals Protest, etwa von Kirchen, Zeitungen und Teilen der Bevölkerung. Im Lauf des Krieges wurde die Praxis gelockert, und die Schweiz nahm Zehntausende Flüchtlinge auf. Heute gilt die Flüchtlingspolitik von 1942 als einer der dunkelsten Punkte der Schweizer Geschichte.",  question: "Welche Verantwortung hatte die Schweiz gegenüber Menschen, die vor der Verfolgung flohen?" }
         ]
       },
       ind: {
@@ -1179,17 +1227,20 @@ Kategorien: Politik, Konflikte, Alltag
         if (start === null || !e.title) return null;
         let end = toInt(e.end);
         if (end !== null && end <= start) end = null;
+        const dm = validDM(e.m, e.d);
         const cat = t.categories.find(c => c.id === e.cat) ? e.cat : t.categories[0].id;
         const icon = ICONS[e.icon] ? e.icon : '';
         return {
           id: /^[A-Za-z0-9_\-]{1,40}$/.test(String(e.id || '')) ? String(e.id) : 'e' + i + randomId(6),
           start, end,
+          m: dm ? dm.m : null, d: dm ? dm.d : null,
           title: String(e.title).slice(0, 90),
           track: e.track === 'bottom' && t.layout === 'dual' ? 'bottom' : 'top',
           cat, icon,
           wiki: String(e.wiki || '').slice(0, 120),
           image: normalizeImage(e.image),
           desc: String(e.desc || e.description || '').slice(0, 600),
+          long: String(e.long || e.ausfuehrlich || '').slice(0, 2500),
           question: String(e.question || '').slice(0, 200)
         };
       }).filter(Boolean).slice(0, 60);
@@ -1209,6 +1260,7 @@ Kategorien: Politik, Konflikte, Alltag
     // 4. APP-ZUSTAND
     // =========================================================================
     const params = new URLSearchParams(location.search);
+    const viewOnly = params.get('ansicht') === '1';   // reine Schüleransicht (nichts veränderbar)
     let currentUser = null;
     let myTopics = {};               // Cloud-Themen der Lehrperson
     let myTopicsUnsub = null;
@@ -1254,6 +1306,9 @@ Kategorien: Politik, Konflikte, Alltag
       populateIconSelect();
       renderTopicDropdown();
       setNewTab('ai');
+      document.getElementById('b-month').innerHTML = '<option value="">–</option>' + MONTHS.map((n, i) => `<option value="${i + 1}">${n}</option>`).join('');
+      renderDatesButton();
+      if (viewOnly) document.body.classList.add('view-only');
 
       const sharedId = params.get('t');
       const presetKey = params.get('topic');
@@ -1394,6 +1449,7 @@ Kategorien: Politik, Konflikte, Alltag
     }
 
     function markDirty() {
+      if (viewOnly) return;
       if (window.EMBED_TOPIC) { dirty = true; renderTopicDropdown(); updateBuilderHint(); return; }
       if (activeRef.kind === 'shared' || activeRef.kind === 'submission' || activeRef.kind === 'preset') {
         // Änderungen an Standard-Themen, geteilten Themen oder Abgaben werden zu einer eigenen Kopie
@@ -1422,6 +1478,8 @@ Kategorien: Politik, Konflikte, Alltag
         style = 'bg-sky-50 border-sky-200 text-sky-900';
         html = `<strong>Abgabe von ${escapeHTML(activeTopic._submittedBy || '')}</strong> – nur Ansicht.`;
         act = '<button onclick="saveSubmissionAsTopic()" class="px-3 py-1 rounded-lg bg-sky-600 text-white font-semibold">In meine Themen übernehmen</button>';
+      } else if (viewOnly) {
+        html = '';
       } else if (activeRef.kind === 'shared') {
         style = 'bg-indigo-50 border-indigo-200 text-indigo-900';
         html = 'Geteiltes Thema deiner Lehrperson. Unter «Selbst bauen» kannst du eine eigene Kopie bearbeiten.';
@@ -1446,6 +1504,7 @@ Kategorien: Politik, Konflikte, Alltag
     // 7. NAVIGATION
     // =========================================================================
     function setMode(mode) {
+      if (viewOnly && mode === 'builder') mode = 'explore';
       currentMode = mode;
       ['explore', 'guess', 'sort', 'builder'].forEach(m => {
         document.getElementById('view-' + m).classList.toggle('hidden', m !== mode);
@@ -1617,7 +1676,7 @@ Kategorien: Politik, Konflikte, Alltag
         const ringClass = isSelected ? 'ring-2 ring-indigo-600 z-20 shadow-lg' : 'hover:shadow-md hover:z-20 z-10';
         const icon = ICONS[ev.icon] || '📌';
         const hasImg = design.images && ev.image && ev.image.url;
-        const yearHTML = design.years ? `<div style="font-size:0.85em" class="font-mono font-bold opacity-75">${fmtRange(ev)}</div>` : '';
+        const yearHTML = design.years ? `<div style="font-size:0.85em" class="font-mono font-bold opacity-75">${fmtCard(ev)}</div>` : '';
         const titleHTML = `<div style="font-size:1em" class="font-bold leading-tight line-clamp-2 ${design.years ? 'mt-0.5' : ''}">${escapeHTML(ev.title)}</div>`;
         const vs = Math.round(40 * M.f);
         const fallback = (cls, style) => `onerror="this.outerHTML='<span class=&quot;${cls}&quot; style=&quot;${style}&quot;>${icon}</span>'"`;
@@ -1637,7 +1696,7 @@ Kategorien: Politik, Konflikte, Alltag
           inner = (hasImg
             ? `<img src="${escapeHTML(ev.image.url)}" alt="" loading="lazy" class="rounded-full object-cover bg-white" style="width:${s}px;height:${s}px" ${fallback('rounded-full bg-white/80 flex items-center justify-center', `width:${s}px;height:${s}px;font-size:${Math.round(s * 0.55)}px`)} />`
             : `<span class="rounded-full bg-white/80 flex items-center justify-center" style="width:${s}px;height:${s}px;font-size:${Math.round(s * 0.55)}px">${icon}</span>`) +
-            (design.years ? `<div style="font-size:0.8em" class="font-mono font-bold opacity-80 mt-0.5">${fmtRange(ev)}</div>` : '');
+            (design.years ? `<div style="font-size:0.8em" class="font-mono font-bold opacity-80 mt-0.5">${fmtCard(ev)}</div>` : '');
           layoutCls = 'flex flex-col items-center justify-center';
           padCls = 'p-1';
         } else {
@@ -1657,6 +1716,21 @@ Kategorien: Politik, Konflikte, Alltag
       canvas.innerHTML = `${phasesHTML}${ticksHTML}<div style="top:${L.axisY}px" class="axis-line absolute left-6 right-6 h-1 bg-slate-800 rounded-full"></div>${cardsHTML}`;
     }
 
+    function renderDatesButton() {
+      const b = document.getElementById('btn-dates');
+      if (!b) return;
+      b.textContent = showDates ? '📅 Datum: an' : '📅 Datum: aus';
+      b.setAttribute('aria-pressed', showDates ? 'true' : 'false');
+      b.className = 'text-xs border px-3 py-1.5 rounded-xl font-semibold ' + (showDates ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700' : 'bg-white border-slate-300 hover:bg-slate-50');
+    }
+    function toggleDates() {
+      showDates = !showDates;
+      try { localStorage.setItem('zeitstrahl_show_dates', showDates ? '1' : '0'); } catch (e) { /* Speicher gesperrt */ }
+      renderDatesButton();
+      renderTimeline();
+      if (selectedEventId) showDetail(selectedEventId, false);
+    }
+
     function clearDetail() {
       selectedEventId = null;
       document.getElementById('detail-year').textContent = '–';
@@ -1668,6 +1742,7 @@ Kategorien: Politik, Konflikte, Alltag
       document.getElementById('detail-image-box').classList.add('hidden');
       document.getElementById('detail-icon-box').classList.add('hidden');
       document.getElementById('detail-wiki').classList.add('hidden');
+      document.getElementById('detail-long-box').classList.add('hidden');
     }
 
     function imageCreditHTML(img) {
@@ -1692,7 +1767,7 @@ Kategorien: Politik, Konflikte, Alltag
         if (btn && vp) vp.scrollTo({ left: Math.max(0, btn.offsetLeft - vp.clientWidth / 2), behavior: 'smooth' });
       }
       const st = catColor(activeTopic, ev.cat);
-      document.getElementById('detail-year').textContent = fmtRange(ev).replace('–', ' – ');
+      document.getElementById('detail-year').textContent = fmtDetail(ev);
       document.getElementById('detail-track').textContent = activeTopic.layout === 'single' ? activeTopic.title : (ev.track === 'bottom' ? activeTopic.trackBottom : activeTopic.trackTop);
       const catEl = document.getElementById('detail-cat');
       catEl.textContent = catLabel(activeTopic, ev.cat);
@@ -1701,12 +1776,15 @@ Kategorien: Politik, Konflikte, Alltag
       catEl.style.color = st.chipText;
       document.getElementById('detail-title').textContent = ev.title;
       document.getElementById('detail-desc').textContent = ev.desc || 'Keine Beschreibung hinterlegt.';
+      const longBox = document.getElementById('detail-long-box');
+      if (ev.long) { document.getElementById('detail-long').textContent = ev.long; longBox.classList.remove('hidden'); if (detailShownId !== id) longBox.open = false; }
+      else longBox.classList.add('hidden');
       document.getElementById('detail-question-box').classList.remove('hidden');
       document.getElementById('detail-question').textContent = ev.question || 'Wie hängt dieses Ereignis mit den anderen Ereignissen auf dem Zeitstrahl zusammen?';
       const wikiA = document.getElementById('detail-wiki');
       if (ev.wiki) { wikiA.href = 'https://de.wikipedia.org/wiki/' + encodeURIComponent(ev.wiki.replace(/ /g, '_')); wikiA.classList.remove('hidden'); }
       else wikiA.classList.add('hidden');
-      document.getElementById('detail-actions').classList.toggle('hidden', !!window.EMBED_TOPIC || activeRef.kind === 'submission');
+      document.getElementById('detail-actions').classList.toggle('hidden', viewOnly || !!window.EMBED_TOPIC || activeRef.kind === 'submission');
       document.getElementById('detail-ai-row').classList.toggle('hidden', !isTeacher());
       if (detailShownId !== id) { document.getElementById('detail-ai-status').textContent = ''; detailShownId = id; }
 
@@ -2213,6 +2291,9 @@ Kategorien: Politik, Konflikte, Alltag
       document.getElementById('b-icon').value = ev.icon || '';
       document.getElementById('b-wiki').value = ev.wiki || '';
       document.getElementById('b-desc').value = ev.desc || '';
+      document.getElementById('b-long').value = ev.long || '';
+      document.getElementById('b-day').value = ev.d ?? '';
+      document.getElementById('b-month').value = ev.m ?? '';
       document.getElementById('b-question').value = ev.question || '';
       setBuilderImage(ev.image);
       document.getElementById('view-builder').scrollIntoView({ behavior: 'smooth' });
@@ -2222,7 +2303,7 @@ Kategorien: Politik, Konflikte, Alltag
       document.getElementById('builder-form-heading').textContent = 'Ereignis hinzufügen';
       document.getElementById('btn-builder-save').textContent = '+ Auf Zeitstrahl setzen';
       document.getElementById('btn-builder-cancel').classList.add('hidden');
-      ['b-start', 'b-end', 'b-title', 'b-wiki', 'b-desc', 'b-question'].forEach(id => { document.getElementById(id).value = ''; });
+      ['b-start', 'b-end', 'b-day', 'b-month', 'b-title', 'b-wiki', 'b-desc', 'b-long', 'b-question'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('b-icon').value = '';
       setBuilderImage(null);
     }
@@ -2232,9 +2313,13 @@ Kategorien: Politik, Konflikte, Alltag
       const title = document.getElementById('b-title').value.trim();
       if (start === null || !title) return toast('Bitte mindestens Startjahr und Titel eingeben.');
       if (end !== null && end <= start) return toast('Das Endjahr muss nach dem Startjahr liegen.');
+      const dayRaw = document.getElementById('b-day').value, monRaw = document.getElementById('b-month').value;
+      const dm = validDM(monRaw, dayRaw);
+      if ((dayRaw || monRaw) && !dm) return toast('Bitte Tag und Monat vollständig und gültig eingeben (oder beides leer lassen).');
       const payload = {
         id: editingEventId || ('e' + randomId(10)),
         start, end,
+        m: dm ? dm.m : null, d: dm ? dm.d : null,
         title: title.slice(0, 90),
         track: activeTopic.layout === 'dual' ? document.getElementById('b-track').value : 'top',
         cat: document.getElementById('b-cat').value || activeTopic.categories[0].id,
@@ -2242,6 +2327,7 @@ Kategorien: Politik, Konflikte, Alltag
         wiki: document.getElementById('b-wiki').value.trim().slice(0, 120),
         image: builderImage,
         desc: document.getElementById('b-desc').value.trim().slice(0, 600),
+        long: document.getElementById('b-long').value.trim().slice(0, 2500),
         question: document.getElementById('b-question').value.trim().slice(0, 200)
       };
       if (editingEventId) {
@@ -2399,6 +2485,7 @@ Regeln:
 - Nur gesicherte historische Fakten. Nimm nur Jahreszahlen auf, bei denen du dir sicher bist. Lieber weniger Ereignisse als unsichere.
 - Schreibe auf Deutsch mit Schweizer Rechtschreibung (ss statt ß), passend zur Zielstufe.
 - "desc": ${TEXT_LENGTHS[document.getElementById('gen-length').value] || TEXT_LENGTHS.mittel}. Was geschah und warum ist es wichtig?
+${count <= 15 ? '- "long": ein ausführlicher Text mit 7 bis 10 Sätzen (Ausgangslage, Ablauf, Folgen, Bedeutung), nur gesicherte Fakten.\n' : ''}- "m" und "d": Monat (1 bis 12) und Tag (1 bis 31), NUR wenn das genaue Datum sicher bekannt ist, sonst beide null.
 - "question": eine Denkfrage, die zum Nachdenken über Ursachen oder Folgen anregt (keine reine Wissensfrage).
 - "wiki": der GENAUE Titel des passenden Artikels in der deutschsprachigen Wikipedia (z. B. "Rütlirapport"). Er wird für das Bild verwendet. Wenn du unsicher bist, nimm den allgemeineren Artikel.
 - "icon": genau eines dieser Wörter: ${iconList}
@@ -2415,7 +2502,7 @@ Antworte NUR mit gültigem JSON in genau diesem Format, ohne Erklärungen davor 
   "categories": [{"id": "politik", "label": "Politik & Staat"}],
   "phases": [{"start": 1939, "end": 1945, "label": "Kriegsjahre"}],
   "events": [
-    {"start": 1940, "end": null, "title": "Kurzer Titel", "track": "${dual ? 'bottom' : 'top'}", "cat": "politik", "icon": "militaer", "wiki": "Rütlirapport", "desc": "…", "question": "…"}
+    {"start": 1940, "end": null, "title": "Kurzer Titel", "track": "${dual ? 'bottom' : 'top'}", "cat": "politik", "icon": "militaer", "m": 7, "d": 25, "wiki": "Rütlirapport", "desc": "…", ${count <= 15 ? '"long": "…", ' : ''}"question": "…"}
   ]
 }`;
     }
@@ -3747,6 +3834,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
     }
 
     function setupDragDrop() {
+      if (viewOnly) return;
       const zone = document.getElementById('drop-zone');
       const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
       window.addEventListener('dragover', (e) => {
@@ -3786,22 +3874,22 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       const body = document.getElementById('share-body');
       let link = '', note = '';
       if (activeRef.kind === 'preset') {
-        link = `${baseUrl()}?topic=${encodeURIComponent(activeRef.id)}`;
-        note = 'Standard-Thema: Schüler öffnen den Zeitstrahl direkt, ohne Login.';
+        link = `${baseUrl()}?topic=${encodeURIComponent(activeRef.id)}&ansicht=1`;
+        note = 'Standard-Thema: reine Ansicht für Schüler, ohne Login. Sie können ansehen, üben und das Heft-PDF drucken, aber nichts verändern.';
       } else if (activeRef.kind === 'cloud') {
         const t = myTopics[activeRef.id] || {};
         if (dirty) { body.innerHTML = '<p class="text-sm text-slate-600">Bitte zuerst unter «Selbst bauen» speichern.</p>'; openModal('share-modal'); return; }
         if (!t.shared) {
-          body.innerHTML = `<p class="text-sm text-slate-600">Dieses Thema ist noch privat. Wer den Link hat, kann es nach der Freigabe ansehen, aber nicht verändern.</p>
+          body.innerHTML = `<p class="text-sm text-slate-600">Dieses Thema ist noch privat. Nach der Freigabe sehen Schüler es in einer reinen Ansicht und können nichts verändern.</p>
             ${activeTopic.aiGenerated && !activeTopic.reviewed ? '<p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">Achtung: KI-generiert und noch nicht als geprüft markiert.</p>' : ''}
             <button onclick="setShared(true)" class="btn-primary w-full py-2.5 text-sm">Für Schüler freigeben</button>`;
           openModal('share-modal');
           return;
         }
-        link = `${baseUrl()}?t=${activeRef.id}`;
-        note = 'Freigegeben: Schüler können das Thema ansehen und üben.';
+        link = `${baseUrl()}?t=${activeRef.id}&ansicht=1`;
+        note = 'Freigegeben: reine Ansicht für Schüler. Sie können ansehen, üben und das Heft-PDF drucken, aber nichts verändern.';
       } else if (activeRef.kind === 'shared') {
-        link = `${baseUrl()}?t=${activeRef.id}`;
+        link = `${baseUrl()}?t=${activeRef.id}&ansicht=1`;
       } else {
         body.innerHTML = isTeacher()
           ? '<p class="text-sm text-slate-600">Bitte das Thema zuerst unter «Selbst bauen» speichern. Danach kannst du es freigeben.</p>'
@@ -4152,7 +4240,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
           <div style="position:absolute;left:${x - L.cardW / 2}px;top:${y}px;width:${L.cardW}px;height:${L.cardH}px;box-sizing:border-box;border:1.5px solid ${c.border};background:${c.soft};color:${c.text};border-radius:10px;padding:6px;display:flex;gap:7px;align-items:center;overflow:hidden">
             ${visual}
             <div style="min-width:0">
-              ${showYear ? `<div style="font:700 9.5px ui-monospace,monospace;opacity:.75">${fmtRange(ev)}</div>` : ''}
+              ${showYear ? `<div style="font:700 9.5px ui-monospace,monospace;opacity:.75">${fmtCard(ev)}</div>` : ''}
               <div style="font:700 11px/1.2 sans-serif;display:-webkit-box;-webkit-line-clamp:${showYear ? 2 : 3};-webkit-box-orient:vertical;overflow:hidden">${escapeHTML(ev.title)}</div>
             </div>
           </div>`;
@@ -4214,7 +4302,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       return events.map(ev => {
         const c = catColor(topic, ev.cat);
         const visual = ev.image && ev.image.url ? `<img src="${escapeHTML(ev.image.url)}" />` : `<div class="ic" style="background:${c.soft}">${ICONS[ev.icon] || '📌'}</div>`;
-        return `<div class="sb" style="border-left:4px solid ${c.base}">${visual}<div><div class="y">${fmtRange(ev)} · ${escapeHTML(catLabel(topic, ev.cat))}${topic.layout === 'dual' ? ' · ' + escapeHTML(ev.track === 'bottom' ? topic.trackBottom : topic.trackTop) : ''}</div>
+        return `<div class="sb" style="border-left:4px solid ${c.base}">${visual}<div><div class="y">${fmtDetail(ev)} · ${escapeHTML(catLabel(topic, ev.cat))}${topic.layout === 'dual' ? ' · ' + escapeHTML(ev.track === 'bottom' ? topic.trackBottom : topic.trackTop) : ''}</div>
           <div class="t">${escapeHTML(ev.title)}</div><div class="d">${escapeHTML(ev.desc || '')}</div>${ev.question ? `<div class="q">💡 ${escapeHTML(ev.question)}</div>` : ''}</div></div>`;
       }).join('');
     }
@@ -4259,6 +4347,31 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
           ${staticTimelineHTML(t, events, { pageWidth: 1040, numbers })}
         </div>` : ''}`;
       printDocument(t.title + ' – Arbeitsblatt', body, 'A4 landscape');
+    }
+
+    // ---------- Heft-PDF (A4 hoch, zum Einkleben) ----------
+    function printHeft() {
+      const t = activeTopic, events = sortedEvents(t.events);
+      if (!events.length) return toast('Der Zeitstrahl hat noch keine Ereignisse.');
+      const blocks = events.map(ev => {
+        const c = catColor(t, ev.cat);
+        const text = ev.long || ev.desc || '';
+        const img = ev.image && ev.image.url ? `<img src="${escapeHTML(ev.image.url)}" alt="" style="float:right;width:90px;height:70px;object-fit:cover;border-radius:6px;margin:0 0 6px 12px" />` : '';
+        return `<div style="break-inside:avoid;border-left:4px solid ${c.base};padding:2px 0 2px 10px;margin:0 0 14px">
+          ${img}<div style="font:700 11px ui-monospace,monospace;color:#4338ca">${escapeHTML(fmtDetail(ev))}${t.layout === 'dual' ? ' · ' + escapeHTML(ev.track === 'bottom' ? t.trackBottom : t.trackTop) : ''}</div>
+          <div style="font-weight:800;font-size:15px;margin:1px 0 4px">${escapeHTML(ev.title)}</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#1e293b;white-space:pre-line">${escapeHTML(text)}</div>
+          ${ev.question ? `<div style="font-size:11.5px;color:#4338ca;margin-top:4px;font-style:italic">💡 ${escapeHTML(ev.question)}</div>` : ''}
+        </div>`;
+      }).join('');
+      const body = `<div class="page" style="page-break-after:auto">
+        <div class="head"><div>Name: <span></span></div><div>Klasse: <span style="min-width:60px"></span></div></div>
+        <h1>${escapeHTML(t.title)}</h1>
+        <div class="sub">${events.length} Ereignisse · ${fmtYear(events[0].start)}–${fmtYear(Math.max(...events.map(e => e.end ?? e.start)))}</div>
+        ${blocks}
+        ${creditsHTML(events)}
+      </div>`;
+      printDocument(t.title + ' – Heft', body, 'A4 portrait');
     }
 
     // ---------- Webseite (.html) ----------

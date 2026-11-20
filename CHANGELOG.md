@@ -1,5 +1,14 @@
 # Changelog
 
+## Entwurf v1.2 – 20.11.2026 (noch nicht eingespielt)
+- Name: «Zeitstrahl» statt «Zeitstrahl CH».
+- Datum (Tag und Monat) pro Ereignis, wenn sicher bekannt; Schalter «📅 Datum» blendet es auf Karten und im Steckbrief ein oder aus. Beim Selbst-Bauen mit Tag- und Monatsfeld.
+- «Ausführlich» (7–10 Sätze) zusätzlich zum Kurztext, im Steckbrief zum Aufklappen; die KI schreibt es bei neuen Themen mit (bis 15 Ereignisse).
+- Heft-PDF (A4 hoch): Datum, Titel und ausführlicher Text pro Ereignis, zum Ausdrucken und Einkleben.
+- Reine Schüleransicht: Teilen-Links und QR-Codes enthalten `&ansicht=1`; ohne Bearbeiten, Löschen, Selbst bauen, Design und KI.
+- 2. Weltkrieg mit Schweizer Spur: ausführliche Texte und Daten ergänzt (die übrigen fünf Themen folgen).
+- «Spur» heisst im Editor jetzt «Streifen» (oben/unten).
+
 ## v1.1.1 – 19.11.2026
 - KI-Schlüssel: Reihenfolge mit ↑↓ statt «bevorzugt»; Schlüssel und Reihenfolge gelten gemeinsam mit dem Sek Planer.
 
