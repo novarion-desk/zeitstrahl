@@ -38,3 +38,6 @@ Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. 
 - `zeitstrahlTasks/<Code>/submissions/<Geräteschlüssel>` – Abgaben; nur die Lehrperson sieht die Liste.
 - Schüler/innen brauchen kein Konto. Nur Vornamen verwenden.
 - `firestore.rules` ist eine Kopie der aktiven Regeln (gemeinsam mit Sek Planer, Zufallsgenerator und Lightning).
+
+## Feedback
+Der Knopf «💬 Feedback» öffnet ein externes, anonymes Formular bei Tally (Fehler, Wünsche, Inhalte). Nur dann werden Angaben gesendet – zusammen mit App-Name, Version und Gerätetyp. Namen werden nicht abgefragt.

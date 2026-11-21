@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.2.1 – 21.11.2026
+- Neuer Knopf «💬 Feedback» in der Kopfzeile: öffnet ein anonymes Formular für Fehler, Inhaltsfehler und Wünsche. Version und Gerät werden automatisch mitgegeben; es werden keine Namen abgefragt.
+
 ## Entwurf v1.2 – 20.11.2026 (noch nicht eingespielt)
 - Name: «Zeitstrahl» statt «Zeitstrahl CH».
 - Datum (Tag und Monat) pro Ereignis, wenn sicher bekannt; Schalter «📅 Datum» blendet es auf Karten und im Steckbrief ein oder aus. Beim Selbst-Bauen mit Tag- und Monatsfeld.

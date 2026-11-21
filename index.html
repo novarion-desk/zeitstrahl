@@ -82,6 +82,7 @@
         <select id="topic-select" onchange="selectTopic(this.value)" class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium max-w-[210px] sm:max-w-xs"></select>
         <button onclick="openNewModal()" id="btn-new" title="Neues Thema" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-semibold">✨ Neu</button>
         <button onclick="openShareModal()" id="btn-share" title="Mit der Klasse teilen" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">📲 Teilen</button>
+        <button onclick="openAppFeedback()" id="btn-feedback" title="Feedback: Fehler melden, Wünsche äussern" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">💬 Feedback</button>
         <button onclick="openAccountModal()" id="btn-account" title="Konto" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold">👤 Anmelden</button>
       </div>
     </div>
@@ -4582,5 +4583,9 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
   </script>
+<script>
+/* Feedback: öffnet das anonyme Tally-Formular (App, Version und Gerät werden mitgegeben, keine Personendaten) */
+function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.2.1',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+</script>
 </body>
 </html>
