@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.2.2 – 21.11.2026
+- Neu: Zurück-Geste / Zurück-Taste schliesst offene Fenster bzw. geht von Raten, Sortieren und Editor zurück zum Entdecken, statt die App zu schliessen.
+
 ## v1.2.1 – 21.11.2026
 - Neuer Knopf «💬 Feedback» in der Kopfzeile: öffnet ein anonymes Formular für Fehler, Inhaltsfehler und Wünsche. Version und Gerät werden automatisch mitgegeben; es werden keine Namen abgefragt.
 

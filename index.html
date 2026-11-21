@@ -4585,7 +4585,25 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
   </script>
 <script>
 /* Feedback: öffnet das anonyme Tally-Formular (App, Version und Gerät werden mitgegeben, keine Personendaten) */
-function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.2.1',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.2.2',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+
+/* ===== Zurück-Geste (Handy): ein Schritt zurück statt App schliessen ===== */
+(function(){
+ let depth=0,ign=0,raf=0;
+ const isSub=()=>{try{return !!(document.querySelector("div[id$='-modal']:not(.hidden),#assistant-panel:not(.hidden)")||document.getElementById('view-explore').classList.contains('hidden'))}catch(e){return false}};
+ const goBack=()=>{try{const o=document.querySelectorAll("div[id$='-modal']:not(.hidden),#assistant-panel:not(.hidden)");if(o.length){o.forEach(e=>e.classList.add('hidden'))}else{setMode('explore')}}catch(e){}};
+ function sync(){
+  raf=0;const want=isSub();
+  if(want&&!depth){history.pushState({sub:1},'');depth=1}
+  else if(!want&&depth){depth=0;ign++;history.back()}
+ }
+ const sched=()=>{if(!raf)raf=requestAnimationFrame(sync)};
+ new MutationObserver(sched).observe(document.body,{attributes:true,subtree:true,childList:true,attributeFilter:['class','hidden','style']});
+ window.addEventListener('popstate',()=>{
+  if(ign>0){ign--;return}
+  if(depth){depth=0;goBack();sched()}
+ });
+})();
 </script>
 </body>
 </html>
