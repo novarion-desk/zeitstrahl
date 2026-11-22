@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.5 – 22.11.2026
+- Neu: Modus «🗺️ Karte»: Orte der Ereignisse auf einer Weltkarte (läuft ohne fremde Server, Natural Earth gemeinfrei). Punkte antippen zeigt das Ereignis. Orte sind für die neuen Themen hinterlegt; die älteren Themen folgen.
+
 ## Version 1.4 – 22.11.2026
 - Neu: 2 Geografie-Themen mit Schweizer Spur: «Klimawandel & Schweiz» und «Verkehr & Alpentransit» (Faktencheck läuft).
 
