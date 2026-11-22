@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.6 – 22.11.2026 (lokal, im Faktencheck)
+- Neu: 13 weitere Schweizer Ereignisse in Erster Weltkrieg (3), Zweiter Weltkrieg (3), Industrialisierung (3) und Kalter Krieg (4)
+
 ## Version 1.5 – 22.11.2026
 - Neu: Modus «🗺️ Karte»: Orte der Ereignisse auf einer Weltkarte (läuft ohne fremde Server, Natural Earth gemeinfrei). Punkte antippen zeigt das Ereignis. Orte sind für die neuen Themen hinterlegt; die älteren Themen folgen.
 
