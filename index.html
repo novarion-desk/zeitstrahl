@@ -73,6 +73,7 @@
       <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full">
         <button onclick="setMode('explore')" id="tab-explore" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">🔍 Überblick</button>
         <button onclick="setMode('guess')" id="tab-guess" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">🎯 Datum schätzen</button>
+        <button onclick="setMode('quiz')" id="tab-quiz" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">❓ Quiz</button>
         <button onclick="setMode('sort')" id="tab-sort" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">🔢 Sortier-Sprint</button>
         <button onclick="setMode('builder')" id="tab-builder" class="mode-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition whitespace-nowrap">✏️ Selbst bauen</button>
       </div>
@@ -230,6 +231,34 @@
             <button onclick="initGuessChallenge()" id="btn-guess-restart" class="hidden px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium">Neue Runde</button>
             <button onclick="checkGuess()" id="btn-guess-check" class="btn-primary px-6 py-2.5 text-sm">Einordnung prüfen</button>
             <button onclick="nextGuessRound()" id="btn-guess-next" class="hidden btn-primary px-6 py-2.5 text-sm">Nächste Karte →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-quiz" class="hidden max-w-3xl mx-auto space-y-5">
+      <div class="card p-6 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Quiz</span>
+            <h2 id="quiz-question" class="text-lg font-bold text-slate-900"></h2>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-500">Frage <span id="quiz-round">1</span> / <span id="quiz-total">5</span></div>
+            <div class="text-sm font-bold text-emerald-700">Punkte: <span id="quiz-score">0</span></div>
+          </div>
+        </div>
+        <div id="quiz-empty" class="hidden text-sm text-slate-500">Für das Quiz braucht das Thema mindestens 4 Ereignisse mit verschiedenen Jahren.</div>
+        <div id="quiz-body" class="space-y-4">
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-1">
+            <h3 id="quiz-card-title" class="text-xl font-bold text-slate-900"></h3>
+            <p id="quiz-card-desc" class="text-sm text-slate-600"></p>
+          </div>
+          <div id="quiz-options" class="grid sm:grid-cols-2 gap-2.5"></div>
+          <div id="quiz-feedback" class="hidden rounded-xl p-4 border text-sm font-medium"></div>
+          <div class="flex justify-end gap-3">
+            <button onclick="initQuiz()" id="btn-quiz-restart" class="hidden btn-primary px-5 py-2.5 text-sm">Neues Quiz</button>
+            <button onclick="nextQuizRound()" id="btn-quiz-next" class="hidden btn-primary px-6 py-2.5 text-sm">Nächste Frage →</button>
           </div>
         </div>
       </div>
@@ -1149,7 +1178,11 @@ Kategorien: Politik, Konflikte, Alltag
           { id: "kk13", start: 1989, title: "Fichenaffäre", track: "bottom", cat: "alltag", icon: "recht", wiki: "Fichenaffäre", desc: "Es wird bekannt, dass die Bundespolizei über Jahrzehnte Hunderttausende Menschen überwacht und Karteikarten (Fichen) über sie angelegt hat – oft nur wegen ihrer politischen Meinung.", question: "Wo liegt die Grenze zwischen Sicherheit und Überwachung?" },
           { id: "kk14", start: 1991, title: "Ende der Sowjetunion", track: "top", cat: "politik", icon: "ende", wiki: "Auflösung der Sowjetunion", desc: "Die Sowjetunion zerfällt in 15 unabhängige Staaten. Der Kalte Krieg ist zu Ende.", question: "Welche Folgen des Kalten Krieges spürt man bis heute?" }
         ]
-      }
+      },
+      antike: {"title": "Antike: Griechenland, Rom & die Schweiz (776 v. Chr.–476)","layout": "dual","trackTop": "Griechenland / Rom","trackBottom": "Gebiet der heutigen Schweiz","unchecked": true,"categories": [{"id": "politik","label": "Politik & Staat"},{"id": "krieg","label": "Krieg & Eroberung"},{"id": "kultur","label": "Kultur & Religion"}],"phases": [{"start": -776,"end": -509,"label": "Frühzeit"},{"start": -509,"end": -27,"label": "Republik"},{"start": -27,"end": 476,"label": "Kaiserzeit"}],"events": [{"id": "an1","start": -776,"title": "Erste Olympische Spiele","track": "top","cat": "kultur","icon": "sport","wiki": "Olympische Spiele der Antike","desc": "Nach der Überlieferung finden 776 v. Chr. in Olympia die ersten Spiele zu Ehren des Zeus statt. Während der Spiele ruhen die Kriege zwischen den griechischen Stadtstaaten.","question": "Warum waren gemeinsame Feste für zerstrittene Stadtstaaten wichtig?"},{"id": "an2","start": -509,"title": "Rom wird Republik","track": "top","cat": "politik","icon": "staat","wiki": "Römische Republik","desc": "Nach der Überlieferung vertreiben die Römer 509 v. Chr. ihren letzten König. Statt eines Königs regieren nun jährlich gewählte Beamte (Konsuln) zusammen mit dem Senat.","question": "Was ändert sich, wenn Macht auf mehrere Personen und auf ein Jahr verteilt wird?"},{"id": "an3","start": -508,"title": "Athen führt die Demokratie ein","track": "top","cat": "politik","icon": "demokratie","wiki": "Kleisthenes","desc": "Um 508 v. Chr. reformiert Kleisthenes die Ordnung Athens. Die Bürger entscheiden in der Volksversammlung mit. Frauen, Sklaven und Zugewanderte sind davon ausgeschlossen.","question": "Wie unterscheidet sich diese Demokratie von unserer heutigen?"},{"id": "an4","start": -490,"end": -479,"title": "Perserkriege","track": "top","cat": "krieg","icon": "krieg","wiki": "Perserkriege","desc": "Die griechischen Stadtstaaten wehren zwei Angriffe des Perserreichs ab, unter anderem bei Marathon (490 v. Chr.) und bei Salamis (480 v. Chr.).","question": "Warum half den zerstrittenen Griechen die gemeinsame Bedrohung?"},{"id": "an5","start": -336,"end": -323,"title": "Alexander der Grosse","track": "top","cat": "krieg","icon": "herrschaft","wiki": "Alexander der Große","desc": "Der König von Makedonien erobert in wenigen Jahren das Perserreich bis nach Indien. Nach seinem frühen Tod 323 v. Chr. zerfällt sein Reich.","question": "Welche Folgen hatte es, dass griechische Kultur so weit verbreitet wurde?"},{"id": "an6","start": -44,"title": "Caesar wird ermordet","track": "top","cat": "politik","icon": "herrschaft","wiki": "Gaius Iulius Caesar","desc": "Im Jahr 44 v. Chr. wird Caesar im Senat von Verschwörern erstochen. Sie wollen die Republik retten, doch es folgen weitere Bürgerkriege.","question": "Warum scheitert die Republik trotz des Mordes?"},{"id": "an7","start": -27,"title": "Augustus wird erster Kaiser","track": "top","cat": "politik","icon": "herrschaft","wiki": "Augustus","desc": "Octavian erhält 27 v. Chr. den Ehrennamen Augustus. Er herrscht allein, lässt die Republik aber äusserlich weiterbestehen. Damit beginnt die römische Kaiserzeit.","question": "Warum behielt Augustus die alten Ämter bei?"},{"id": "an8","start": 313,"title": "Toleranz für das Christentum","track": "top","cat": "kultur","icon": "religion","wiki": "Mailänder Vereinbarung","desc": "Die Kaiser Konstantin und Licinius erlauben das Christentum 313 offiziell. Später, im Jahr 380, wird es zur Staatsreligion.","question": "Was ändert sich für eine Religion, wenn sie vom Staat gefördert wird?"},{"id": "an9","start": 395,"title": "Teilung des Römischen Reiches","track": "top","cat": "politik","icon": "staat","wiki": "Reichsteilung von 395","desc": "Nach dem Tod von Kaiser Theodosius wird das Reich in einen West- und einen Ostteil geteilt. Der Osten besteht noch fast 1000 Jahre weiter.","question": "Warum war ein so grosses Reich schwer zu regieren?"},{"id": "an10","start": 476,"title": "Ende des Weströmischen Reiches","track": "top","cat": "politik","icon": "ende","wiki": "Romulus Augustulus","desc": "Der germanische Heerführer Odoaker setzt 476 den letzten westlichen Kaiser ab. Dieses Jahr gilt als Ende der Antike und Beginn des Mittelalters.","question": "Warum spricht man eher von einem langsamen Wandel als von einem plötzlichen Ende?"},{"id": "as1","start": -58,"title": "Helvetier unterliegen Caesar","track": "bottom","cat": "krieg","icon": "krieg","wiki": "Helvetier","desc": "Die Helvetier wollen nach Gallien auswandern. Caesar stoppt sie 58 v. Chr. bei Bibracte. Die Überlebenden müssen in ihr Gebiet zurückkehren.","question": "Warum wollten die Helvetier ihr Land verlassen?"},{"id": "as2","start": -15,"title": "Römer erobern die Alpen","track": "bottom","cat": "krieg","icon": "militaer","wiki": "Rätien","desc": "Die Stiefsöhne des Augustus, Drusus und Tiberius, unterwerfen 15 v. Chr. die Alpenvölker. Die Gebiete der heutigen Schweiz gehören nun zum Römischen Reich.","question": "Warum waren die Alpenpässe für die Römer wichtig?"},{"id": "as3","start": 1,"end": 250,"title": "Römische Städte und Strassen","track": "bottom","cat": "kultur","icon": "stadt","wiki": "Augusta Raurica","desc": "Im Gebiet der heutigen Schweiz entstehen römische Städte wie Augusta Raurica (bei Basel) und Aventicum (Avenches) mit Tempeln, Theatern und Bädern. Strassen verbinden sie mit dem Reich.","question": "Was in unserer Gegend erinnert noch an die Römer?"},{"id": "as4","start": 260,"title": "Alemannen durchbrechen den Limes","track": "bottom","cat": "krieg","icon": "krieg","wiki": "Alamannen","desc": "Um 260 n. Chr. brechen Alemannen durch die römische Grenzbefestigung und plündern auch Gebiete der heutigen Schweiz. Die Römer ziehen sich an den Rhein zurück.","question": "Warum konnte das Reich seine Grenzen nicht mehr gut schützen?"},{"id": "as5","start": 443,"title": "Burgunder und Alemannen siedeln","track": "bottom","cat": "politik","icon": "flucht","wiki": "Burgunden","desc": "Rom siedelt 443 die Burgunder im Gebiet um Genf an. Alemannen lassen sich im Mittelland nieder. Das prägt später die Sprachgebiete der Schweiz.","question": "Wie hängen die heutigen Sprachgebiete mit dieser Zeit zusammen?"}]},
+      mittelalter: {"title": "Mittelalter: Reich, Kirche & Schweiz (500–1493)","layout": "dual","trackTop": "Europa","trackBottom": "Schweiz","unchecked": true,"categories": [{"id": "politik","label": "Politik & Herrschaft"},{"id": "kirche","label": "Kirche & Glaube"},{"id": "gesellschaft","label": "Gesellschaft & Wissen"}],"phases": [{"start": 500,"end": 1000,"label": "Frühmittelalter"},{"start": 1000,"end": 1250,"label": "Hochmittelalter"},{"start": 1250,"end": 1493,"label": "Spätmittelalter"}],"events": [{"id": "mi1","start": 500,"title": "Chlodwig lässt sich taufen","track": "top","cat": "kirche","icon": "religion","wiki": "Chlodwig I.","desc": "Um das Jahr 500 wird der Frankenkönig Chlodwig Christ. Damit gewinnt er die Kirche als Verbündete und festigt seine Herrschaft.","question": "Warum war die Kirche für einen König ein wichtiger Partner?"},{"id": "mi2","start": 622,"title": "Hidschra: Beginn des Islam als Gemeinschaft","track": "top","cat": "kirche","icon": "religion","wiki": "Hedschra","desc": "Mohammed wandert 622 von Mekka nach Medina aus. Dieses Jahr gilt als Beginn der islamischen Zeitrechnung. Danach breitet sich der Islam rasch aus.","question": "Wie wirkte sich die Ausbreitung des Islam auf Europa aus?"},{"id": "mi3","start": 800,"m": 12,"d": 25,"title": "Karl der Grosse wird Kaiser","track": "top","cat": "politik","icon": "herrschaft","wiki": "Karl der Große","desc": "Papst Leo III. krönt den Frankenkönig an Weihnachten 800 in Rom zum Kaiser. Karls Reich umfasst grosse Teile Westeuropas.","question": "Warum wollte der Papst einen Kaiser krönen?"},{"id": "mi4","start": 962,"title": "Otto der Grosse wird Kaiser","track": "top","cat": "politik","icon": "herrschaft","wiki": "Otto I. (HRR)","desc": "Otto I. wird 962 in Rom zum Kaiser gekrönt. Sein Reich wird später «Heiliges Römisches Reich» genannt.","question": "Was verbindet die Herrschaft der Könige im Reich mit der Kirche?"},{"id": "mi5","start": 1077,"title": "Gang nach Canossa","track": "top","cat": "kirche","icon": "verfolgung","wiki": "Gang nach Canossa","desc": "Im Streit mit dem Papst um die Einsetzung von Bischöfen bittet König Heinrich IV. 1077 in Canossa um Verzeihung. Die Macht des Papstes wächst.","question": "Wer sollte Bischöfe einsetzen: der Papst oder der König?"},{"id": "mi6","start": 1096,"end": 1099,"title": "Erster Kreuzzug","track": "top","cat": "kirche","icon": "krieg","wiki": "Erster Kreuzzug","desc": "Christliche Ritter ziehen ins Heilige Land und erobern 1099 Jerusalem. Auf weitere Kreuzzüge folgen Handel und Wissen aus dem Orient, aber auch viel Gewalt.","question": "Welche Gründe hatten Menschen, an einem Kreuzzug teilzunehmen?"},{"id": "mi7","start": 1215,"title": "Magna Carta","track": "top","cat": "politik","icon": "recht","wiki": "Magna Carta","desc": "Englische Adlige zwingen König Johann, ihre Rechte schriftlich festzuhalten. Auch der König muss sich nun an Gesetze halten.","question": "Warum ist es wichtig, dass auch Herrscher an Gesetze gebunden sind?"},{"id": "mi8","start": 1347,"end": 1353,"title": "Die Pest in Europa","track": "top","cat": "gesellschaft","icon": "krankheit","wiki": "Schwarzer Tod","desc": "Die Pest erreicht Europa und tötet innerhalb weniger Jahre einen sehr grossen Teil der Bevölkerung, vielleicht ein Drittel. Oft werden Minderheiten zu Unrecht beschuldigt.","question": "Wie veränderte die Pest das Leben der Überlebenden?"},{"id": "mi9","start": 1450,"title": "Gutenberg erfindet den Buchdruck","track": "top","cat": "gesellschaft","icon": "erfindung","wiki": "Johannes Gutenberg","desc": "Um 1450 entwickelt Johannes Gutenberg in Mainz den Buchdruck mit beweglichen Metallbuchstaben. Bücher werden billiger, Wissen verbreitet sich schneller.","question": "Was änderte sich, als Bücher für viele erschwinglich wurden?"},{"id": "mi10","start": 1453,"title": "Konstantinopel fällt","track": "top","cat": "politik","icon": "ende","wiki": "Fall Konstantinopels","desc": "Die Osmanen erobern 1453 Konstantinopel, die Hauptstadt des Oströmischen Reiches. Viele Gelehrte fliehen nach Westen.","question": "Warum war diese Stadt so wichtig für Handel und Wissen?"},{"id": "mi11","start": 1492,"title": "Kolumbus erreicht Amerika","track": "top","cat": "gesellschaft","icon": "entdeckung","wiki": "Christoph Kolumbus","desc": "Der Seefahrer Christoph Kolumbus erreicht 1492 im Auftrag Spaniens Inseln in der Karibik. Für Europa beginnt eine neue Zeit, für die Menschen in Amerika oft eine Zeit von Gewalt und Krankheiten.","question": "Wie beurteilen wir Kolumbus heute?"},{"id": "ms1","start": 719,"title": "Kloster St. Gallen entsteht","track": "bottom","cat": "kirche","icon": "bildung","wiki": "Stiftsbezirk St. Gallen","desc": "Der Mönch Otmar gründet 719 das Kloster St. Gallen am Ort, wo der heilige Gallus gelebt haben soll. Es wird zu einem wichtigen Zentrum für Bildung und Bücher.","question": "Warum waren Klöster im Mittelalter Orte der Bildung?"},{"id": "ms2","start": 1218,"title": "Die Zähringer sterben aus","track": "bottom","cat": "politik","icon": "stadt","wiki": "Zähringer","desc": "Mit dem Tod Bertolds V. 1218 sterben die Zähringer aus, die Städte wie Bern und Freiburg gegründet haben. Zürich und Bern werden danach reichsfreie Städte.","question": "Was bedeutet es für eine Stadt, dem Kaiser direkt unterstellt zu sein?"},{"id": "ms3","start": 1230,"title": "Der Gotthard wird begehbar","track": "bottom","cat": "gesellschaft","icon": "verkehr","wiki": "Gotthardpass","desc": "Um 1230 wird der Weg durch die Schöllenenschlucht begehbar. Der Gotthard wird zur wichtigen Handelsroute zwischen Italien und dem Norden.","question": "Warum interessierte der Gotthard Kaiser und Händler?"},{"id": "ms4","start": 1291,"title": "Bundesbrief","track": "bottom","cat": "politik","icon": "vertrag","wiki": "Bundesbrief von 1291","desc": "Die Talschaften Uri, Schwyz und Unterwalden bekräftigen 1291 ein Bündnis zur gegenseitigen Hilfe. Der Bundesbrief gilt später als Gründungsdokument der Schweiz.","question": "Warum schlossen sich diese Talschaften zusammen?"},{"id": "ms5","start": 1315,"m": 11,"d": 15,"title": "Schlacht am Morgarten","track": "bottom","cat": "politik","icon": "krieg","wiki": "Schlacht am Morgarten","desc": "Die Eidgenossen besiegen am Morgarten ein Heer der Habsburger. Danach erneuern sie ihren Bund.","question": "Warum konnten Bauern gegen ein Ritterheer bestehen?"},{"id": "ms6","start": 1353,"title": "Bern tritt dem Bund bei","track": "bottom","cat": "politik","icon": "vertrag","wiki": "Acht Alte Orte","desc": "Mit dem Beitritt Berns 1353 besteht der Bund aus acht Orten, den «Acht Alten Orten». Zürich, Glarus und Zug sind kurz zuvor beigetreten.","question": "Was ändert sich, wenn Städte und Bergtäler im selben Bund sind?"},{"id": "ms7","start": 1386,"m": 7,"d": 9,"title": "Schlacht bei Sempach","track": "bottom","cat": "politik","icon": "krieg","wiki": "Schlacht bei Sempach","desc": "Die Eidgenossen besiegen bei Sempach erneut ein habsburgisches Ritterheer. Um den Helden Winkelried ranken sich Legenden.","question": "Warum werden Schlachten später zu Legenden?"}]},
+      revolution: {"title": "Französische Revolution & die Schweiz (1789–1815)","layout": "dual","trackTop": "Frankreich / Europa","trackBottom": "Schweiz","unchecked": true,"categories": [{"id": "politik","label": "Politik & Macht"},{"id": "gesellschaft","label": "Rechte & Ideen"},{"id": "krieg","label": "Krieg & Gewalt"}],"phases": [{"start": 1789,"end": 1799,"label": "Revolution"},{"start": 1799,"end": 1815,"label": "Napoleon"}],"events": [{"id": "fr1","start": 1789,"m": 7,"d": 14,"title": "Sturm auf die Bastille","track": "top","cat": "politik","icon": "revolution","wiki": "Sturm auf die Bastille","desc": "Am 14. Juli stürmt die Pariser Bevölkerung das Gefängnis Bastille. Das Ereignis wird zum Symbol für das Ende der absoluten Monarchie.","question": "Warum wurde die Bastille zum Symbol?"},{"id": "fr2","start": 1789,"m": 8,"d": 26,"title": "Menschen- und Bürgerrechte","track": "top","cat": "gesellschaft","icon": "recht","wiki": "Erklärung der Menschen- und Bürgerrechte","desc": "Die Nationalversammlung erklärt im August: Alle Menschen sind frei und gleich an Rechten. Die Vorrechte von Adel und Kirche werden abgeschafft.","question": "Welche dieser Rechte gelten heute auch bei uns?"},{"id": "fr3","start": 1792,"m": 9,"d": 21,"title": "Frankreich wird Republik","track": "top","cat": "politik","icon": "staat","wiki": "Erste Französische Republik","desc": "Frankreich schafft das Königtum ab und wird im September 1792 Republik. Zuvor hat es Österreich und Preussen den Krieg erklärt.","question": "Warum fürchteten die Nachbarländer die Revolution?"},{"id": "fr4","start": 1793,"m": 1,"d": 21,"title": "Hinrichtung des Königs","track": "top","cat": "krieg","icon": "krieg","wiki": "Ludwig XVI.","desc": "König Ludwig XVI. wird im Januar 1793 mit der Guillotine hingerichtet. Kurz danach fällt auch Königin Marie-Antoinette.","question": "War die Hinrichtung des Königs nötig?"},{"id": "fr5","start": 1793,"end": 1794,"title": "Terrorherrschaft","track": "top","cat": "krieg","icon": "verfolgung","wiki": "Maximilien de Robespierre","desc": "Unter Robespierre und den Jakobinern werden Tausende vermeintliche Gegner der Revolution hingerichtet, viele mit der Guillotine.","question": "Wie kann eine Revolution, die Freiheit will, in Gewalt enden?"},{"id": "fr6","start": 1799,"m": 11,"d": 9,"title": "Napoleon übernimmt die Macht","track": "top","cat": "politik","icon": "herrschaft","wiki": "Napoleon Bonaparte","desc": "Der General Napoleon Bonaparte stürzt im November 1799 die Regierung und wird Herrscher Frankreichs.","question": "Warum wünschten sich viele Menschen nach den Unruhen einen starken Mann?"},{"id": "fr7","start": 1804,"m": 12,"d": 2,"title": "Napoleon wird Kaiser","track": "top","cat": "politik","icon": "herrschaft","wiki": "Napoleon Bonaparte","desc": "Napoleon krönt sich im Dezember 1804 selbst zum Kaiser der Franzosen. Im selben Jahr tritt der «Code civil» in Kraft, ein Gesetzbuch für alle.","question": "Was haben Revolution und Kaisertum gemeinsam, was nicht?"},{"id": "fr8","start": 1812,"title": "Russlandfeldzug","track": "top","cat": "krieg","icon": "krieg","wiki": "Napoleons Russlandfeldzug","desc": "Napoleon zieht mit einem riesigen Heer nach Russland. Der Feldzug endet in einer Katastrophe: Nur ein kleiner Teil der Soldaten kehrt zurück.","question": "Warum wurde der Feldzug für Napoleon zum Wendepunkt?"},{"id": "fr9","start": 1815,"title": "Waterloo und Wiener Kongress","track": "top","cat": "politik","icon": "vertrag","wiki": "Wiener Kongress","desc": "Napoleon wird im Juni 1815 bei Waterloo endgültig besiegt. Der Wiener Kongress ordnet Europa neu und will die alte Ordnung wiederherstellen.","question": "Konnte man die Zeit vor der Revolution wirklich zurückholen?"},{"id": "fs1","start": 1792,"m": 8,"d": 10,"title": "Schweizergarde stirbt in Paris","track": "bottom","cat": "krieg","icon": "militaer","wiki": "Löwendenkmal","desc": "Beim Sturm auf die Tuilerien in Paris am 10. August 1792 werden viele Gardisten aus der Schweiz getötet. In Luzern erinnert das Löwendenkmal an sie.","question": "Warum dienten Schweizer in fremden Heeren?"},{"id": "fs2","start": 1798,"m": 3,"d": 5,"title": "Franzosen marschieren ein","track": "bottom","cat": "krieg","icon": "krieg","wiki": "Franzoseneinfall in der Schweiz","desc": "Französische Truppen besiegen im März 1798 Bern. Die Alte Eidgenossenschaft bricht zusammen.","question": "Warum war die Eidgenossenschaft so schwach?"},{"id": "fs3","start": 1798,"m": 4,"d": 12,"title": "Helvetische Republik","track": "bottom","cat": "politik","icon": "staat","wiki": "Helvetische Republik","desc": "Im April 1798 entsteht ein Einheitsstaat nach französischem Vorbild mit einer Verfassung und gleichen Rechten. Viele erleben ihn als Fremdherrschaft.","question": "Welche Vor- und Nachteile hat ein Einheitsstaat?"},{"id": "fs4","start": 1803,"title": "Mediationsakte","track": "bottom","cat": "politik","icon": "vertrag","wiki": "Mediationsakte","desc": "Napoleon gibt der Schweiz 1803 eine neue Ordnung: Die Kantone erhalten wieder mehr Selbstständigkeit. Es gibt nun 19 Kantone.","question": "Warum griff Napoleon in die Schweiz ein?"},{"id": "fs5","start": 1815,"title": "22 Kantone und Neutralität","track": "bottom","cat": "politik","icon": "frieden","wiki": "Wiener Kongress","desc": "Die Grossmächte garantieren 1815 die dauernde Neutralität der Schweiz. Wallis, Neuenburg und Genf werden Kantone: Es gibt nun 22.","question": "Was bedeutet Neutralität für ein Land?"}]},
+      reformation: {"title": "Reformation & die Schweiz (1517–1648)","layout": "dual","trackTop": "Deutschland / Europa","trackBottom": "Schweiz","unchecked": true,"categories": [{"id": "glaube","label": "Glaube & Kirche"},{"id": "politik","label": "Politik & Macht"},{"id": "krieg","label": "Konflikt & Krieg"}],"phases": [{"start": 1517,"end": 1555,"label": "Reformation"},{"start": 1555,"end": 1648,"label": "Konfessionelles Zeitalter"}],"events": [{"id": "rf1","start": 1517,"m": 10,"d": 31,"title": "Luthers Ablassthesen","track": "top","cat": "glaube","icon": "religion","wiki": "Ablassthesen","desc": "Martin Luther kritisiert den Ablasshandel der Kirche mit 95 Thesen. Dass er sie an die Tür der Wittenberger Schlosskirche schlug, ist historisch umstritten.","question": "Warum war der Ablasshandel für Luther ein Problem?"},{"id": "rf2","start": 1521,"title": "Luther auf dem Reichstag zu Worms","track": "top","cat": "politik","icon": "recht","wiki": "Wormser Edikt","desc": "Luther weigert sich vor Kaiser Karl V., seine Schriften zu widerrufen. Er wird geächtet und übersetzt danach auf der Wartburg das Neue Testament ins Deutsche.","question": "Warum war die Bibel in deutscher Sprache so wichtig?"},{"id": "rf3","start": 1524,"end": 1525,"title": "Bauernkrieg","track": "top","cat": "krieg","icon": "krieg","wiki": "Deutscher Bauernkrieg","desc": "Bauern fordern mehr Rechte und weniger Abgaben und berufen sich dabei auch auf die Bibel. Ihre Aufstände werden blutig niedergeschlagen.","question": "Wie hing der Glaube mit den Forderungen der Bauern zusammen?"},{"id": "rf4","start": 1534,"title": "König Heinrich VIII. und die Kirche","track": "top","cat": "politik","icon": "herrschaft","wiki": "Supremationsakte","desc": "Der englische König löst 1534 die Kirche in England von Rom und wird selbst ihr Oberhaupt.","question": "Welche Vorteile hatte der König davon?"},{"id": "rf5","start": 1545,"end": 1563,"title": "Konzil von Trient","track": "top","cat": "glaube","icon": "religion","wiki": "Konzil von Trient","desc": "Die katholische Kirche antwortet auf die Reformation: Sie erneuert sich und legt ihre Lehre genau fest (Gegenreformation).","question": "Wie reagierte die Kirche auf die Kritik?"},{"id": "rf6","start": 1555,"title": "Augsburger Religionsfriede","track": "top","cat": "politik","icon": "vertrag","wiki": "Augsburger Reichs- und Religionsfrieden","desc": "Im Reich bestimmt der Landesherr die Konfession seiner Untertanen. Erlaubt sind nur Katholiken und Lutheraner.","question": "Was bedeutete das für Menschen mit anderem Glauben?"},{"id": "rf7","start": 1618,"end": 1648,"title": "Dreissigjähriger Krieg","track": "top","cat": "krieg","icon": "krieg","wiki": "Dreißigjähriger Krieg","desc": "Ein Streit um Religion und Macht wächst zu einem Krieg ganz Europas. Grosse Teile Deutschlands werden verwüstet.","question": "Warum dauerte der Krieg so lange?"},{"id": "rf8","start": 1648,"title": "Westfälischer Friede","track": "top","cat": "politik","icon": "frieden","wiki": "Westfälischer Friede","desc": "Der Frieden beendet den Dreissigjährigen Krieg. Die Konfessionen im Reich werden gleichberechtigt anerkannt.","question": "Wie schafft man dauerhaft Frieden zwischen Gruppen?"},{"id": "rs1","start": 1519,"title": "Zwingli predigt in Zürich","track": "bottom","cat": "glaube","icon": "religion","wiki": "Huldrych Zwingli","desc": "Huldrych Zwingli predigt am Grossmünster in Zürich und fordert, sich an der Bibel zu orientieren. Damit beginnt die Reformation in der Schweiz.","question": "Was wollte Zwingli anders machen als die Kirche?"},{"id": "rs2","start": 1523,"title": "Zürcher Disputationen","track": "bottom","cat": "politik","icon": "recht","wiki": "Zürcher Disputationen","desc": "Bei öffentlichen Streitgesprächen entscheidet sich der Rat von Zürich für Zwinglis Lehre. Später werden die Messe abgeschafft und Bilder aus den Kirchen entfernt.","question": "Warum entschied der Rat und nicht der Papst?"},{"id": "rs3","start": 1529,"title": "Kappeler Milchsuppe","track": "bottom","cat": "krieg","icon": "frieden","wiki": "Erster Kappelerkrieg","desc": "Reformierte Zürcher und katholische Innerschweizer stehen sich bei Kappel gegenüber. Der Krieg wird verhindert. Der Legende nach essen beide Seiten gemeinsam eine Milchsuppe.","question": "Was zeigt die Legende über den Umgang mit Konflikten?"},{"id": "rs4","start": 1531,"m": 10,"d": 11,"title": "Zwingli fällt bei Kappel","track": "bottom","cat": "krieg","icon": "krieg","wiki": "Zweiter Kappelerkrieg","desc": "Zwingli stirbt in der Schlacht bei Kappel. Danach darf jeder Ort seinen Glauben behalten. Die Schweiz bleibt konfessionell gespalten.","question": "Welche Folgen hat eine solche Spaltung im Alltag?"},{"id": "rs5","start": 1536,"title": "Calvin in Genf","track": "bottom","cat": "glaube","icon": "bildung","wiki": "Johannes Calvin","desc": "Johannes Calvin lässt sich 1536 in Genf nieder und baut die Stadt zu einem Zentrum der reformierten Kirche aus. Flüchtlinge aus ganz Europa kommen.","question": "Warum zog Genf Flüchtlinge an?"},{"id": "rs6","start": 1648,"title": "Eidgenossenschaft wird unabhängig vom Reich","track": "bottom","cat": "politik","icon": "staat","wiki": "Westfälischer Friede","desc": "Im Westfälischen Frieden wird die Eidgenossenschaft vom Reich als unabhängig anerkannt. Sie hält sich aus dem Dreissigjährigen Krieg weitgehend heraus.","question": "Wie kam die Schweiz weitgehend ungeschoren davon?"}]}
     };
 
     // =========================================================================
@@ -1249,6 +1282,7 @@ Kategorien: Politik, Konflikte, Alltag
       const seen = new Set();
       events.forEach(e => { while (seen.has(e.id)) e.id = 'e' + randomId(8); seen.add(e.id); });
       t.events = events;
+      t.unchecked = raw.unchecked === true;
       t.aiGenerated = !!raw.aiGenerated;
       t.reviewed = t.aiGenerated ? raw.reviewed === true : true;
       t.design = normalizeDesign(raw.design);
@@ -1479,6 +1513,9 @@ Kategorien: Politik, Konflikte, Alltag
         style = 'bg-sky-50 border-sky-200 text-sky-900';
         html = `<strong>Abgabe von ${escapeHTML(activeTopic._submittedBy || '')}</strong> – nur Ansicht.`;
         act = '<button onclick="saveSubmissionAsTopic()" class="px-3 py-1 rounded-lg bg-sky-600 text-white font-semibold">In meine Themen übernehmen</button>';
+      } else if (activeRef.kind === 'preset' && activeTopic.unchecked) {
+        style = 'bg-amber-50 border-amber-200 text-amber-900';
+        html = '<strong>Neues Thema, Faktencheck läuft:</strong> Die Inhalte sind noch nicht von der Lehrperson geprüft. Bitte Jahreszahlen und Texte mit dem Schulbuch vergleichen.';
       } else if (viewOnly) {
         html = '';
       } else if (activeRef.kind === 'shared') {
@@ -1507,13 +1544,14 @@ Kategorien: Politik, Konflikte, Alltag
     function setMode(mode) {
       if (viewOnly && mode === 'builder') mode = 'explore';
       currentMode = mode;
-      ['explore', 'guess', 'sort', 'builder'].forEach(m => {
+      ['explore', 'guess', 'quiz', 'sort', 'builder'].forEach(m => {
         document.getElementById('view-' + m).classList.toggle('hidden', m !== mode);
         const btn = document.getElementById('tab-' + m);
         btn.classList.toggle('tab-active', m === mode);
       });
       if (mode === 'explore') renderTimeline();
       if (mode === 'guess') initGuessChallenge();
+      if (mode === 'quiz') initQuiz();
       if (mode === 'sort') initSortGame();
       if (mode === 'builder') renderBuilderList();
     }
@@ -1783,7 +1821,7 @@ Kategorien: Politik, Konflikte, Alltag
       document.getElementById('detail-question-box').classList.remove('hidden');
       document.getElementById('detail-question').textContent = ev.question || 'Wie hängt dieses Ereignis mit den anderen Ereignissen auf dem Zeitstrahl zusammen?';
       const wikiA = document.getElementById('detail-wiki');
-      if (ev.wiki) { wikiA.href = 'https://de.wikipedia.org/wiki/' + encodeURIComponent(ev.wiki.replace(/ /g, '_')); wikiA.classList.remove('hidden'); }
+      if (ev.wiki) { wikiA.href = 'https://de.wikipedia.org/wiki/' + encodeURIComponent(ev.wiki.replace(/ /g, '_')); wikiA.textContent = '📖 Quelle: Wikipedia – «' + ev.wiki + '»'; wikiA.classList.remove('hidden'); }
       else wikiA.classList.add('hidden');
       document.getElementById('detail-actions').classList.toggle('hidden', viewOnly || !!window.EMBED_TOPIC || activeRef.kind === 'submission');
       document.getElementById('detail-ai-row').classList.toggle('hidden', !isTeacher());
@@ -2094,7 +2132,7 @@ Kategorien: Politik, Konflikte, Alltag
     }
     // Jahreszahlen im Text verdecken, damit die Lösung nicht im Beschreibungstext steht
     function hideYears(text) {
-      return text.replace(/(^|[^\d])(1\d{3}|20\d{2})(?!\d)/g, '$1····');
+      return text.replace(/(\d{1,4})(?= v\. Chr\.)/g, '····').replace(/(^|[^\d])(1\d{3}|20\d{2})(?!\d)/g, '$1····');
     }
     function updateGuessSlider(val) { document.getElementById('guess-slider-value').textContent = fmtYear(val); }
 
@@ -2126,6 +2164,77 @@ Kategorien: Politik, Konflikte, Alltag
       }
     }
     function nextGuessRound() { guessIndex++; loadGuessRound(); }
+
+    // =========================================================================
+    // MODUS: QUIZ (Multiple Choice: «Wann?» und «Was geschah?»)
+    // =========================================================================
+    let quizQueue = [], quizIndex = 0, quizScore = 0, quizAnswered = false;
+    function initQuiz() {
+      const events = activeTopic.events || [];
+      const enough = events.length >= 4 && new Set(events.map(e => e.start)).size >= 4;
+      document.getElementById('quiz-empty').classList.toggle('hidden', enough);
+      document.getElementById('quiz-body').classList.toggle('hidden', !enough);
+      if (!enough) return;
+      const n = Math.min(6, events.length);
+      quizQueue = shuffle(events).slice(0, n).map((e, i) => ({ ev: e, type: i % 2 === 0 ? 'when' : 'what' }));
+      quizIndex = 0; quizScore = 0;
+      document.getElementById('quiz-total').textContent = n;
+      document.getElementById('quiz-score').textContent = '0';
+      document.getElementById('btn-quiz-restart').classList.add('hidden');
+      loadQuizRound();
+    }
+    function loadQuizRound() {
+      const q = quizQueue[quizIndex], ev = q.ev, events = activeTopic.events;
+      quizAnswered = false;
+      document.getElementById('quiz-round').textContent = quizIndex + 1;
+      let options = [], correct;
+      if (q.type === 'when') {
+        document.getElementById('quiz-question').textContent = 'Wann geschah dieses Ereignis?';
+        document.getElementById('quiz-card-title').textContent = ev.title;
+        document.getElementById('quiz-card-desc').textContent = hideYears(ev.desc || '');
+        const years = events.map(e => e.start), span = Math.max(4, Math.max(...years) - Math.min(...years));
+        const set = new Set([ev.start]);
+        const step = Math.max(1, Math.round(span / 8));
+        let tries = 0;
+        while (set.size < 4 && tries++ < 200) {
+          const off = (Math.floor(Math.random() * 4) + 1) * step * (Math.random() < 0.5 ? -1 : 1);
+          set.add(ev.start + off);
+        }
+        options = shuffle([...set]).map(y => ({ label: fmtYear(y), ok: y === ev.start }));
+      } else {
+        document.getElementById('quiz-question').textContent = 'Welches Ereignis ist gemeint?';
+        document.getElementById('quiz-card-title').textContent = '';
+        document.getElementById('quiz-card-desc').textContent = hideYears(ev.desc || '');
+        const titles = shuffle(events.filter(e => e.id !== ev.id && e.title !== ev.title)).slice(0, 3);
+        options = shuffle([ev, ...titles]).map(e => ({ label: e.title, ok: e.id === ev.id }));
+      }
+      const box = document.getElementById('quiz-options');
+      box.innerHTML = options.map((o, i) => `<button type="button" data-i="${i}" class="quiz-opt text-left px-4 py-3 rounded-xl border border-slate-300 bg-white hover:bg-indigo-50 text-sm font-semibold">${escapeHTML(o.label)}</button>`).join('');
+      box.querySelectorAll('.quiz-opt').forEach(b => b.onclick = () => answerQuiz(b, options));
+      document.getElementById('quiz-feedback').classList.add('hidden');
+      document.getElementById('btn-quiz-next').classList.add('hidden');
+    }
+    function answerQuiz(btn, options) {
+      if (quizAnswered) return;
+      quizAnswered = true;
+      const ev = quizQueue[quizIndex].ev, ok = options[Number(btn.dataset.i)].ok;
+      if (ok) quizScore++;
+      document.querySelectorAll('#quiz-options .quiz-opt').forEach((b, i) => {
+        b.disabled = true;
+        if (options[i].ok) b.className = 'quiz-opt text-left px-4 py-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-sm font-semibold';
+        else if (b === btn) b.className = 'quiz-opt text-left px-4 py-3 rounded-xl border-2 border-rose-400 bg-rose-50 text-sm font-semibold';
+      });
+      document.getElementById('quiz-score').textContent = quizScore;
+      const fb = document.getElementById('quiz-feedback');
+      fb.className = 'rounded-xl p-4 border text-sm font-medium ' + (ok ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900');
+      fb.textContent = (ok ? 'Richtig! ' : 'Leider falsch. ') + ev.title + ' (' + fmtRange(ev) + ').';
+      if (quizIndex < quizQueue.length - 1) document.getElementById('btn-quiz-next').classList.remove('hidden');
+      else {
+        fb.textContent += ` Quiz beendet: ${quizScore} von ${quizQueue.length} richtig.`;
+        document.getElementById('btn-quiz-restart').classList.remove('hidden');
+      }
+    }
+    function nextQuizRound() { quizIndex++; loadQuizRound(); }
 
     // =========================================================================
     // 11. MODUS: SORTIER-SPRINT
@@ -4585,7 +4694,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
   </script>
 <script>
 /* Feedback: öffnet das anonyme Tally-Formular (App, Version und Gerät werden mitgegeben, keine Personendaten) */
-function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.2.2',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.3',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
 
 /* ===== Zurück-Geste (Handy): ein Schritt zurück statt App schliessen ===== */
 (function(){

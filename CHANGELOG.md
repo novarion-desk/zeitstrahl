@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.3 – 22.11.2026
+- Neu: 4 Standard-Themen mit Schweizer Spur: Antike, Mittelalter, Französische Revolution, Reformation. Mit Hinweis «Faktencheck läuft», bis die Lehrperson sie geprüft hat.
+- Neu: Modus «❓ Quiz» (Multiple Choice: «Wann geschah das?» und «Welches Ereignis ist gemeint?»).
+- Das Datum-Schätzen verdeckt auch Jahreszahlen «v. Chr.» im Text.
+- Die Quelle (Wikipedia-Artikel) steht jetzt sichtbar beim Ereignis.
+
 ## Version 1.2.2 – 21.11.2026
 - Neu: Zurück-Geste / Zurück-Taste schliesst offene Fenster bzw. geht von Raten, Sortieren und Editor zurück zum Entdecken, statt die App zu schliessen.
 
