@@ -7,7 +7,7 @@ Interaktive Zeitstrahlen für den Unterricht: Überblick mit zwei Spuren (z. B. 
 
 | Funktion | Ohne Login | Mit Lehrpersonen-Login |
 |---|---|---|
-| 10 Standard-Themen (Antike, Mittelalter, Französische Revolution, Reformation neu, im Faktencheck; Alte Eidgenossenschaft, Industrialisierung, 1. Weltkrieg, 2. Weltkrieg, Kalter Krieg, Frauenstimmrecht – je mit Schweizer Spur) | ✓ | ✓ |
+| 12 Standard-Themen (Antike, Mittelalter, Französische Revolution, Reformation, Klimawandel, Alpentransit neu, im Faktencheck; Alte Eidgenossenschaft, Industrialisierung, 1. Weltkrieg, 2. Weltkrieg, Kalter Krieg, Frauenstimmrecht – je mit Schweizer Spur) | ✓ | ✓ |
 | Eigene Zeitstrahlen bauen | ✓ (auf dem Gerät / als Datei) | ✓ (Cloud, auf allen Geräten) |
 | KI-Chat: Prompt kopieren → Antwort einfügen | ✓ | ✓ |
 | KI direkt (Gemini, Claude, ChatGPT oder Mistral; ein Schlüsselfeld, Anbieter wird erkannt; Schlüssel wie im Sek Planer) | – | ✓ |

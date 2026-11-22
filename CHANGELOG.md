@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.4 – 22.11.2026
+- Neu: 2 Geografie-Themen mit Schweizer Spur: «Klimawandel & Schweiz» und «Verkehr & Alpentransit» (Faktencheck läuft).
+
 ## Version 1.3 – 22.11.2026
 - Neu: 4 Standard-Themen mit Schweizer Spur: Antike, Mittelalter, Französische Revolution, Reformation. Mit Hinweis «Faktencheck läuft», bis die Lehrperson sie geprüft hat.
 - Neu: Modus «❓ Quiz» (Multiple Choice: «Wann geschah das?» und «Welches Ereignis ist gemeint?»).
