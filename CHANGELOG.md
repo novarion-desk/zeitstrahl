@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.8 – 23.11.2026
+- Neu: Gemeinsamer KI-Zugang (Mistral). Die KI-Erstellung funktioniert auch ohne eigenen Schlüssel im Konto, mit Tageslimit. Eigene Schlüssel haben Vorrang
+
 ## Version 1.7 – 23.11.2026
 - Neu: Unter «Mein Konto» gibt es «Google Drive»: «Jetzt in Drive sichern» legt alle deine Themen und Aufträge als Datei (.json) im Drive-Ordner «Teaching Cockpit Backups / Zeitstrahl» ab. Eigener Zielordner wählbar, optionale Erinnerung beim Öffnen (höchstens 1× pro Woche). Die Abgaben der Schülerinnen und Schüler sind nicht enthalten
 - Neu, nur für den Besitzer: «Code dieser App sichern» (ZIP in Drive) mit optionaler Erinnerung

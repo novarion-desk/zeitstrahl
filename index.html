@@ -898,6 +898,7 @@ Kategorien: Politik, Konflikte, Alltag
   <script src="vendor/firebase-auth-compat.js"></script>
   <script src="vendor/firebase-firestore-compat.js"></script>
   <script src="drive-backup.js"></script>
+  <script src="shared-ki.js"></script>
   <script src="vendor/qrcode.js"></script>
 
   <script>
@@ -2650,7 +2651,7 @@ Kategorien: Politik, Konflikte, Alltag
       keyBox.classList.add('hidden');
       if (isTeacher()) {
         const keys = await loadAiKeys();
-        const hasKey = !!(keys.gemini || keys.claude || keys.openai || keys.mistral);
+        const hasKey = !!(keys.gemini || keys.claude || keys.openai || keys.mistral) || !!(window.SharedKI && SharedKI.available());
         keyBox.classList.toggle('hidden', hasKey);
         document.getElementById('gen-key-link').classList.toggle('hidden', !hasKey);
       }
@@ -3913,7 +3914,10 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
       if (!isTeacher()) throw new Error('Nur mit Anmeldung möglich.');
       const keys = await loadAiKeys();
       const order = keys.order.filter(p => keys[p]);
-      if (!order.length) throw new Error('Kein KI-Schlüssel hinterlegt – unter «👤 Konto» → «🔑 KI-Schlüssel» eintragen.');
+      if (!order.length) {
+        if (window.SharedKI && SharedKI.available()) return (await SharedKI.ask({ user: prompt, maxTokens: 3000 })).answer;   // gemeinsamer KI-Zugang (Mistral)
+        throw new Error('Kein KI-Schlüssel hinterlegt – unter «👤 Konto» → «🔑 KI-Schlüssel» eintragen.');
+      }
       const errors = [];
       for (const p of order) {
         try { return await callProvider(p, keys[p], prompt); }
@@ -4787,7 +4791,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
         snap.forEach(function(d){topics[d.id]=d.data();});
         var ts=await db.collection(TASKS_COL).where('ownerUid','==',currentUser.uid).get(), tasks=[];
         ts.forEach(function(d){tasks.push(Object.assign({id:d.id},d.data()));});
-        var payload={app:'zeitstrahl',appVersion:'1.7',exportedAt:new Date().toISOString(),account:currentUser.email,topics:topics,tasks:tasks};
+        var payload={app:'zeitstrahl',appVersion:'1.8',exportedAt:new Date().toISOString(),account:currentUser.email,topics:topics,tasks:tasks};
         var blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
         return {blob:blob,name:'zeitstrahl-backup-'+new Date().toISOString().slice(0,10)+'.json',info:Object.keys(topics).length+' Themen, '+tasks.length+' Aufträge'};
       }});
@@ -4795,7 +4799,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
 })();
 
-function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.7',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.8',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
 
 /* ===== Zurück-Geste (Handy): ein Schritt zurück statt App schliessen ===== */
 (function(){
