@@ -727,6 +727,8 @@ Kategorien: Politik, Konflikte, Alltag
           <div id="task-list" class="space-y-2"></div>
         </div>
 
+        <div id="driveMountZeitstrahl"></div>
+
         <div class="flex justify-between items-center border-t border-slate-100 pt-4">
           <span id="account-email" class="text-xs text-slate-500"></span>
           <span class="flex gap-2"><button onclick="openAiSettings()" class="text-xs px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold">🔑 KI-Schlüssel</button>
@@ -895,6 +897,7 @@ Kategorien: Politik, Konflikte, Alltag
   <script src="vendor/firebase-app-compat.js"></script>
   <script src="vendor/firebase-auth-compat.js"></script>
   <script src="vendor/firebase-firestore-compat.js"></script>
+  <script src="drive-backup.js"></script>
   <script src="vendor/qrcode.js"></script>
 
   <script>
@@ -4771,7 +4774,28 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
   </script>
 <script>
 /* Feedback: öffnet das anonyme Tally-Formular (App, Version und Gerät werden mitgegeben, keine Personendaten) */
-function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.5',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+/* Google Drive: Sicherung (ab Version 1.7) */
+(function(){
+  function go(){
+    var host=document.getElementById('driveMountZeitstrahl'); if(!host||!window.DriveBackup||host.dataset.mounted)return; host.dataset.mounted='1';
+    DriveBackup.mountSection({host:host,app:'Zeitstrahl',repo:'zeitstrahl',
+      getEmail:function(){return currentUser?currentUser.email:'';},
+      isDemo:function(){return !currentUser||currentUser.isAnonymous;},
+      toast:function(m){toast(m);},
+      getBackup:async function(){
+        var snap=await db.collection(TOPICS_COL).where('ownerUid','==',currentUser.uid).get(), topics={};
+        snap.forEach(function(d){topics[d.id]=d.data();});
+        var ts=await db.collection(TASKS_COL).where('ownerUid','==',currentUser.uid).get(), tasks=[];
+        ts.forEach(function(d){tasks.push(Object.assign({id:d.id},d.data()));});
+        var payload={app:'zeitstrahl',appVersion:'1.7',exportedAt:new Date().toISOString(),account:currentUser.email,topics:topics,tasks:tasks};
+        var blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+        return {blob:blob,name:'zeitstrahl-backup-'+new Date().toISOString().slice(0,10)+'.json',info:Object.keys(topics).length+' Themen, '+tasks.length+' Aufträge'};
+      }});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+})();
+
+function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.7',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
 
 /* ===== Zurück-Geste (Handy): ein Schritt zurück statt App schliessen ===== */
 (function(){

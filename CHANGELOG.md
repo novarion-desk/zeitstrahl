@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 1.7 – 23.11.2026
+- Neu: Unter «Mein Konto» gibt es «Google Drive»: «Jetzt in Drive sichern» legt alle deine Themen und Aufträge als Datei (.json) im Drive-Ordner «Teaching Cockpit Backups / Zeitstrahl» ab. Eigener Zielordner wählbar, optionale Erinnerung beim Öffnen (höchstens 1× pro Woche). Die Abgaben der Schülerinnen und Schüler sind nicht enthalten
+- Neu, nur für den Besitzer: «Code dieser App sichern» (ZIP in Drive) mit optionaler Erinnerung
+- Neue Datei drive-backup.js (gemeinsamer Baustein)
+
 ## Version 1.6 – 22.11.2026
 - Faktencheck abgeschlossen: Hinweis «Faktencheck läuft» entfernt. Pizolgletscher: Text korrigiert (nicht «erster» gestrichener Gletscher).
 - Neu: 13 weitere Schweizer Ereignisse in Erster Weltkrieg (3), Zweiter Weltkrieg (3), Industrialisierung (3) und Kalter Krieg (4)
