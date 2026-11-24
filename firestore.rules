@@ -10,7 +10,7 @@ service cloud.firestore {
       return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
     function isOwnerAccount() {
-      return isAccount() && request.auth.token.email == 'patrick.krapf63@gmail.com';
+      return isAccount() && request.auth.uid in ['OWNER_UID_HIER_EINTRAGEN'];
     }
 
     // Sek Planer: jedes Dokument gehört genau einem Konto (ownerUid)
