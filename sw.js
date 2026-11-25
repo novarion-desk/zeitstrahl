@@ -1,7 +1,7 @@
-// Service Worker Zeitstrahl (Version 1.9): macht die App installierbar UND offline nutzbar.
+// Service Worker Zeitstrahl (Version 1.10): macht die App installierbar UND offline nutzbar.
 // Strategie: zuerst Netz (immer frische Version, wenn online), bei Ausfall oder langsamem Netz (4 s) der Zwischenspeicher.
 // Beim Erhöhen der App-Version hier VERSION mitändern, damit der Update-Hinweis erscheint.
-const VERSION = '1.9';
+const VERSION = '1.10';
 const CACHE = 'zeitstrahl-' + VERSION;
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'drive-backup.js', 'shared-ki.js', 'vendor/app.css', 'vendor/firebase-app-compat.js', 'vendor/firebase-auth-compat.js', 'vendor/firebase-firestore-compat.js', 'vendor/qrcode.js', 'icons/icon.svg', 'icons/favicon-32.png', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-192.png', 'icons/icon-maskable-512.png'];
 const SCOPE = self.registration.scope;

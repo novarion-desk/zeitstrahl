@@ -9,6 +9,9 @@ service cloud.firestore {
     function isAccount() {
       return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
+    // Nur für ältere Planer-Dokumente ohne ownerUid.
+    // VOR DEM VERÖFFENTLICHEN in der Firebase-Konsole die UID(s) des eigenen Kontos eintragen
+    // (Authentication → Benutzer → «Benutzer-UID»). Hier im Repo bleibt der Platzhalter.
     function isOwnerAccount() {
       return isAccount() && request.auth.uid in ['OWNER_UID_HIER_EINTRAGEN'];
     }
@@ -53,7 +56,7 @@ service cloud.firestore {
       // Listen nur für die eigenen Sessions der Lehrperson
       allow list: if sessionOwner();
       allow create: if isAccount()
-        && code.matches('^[0-9]{4}$')
+        && code.matches('^[0-9]{4,6}$')   // neu 6 Ziffern; 4 bleiben vorläufig erlaubt (ältere App-Versionen)
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.durationSec is int;
       allow update: if sessionOwner()
@@ -154,7 +157,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if isAccount() && resource.data.ownerUid == request.auth.uid;
       allow create: if isAccount()
-        && code.matches('^[0-9]{4}$')
+        && code.matches('^[0-9]{4,6}$')   // neu 6 Ziffern; 4 bleiben vorläufig erlaubt (ältere App-Versionen)
         && request.resource.data.ownerUid == request.auth.uid;
       allow update: if isAccount()
         && resource.data.ownerUid == request.auth.uid

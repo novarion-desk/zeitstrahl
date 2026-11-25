@@ -756,7 +756,7 @@ Kategorien: Politik, Konflikte, Alltag
         <h3 class="font-bold text-lg text-slate-900">📤 Zeitstrahl abgeben</h3>
         <button onclick="closeModal('submit-modal')" class="text-slate-400 hover:text-slate-700">✕</button>
       </div>
-      <input type="text" id="submit-code" maxlength="4" inputmode="numeric" placeholder="4-stelliger Code" class="w-full text-center text-2xl font-mono tracking-widest rounded-xl border border-slate-300 py-2.5" />
+      <input type="text" id="submit-code" maxlength="6" inputmode="numeric" placeholder="Code (6 Ziffern)" class="w-full text-center text-2xl font-mono tracking-widest rounded-xl border border-slate-300 py-2.5" />
       <input type="text" id="submit-name" maxlength="40" placeholder="Dein Vorname" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base" />
       <div id="submit-info" class="hidden text-sm rounded-xl p-3 border"></div>
       <button onclick="submitTopic()" id="btn-submit" class="btn-primary w-full py-3 text-base">Abgeben</button>
@@ -1395,7 +1395,7 @@ Kategorien: Politik, Konflikte, Alltag
       else if (presetKey && (PRESET_TOPICS[presetKey] || localTopics[presetKey])) selectTopic(presetKey);
       else selectTopic('preset:ww2');
 
-      if (taskCode && /^\d{4}$/.test(taskCode)) {
+      if (taskCode && /^\d{4,6}$/.test(taskCode)) {
         document.getElementById('submit-code').value = taskCode;
         await prepareTaskStart(taskCode);
       } else {
@@ -4225,8 +4225,16 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
         if (JSON.stringify(t).length > 500000) return toast('Das aktuelle Thema ist zu gross als Startpunkt.');
         data.startTopic = t;
       }
+      // 6 Ziffern (1 Mio. mögliche Codes, schwerer zu erraten). 4 Ziffern nur als Ausweichlösung,
+      // solange die Firebase-Regeln (firestore.rules) noch nur 4 Ziffern erlauben.
+      const makeCode = (digits) => {
+        const buf = new Uint32Array(1);
+        crypto.getRandomValues(buf);
+        return digits === 4 ? String(1000 + (buf[0] % 9000)) : String(100000 + (buf[0] % 900000));
+      };
+      let denied = 0;
       for (let i = 0; i < 15; i++) {
-        const code = String(Math.floor(1000 + Math.random() * 9000));
+        const code = makeCode(denied >= 3 ? 4 : 6);
         try {
           const ok = await db.runTransaction(async (tx) => {
             const ref = db.collection(TASKS_COL).doc(code);
@@ -4240,7 +4248,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
             toast(`Auftrag erstellt – Code ${code}`);
             return;
           }
-        } catch (e) { if (e.code !== 'permission-denied' && e.code !== 'aborted') break; }
+        } catch (e) { if (e.code === 'permission-denied') denied++; if (e.code !== 'permission-denied' && e.code !== 'aborted') break; }
       }
       toast('Auftrag konnte nicht erstellt werden.');
     }
@@ -4366,7 +4374,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
         info.className = `text-sm rounded-xl p-3 border ${ok ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`;
         info.textContent = msg;
       };
-      if (!/^\d{4}$/.test(code)) return showInfo('Bitte den 4-stelligen Code eingeben.', false);
+      if (!/^\d{4,6}$/.test(code)) return showInfo('Bitte den Code eingeben (6 Ziffern).', false);
       if (!name) return showInfo('Bitte deinen Vornamen eingeben.', false);
       updateBuilderMetaSilent();
       if (!activeTopic.events.length) return showInfo('Dein Zeitstrahl hat noch keine Ereignisse.', false);
@@ -4799,7 +4807,7 @@ Antworte NUR mit gültigem JSON: {"events": [{"i": 0, "desc": "…", "question":
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
 })();
 
-function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.9',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
+function openAppFeedback(){var q=new URLSearchParams({app:'zeitstrahl',version:'1.10',geraet:(navigator.userAgent||'').slice(0,120)});window.open('https://tally.so/r/GeR9re?'+q.toString(),'_blank','noopener');}
 
 /* ===== Zurück-Geste (Handy): ein Schritt zurück statt App schliessen ===== */
 (function(){

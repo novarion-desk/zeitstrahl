@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.10 – 25.11.2026
+- Sicherer: Neue Abgabe-Aufträge bekommen einen **6-stelligen Code** (statt 4 Ziffern), schwerer zu erraten. Alte 4-stellige Codes funktionieren weiter. Sind die Firebase-Regeln noch nicht angepasst, fällt die App automatisch auf 4 Ziffern zurück.
+- `firestore.rules` auf den gemeinsamen Stand gebracht (Codes mit 4 bis 6 Ziffern erlaubt). Die Regeln müssen in der Firebase-Konsole selbst veröffentlicht werden.
+
 ## Version 1.9 – 25.11.2026
 - Neu: **Offline-Start.** Die App wird beim ersten Öffnen zwischengespeichert und öffnet danach auch ohne Netz. Mit Netz kommt immer die neueste Version. Anmelden, Cloud-Daten, Abgaben, KI, Wikipedia-Bilder und -Quellen, Drive-Sicherung und Feedback brauchen weiterhin Netz. Die grossen Import-Bausteine (PDF, Excel, Word) werden erst bei der ersten Benutzung zwischengespeichert.
 
