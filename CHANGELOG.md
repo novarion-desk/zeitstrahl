@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.9 – 25.11.2026
+- Neu: **Offline-Start.** Die App wird beim ersten Öffnen zwischengespeichert und öffnet danach auch ohne Netz. Mit Netz kommt immer die neueste Version. Anmelden, Cloud-Daten, Abgaben, KI, Wikipedia-Bilder und -Quellen, Drive-Sicherung und Feedback brauchen weiterhin Netz. Die grossen Import-Bausteine (PDF, Excel, Word) werden erst bei der ersten Benutzung zwischengespeichert.
+
 ## Version 1.8 – 23.11.2026
 - Neu: Gemeinsamer KI-Zugang (Mistral). Die KI-Erstellung funktioniert auch ohne eigenen Schlüssel im Konto, mit Tageslimit. Eigene Schlüssel haben Vorrang
 
